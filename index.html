@@ -616,7 +616,7 @@ const MAPS = {
         { id: 'hv_troll', name: '弱化食人妖精', level: 5, hp: 36, mp: 30, ac: 7, alignment: -10, size: 'large', exp: 120, atkSpeed: 2600, dice: '1d5+1', weight: 78, adena: [25,58], adenaAlways: true, drops: [{id:'potion_red', rate: 16}, {id:'potion_orange', rate: 6}, {id:'potion_haste', rate: 2.5}] },
         { id: 'hv_black_knight', name: '弱化黑騎士', level: 5, hp: 34, mp: 0, ac: 7, alignment: -7, size: 'small', exp: 130, atkSpeed: 2500, dice: '1d5+1', weight: 72, adena: [10,24], adenaAlways: true, drops: [{id:'potion_red', rate: 12}, {id:'potion_orange', rate: 3}, {id:'potion_haste', rate: 1}, {id:'cloak_protector', rate: 0.1}] },
         { id: 'hv_ogre', name: '弱化歐吉', level: 5, hp: 38, mp: 0, ac: 7, alignment: -10, size: 'large', exp: 140, atkSpeed: 2700, dice: '1d5+2', weight: 54, adena: [25,62], adenaAlways: true, drops: [{id:'potion_red', rate: 16}, {id:'potion_orange', rate: 6}, {id:'potion_haste', rate: 2.5}, {id:'gloves_str', rate: 0.01}] },
-        { id: 'hv_cursed_aruba', name: '受詛咒的阿魯巴', level: 11, hp: 120, mp: 50, ac: 0, alignment: -15, size: 'large', exp: 122, atkSpeed: 1800, dice: '2d8+5', hitBonus: 2, isBoss: true, weight: 8, adena: [38,90], adenaAlways: true, drops: [{id:'amulet_hidden_valley', rate: 100}, {id:'potion_orange', rate: 20}, {id:'potion_clear', rate: 8}, {id:'potion_haste', rate: 8}] }
+        { id: 'hv_cursed_aruba', name: '受詛咒的阿魯巴', level: 12, hp: 360, mp: 80, ac: -5, alignment: -15, size: 'large', exp: 480, atkSpeed: 1600, dice: '2d10+8', hitBonus: 6, isBoss: true, weight: 1, adena: [90,180], adenaAlways: true, drops: [{id:'amulet_hidden_valley', rate: 100}, {id:'potion_orange', rate: 20}, {id:'potion_clear', rate: 8}, {id:'potion_haste', rate: 8}] }
     ]},
     knight_village: { name: '騎士村周邊', monsters: [
         { id: 'goblin', name: '哥布林', level: 2, hp: 3, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'broadsword', rate: 1}, {id:'book_light', rate: 1}, {id:'book_shield', rate: 0.5}] },
@@ -1105,7 +1105,7 @@ const game = {
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, autoHealCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false
+        potionCooldown: 0, autoHealCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
     },
 
     init: function() {
@@ -1161,7 +1161,7 @@ const game = {
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
-            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated
+            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
         };
         localStorage.setItem('lineageIdleSave', JSON.stringify(saveData));
         this.logSystem('遊戲進度已儲存。', 'reward');
@@ -1215,6 +1215,7 @@ const game = {
                 this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
                 this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
+                this.state.hiddenValleyArubaSummoned = !!savedData.hiddenValleyArubaSummoned;
                 
                 this.state.settings = { ...this.state.settings, ...(savedData.settings || {}) };
                 this.state.settings.autoHpThreshold = parseInt(this.state.settings.autoHpThreshold) || 5;
@@ -1355,6 +1356,7 @@ const game = {
         document.getElementById('main-ui').classList.remove('hidden');
         this.state.currentMap = 'hidden_valley';
         this.state.hiddenValleyArubaDefeated = false;
+        this.state.hiddenValleyArubaSummoned = false;
         let mapSel = document.getElementById('map-select');
         if (mapSel) mapSel.value = 'hidden_valley';
         this.addInventory('dagger_orc', 1, 0, false);
@@ -2469,8 +2471,9 @@ const game = {
         }
 
         let selected = map.monsters[0];
-        if (this.state.currentMap === 'hidden_valley' && this.state.level >= 12 && !this.state.hiddenValleyArubaDefeated) {
+        if (this.state.currentMap === 'hidden_valley' && this.state.level >= 12 && !this.state.hiddenValleyArubaSummoned && !this.state.hiddenValleyArubaDefeated) {
             selected = map.monsters.find(m => m.id === 'hv_cursed_aruba') || selected;
+            this.state.hiddenValleyArubaSummoned = true;
             this.logSystem('隱藏之谷深處傳來詛咒的氣息，受詛咒的阿魯巴現身了！', 'danger');
         } else {
             let totalW = map.monsters.reduce((s, m) => s + m.weight, 0);
