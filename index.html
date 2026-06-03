@@ -166,7 +166,6 @@
                             <div class="list-item"><span class="c-info">精靈水晶(魔法防禦)</span> <div class="flex items-center gap-3"><span class="c-warn">15,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_resist_magic')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(心靈轉換)</span> <div class="flex items-center gap-3"><span class="c-warn">20,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_body_to_mind')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(淨化精神)</span> <div class="flex items-center gap-3"><span class="c-warn">40,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_clear_mind')">購買</button></div></div>
-                            <div class="list-item"><span class="c-info">精靈水晶(屬性防禦)</span> <div class="flex items-center gap-3"><span class="c-warn">25,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_resist_elemental')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(大地防護)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_earth_skin')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(火焰武器)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_fire_weapon')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(風之神射)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_wind_shot')">購買</button></div></div>
@@ -389,7 +388,7 @@ const ITEMS = {
     helm_heal_magic: { name: '治癒魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.5, desc: '賦予治癒法術。' },
     cloak_protector: { name: '保護者斗篷', type: 'cloak', safe: 4, ac: -3, dropRate: 5 },
     armor_rattan: { name: '藤甲', type: 'armor', safe: 4, ac: -6, dropRate: 3 },
-    helm_str_magic: { name: '力量魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.2, desc: '賦予體魄強健等法術。' },
+    helm_str_magic: { name: '力量魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.2, classes: ['knight'], desc: '賦予體魄強健等法術。' },
     armor_bronze: { name: '青銅盔甲', type: 'armor', safe: 4, ac: -6, dropRate: 0.3 },
     gloves_normal: { name: '手套', type: 'gloves', safe: 4, ac: 0, dropRate: 1 },
     gloves_str: { name: '力量手套', type: 'gloves', safe: 4, ac: 0, dropRate: 0.05, desc: '力量+2' },
@@ -461,7 +460,6 @@ const ITEMS = {
     book_light: { name: '魔法書(光箭)', type: 'book', spellId: 'light_arrow' },
     book_heal: { name: '魔法書(初級治癒術)', type: 'book', spellId: 'heal' },
     book_shield: { name: '魔法書(保護罩)', type: 'book', spellId: 'shield' },
-    book_cure_path: { name: '魔法書(解毒術)', type: 'book', spellId: 'cure_poison' },
     book_vampire: { name: '魔法書(吸血鬼之吻)', type: 'book', spellId: 'vampire' },
     book_dex: { name: '魔法書(通暢氣脈術)', type: 'book', spellId: 'dex_buff' },
     book_slow: { name: '魔法書(緩速術)', type: 'book', spellId: 'slow' },
@@ -500,7 +498,6 @@ const SPELLS = {
     light_arrow: { id: 'light_arrow', name: '光箭', level: 1, type: 'attack', mp: 3, dice: '1d4', baseDmg: 3 },
     heal: { id: 'heal', name: '初級治癒術', level: 1, type: 'heal', mp: 4, healBase: 15 },
     shield: { id: 'shield', name: '保護罩', level: 1, type: 'buff', mp: 2, duration: 1200 },
-    cure_poison: { id: 'cure_poison', name: '解毒術', level: 2, type: 'passive' },
     vampire: { id: 'vampire', name: '吸血鬼之吻', level: 4, type: 'attack', mp: 13, dice: '4d4', baseDmg: 6, healDice: '4d4' },
     dex_buff: { id: 'dex_buff', name: '通暢氣脈術', level: 4, type: 'buff', mp: 45, duration: 1200 },
     slow: { id: 'slow', name: '緩速術', level: 4, type: 'attack', mp: 20, duration: 30 },
@@ -583,37 +580,40 @@ const CLASSES = {
 
 const GEM_EXCHANGES = {
     kalip_basic: {
-        name: '卡立普的袋子',
-        cost: { gem_diamond: 1, gem_ruby: 1, gem_sapphire: 1, gem_emerald: 1 },
+        name: '卡利普的袋子',
+        gems: ['gem_diamond', 'gem_ruby', 'gem_sapphire', 'gem_emerald'],
         rewards: [
-            { id: 'potion_haste', count: 5, weight: 28 },
-            { id: 'potion_blue', count: 3, weight: 20 },
-            { id: 'potion_wisdom', count: 2, weight: 14 },
-            { id: 'scroll_armor', count: 1, weight: 10 },
-            { id: 'scroll_weapon', count: 1, weight: 6 }
+            { id: 'gem_diamond', count: 1, weight: 7.5 }, { id: 'gem_ruby', count: 1, weight: 7.5 }, { id: 'gem_sapphire', count: 1, weight: 7.5 }, { id: 'gem_emerald', count: 1, weight: 7.5 },
+            { id: 'gem_quality_diamond', count: 1, weight: 2.5 }, { id: 'gem_quality_ruby', count: 1, weight: 2.5 }, { id: 'gem_quality_sapphire', count: 1, weight: 2.5 }, { id: 'gem_quality_emerald', count: 1, weight: 2.5 },
+            { id: 'short_sword_orc', count: 1, weight: 12 }, { id: 'long_sword', count: 1, weight: 12 }, { id: 'fauchard', count: 1, weight: 12 }, { id: 'scimitar', count: 1, weight: 12 }, { id: 'sword_two_handed', count: 1, weight: 12 }
         ]
     },
     kalip_high: {
-        name: '卡立普的高級袋子',
-        cost: { gem_quality_diamond: 2, gem_quality_ruby: 2, gem_quality_sapphire: 2, gem_quality_emerald: 2 },
+        name: '卡利普的高級袋子',
+        gems: ['gem_quality_diamond', 'gem_quality_ruby', 'gem_quality_sapphire', 'gem_quality_emerald'],
         rewards: [
-            { id: 'scroll_weapon', count: 1, weight: 18 },
-            { id: 'scroll_armor', count: 2, weight: 22 },
-            { id: 'scroll_accessory', count: 1, weight: 8 },
-            { id: 'potion_haste', count: 20, weight: 24 },
-            { id: 'gloves_str', count: 1, weight: 3 }
+            { id: 'gem_quality_diamond', count: 1, weight: 7.5 }, { id: 'gem_quality_ruby', count: 1, weight: 7.5 }, { id: 'gem_quality_sapphire', count: 1, weight: 7.5 }, { id: 'gem_quality_emerald', count: 1, weight: 7.5 },
+            { id: 'gem_high_diamond', count: 1, weight: 2.5 }, { id: 'gem_high_ruby', count: 1, weight: 2.5 }, { id: 'gem_high_sapphire', count: 1, weight: 2.5 }, { id: 'gem_high_emerald', count: 1, weight: 2.5 },
+            { id: 'crystal_elf_fire_weapon', count: 1, weight: 30/9 }, { id: 'crystal_elf_wind_shot', count: 1, weight: 30/9 }, { id: 'crystal_elf_earth_skin', count: 1, weight: 30/9 },
+            { id: 'crystal_dark_enchant_venom', count: 1, weight: 30/9 }, { id: 'crystal_dark_shadow_armor', count: 1, weight: 30/9 }, { id: 'crystal_dark_burning_spirit', count: 1, weight: 30/9 }, { id: 'crystal_dark_shadow_fang', count: 1, weight: 30/9 },
+            { id: 'book_knight_reduction_armor', count: 1, weight: 30/9 }, { id: 'book_knight_solid_carriage', count: 1, weight: 30/9 },
+            { id: 'katana', count: 1, weight: 20/14 }, { id: 'sword_damascus', count: 1, weight: 20/14 }, { id: 'dual_spike', count: 1, weight: 20/14 }, { id: 'dual_steel', count: 1, weight: 20/14 }, { id: 'dual_shadow', count: 1, weight: 20/14 },
+            { id: 'dual_short', count: 1, weight: 20/14 }, { id: 'dual_abyss', count: 1, weight: 20/14 }, { id: 'dual_damascus', count: 1, weight: 20/14 }, { id: 'dual_lastabad', count: 1, weight: 20/14 },
+            { id: 'dual_shadow_high', count: 1, weight: 20/14 }, { id: 'dual_diad', count: 1, weight: 20/14 }, { id: 'claw_short', count: 1, weight: 20/14 }, { id: 'claw_damascus', count: 1, weight: 20/14 }, { id: 'claw_shadow_high', count: 1, weight: 20/14 },
+            { id: 'quiver_mithril', count: 1, weight: 10 }
         ]
     },
     kalip_rare: {
-        name: '卡立普的稀有袋子',
-        cost: { gem_high_diamond: 1, gem_high_ruby: 1, gem_high_sapphire: 1, gem_high_emerald: 1 },
+        name: '卡利普的稀有袋子',
+        gems: ['gem_high_diamond', 'gem_high_ruby', 'gem_high_sapphire', 'gem_high_emerald'],
         rewards: [
-            { id: 'scroll_weapon_blessed', count: 1, weight: 8 },
-            { id: 'scroll_armor_blessed', count: 1, weight: 10 },
-            { id: 'belt_soul', count: 1, weight: 3 },
-            { id: 'belt_mind', count: 1, weight: 3 },
-            { id: 'belt_body', count: 1, weight: 3 },
-            { id: 'staff_mana', count: 1, weight: 2 }
+            { id: 'gem_high_diamond', count: 1, weight: 7.5 }, { id: 'gem_high_ruby', count: 1, weight: 7.5 }, { id: 'gem_high_sapphire', count: 1, weight: 7.5 }, { id: 'gem_high_emerald', count: 1, weight: 7.5 },
+            { id: 'crystal_elf_soul_to_mind', count: 1, weight: 3.5 }, { id: 'crystal_elf_triple_arrow', count: 1, weight: 3.5 }, { id: 'crystal_elf_storm_shot', count: 1, weight: 3.5 }, { id: 'crystal_elf_iron_skin', count: 1, weight: 3.5 },
+            { id: 'crystal_elf_release_elemental', count: 1, weight: 3.5 }, { id: 'crystal_dark_uncanny_dodge', count: 1, weight: 3.5 }, { id: 'crystal_dark_double_break', count: 1, weight: 3.5 },
+            { id: 'crystal_dark_dress_mighty', count: 1, weight: 3.5 }, { id: 'book_knight_shock_stun', count: 1, weight: 3.5 }, { id: 'book_knight_counter_barrier', count: 1, weight: 3.5 },
+            { id: 'sword_tsurugi', count: 1, weight: 25/9 }, { id: 'crossbow', count: 1, weight: 25/9 }, { id: 'crossbow_shadow', count: 1, weight: 25/9 }, { id: 'crossbow_dark', count: 1, weight: 25/9 }, { id: 'crossbow_diad', count: 1, weight: 25/9 },
+            { id: 'dual_dark_high', count: 1, weight: 25/9 }, { id: 'claw_bloody', count: 1, weight: 25/9 }, { id: 'claw_dark_high', count: 1, weight: 25/9 }, { id: 'claw_balanka', count: 1, weight: 25/9 },
+            { id: 'quiver_black_mithril', count: 1, weight: 5 }, { id: 'quiver_oriharukon', count: 1, weight: 5 }
         ]
     }
 };
@@ -636,161 +636,161 @@ const MAPS = {
         { id: 'goblin', name: '哥布林', level: 2, hp: 3, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'broadsword', rate: 1}, {id:'book_light', rate: 1}, {id:'book_shield', rate: 0.5}] },
         { id: 'orc', name: '妖魔', level: 2, hp: 6, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'dagger_orc', rate: 1}, {id:'short_sword_orc', rate: 5}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'book_light', rate: 1}] },
         { id: 'earth_spirit', name: '地靈', level: 3, hp: 7, ac: 10, exp: 10, atkSpeed: 2000, dice: '1d6', weight: 97, adena: [11,32], drops: [{id:'club', rate: 1}, {id:'boots_short', rate: 1}, {id:'book_light', rate: 1}] },
-        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
-        { id: 'gnome', name: '侏儒', level: 5, hp: 30, ac: 10, exp: 26, atkSpeed: 2000, dice: '1d6+1', weight: 95, adena: [13,36], drops: [{id:'short_sword_gnome', rate: 1}, {id:'helm_gnome', rate: 0.5}, {id:'cloak_gnome', rate: 5}, {id:'shield_gnome', rate: 8}, {id:'book_shield', rate: 0.5}] }
+        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'crossbow_diad', rate: 0.08}, {id:'crossbow_ivory', rate: 0.08}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
+        { id: 'gnome', name: '侏儒', level: 5, hp: 30, ac: 10, exp: 26, atkSpeed: 2000, dice: '1d6+1', weight: 95, adena: [13,36], drops: [{id:'crystal_elf_body_to_mind', rate: 0.4}, {id:'short_sword_gnome', rate: 1}, {id:'helm_gnome', rate: 0.5}, {id:'cloak_gnome', rate: 5}, {id:'shield_gnome', rate: 8}, {id:'book_shield', rate: 0.5}] }
     ]},
     desert: { name: '風木沙漠周邊', monsters: [
         { id: 'earth_spirit', name: '地靈', level: 3, hp: 7, ac: 10, exp: 10, atkSpeed: 2000, dice: '1d6', weight: 97, adena: [11,32], drops: [{id:'club', rate: 1}, {id:'boots_short', rate: 1}, {id:'book_light', rate: 1}] },
-        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
-        { id: 'gnome', name: '侏儒', level: 5, hp: 30, ac: 10, exp: 26, atkSpeed: 2000, dice: '1d6+1', weight: 95, adena: [13,36], drops: [{id:'short_sword_gnome', rate: 1}, {id:'helm_gnome', rate: 0.5}, {id:'cloak_gnome', rate: 5}, {id:'shield_gnome', rate: 8}, {id:'book_shield', rate: 0.5}] },
+        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'crossbow_diad', rate: 0.08}, {id:'crossbow_ivory', rate: 0.08}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
+        { id: 'gnome', name: '侏儒', level: 5, hp: 30, ac: 10, exp: 26, atkSpeed: 2000, dice: '1d6+1', weight: 95, adena: [13,36], drops: [{id:'crystal_elf_body_to_mind', rate: 0.4}, {id:'short_sword_gnome', rate: 1}, {id:'helm_gnome', rate: 0.5}, {id:'cloak_gnome', rate: 5}, {id:'shield_gnome', rate: 8}, {id:'book_shield', rate: 0.5}] },
         { id: 'lizardman', name: '蜥蜴人', level: 15, hp: 100, ac: -3, exp: 210, atkSpeed: 2000, dice: '2d8+2', hitBonus: 2, weight: 85, adena: [45,95], adenaAlways: true, drops: [{id:'silver_sword', rate: 1}, {id:'helm_antic_magic', rate: 0.5}, {id:'shield_large', rate: 3}] },
         { id: 'werewolf', name: '狼人', level: 9, hp: 50, ac: 4, exp: 82, atkSpeed: 2000, dice: '1d8+2', isWerewolf: true, weight: 91, adena: [22,50], drops: [{id:'long_sword', rate: 2}, {id:'studded_leather', rate: 3}, {id:'boots_short', rate: 1}, {id:'boots_long', rate: 0.3}, {id:'book_shield', rate: 0.5}, {id:'book_dex', rate: 0.5}, {id:'book_vampire', rate: 0.5}] },
-        { id: 'lycan', name: '萊肯', level: 17, hp: 120, ac: -4, exp: 26, atkSpeed: 2000, dice: '1d12+3', isWerewolf: true, weight: 83, adena: [56,102], drops: [{id:'fauchard', rate: 1}, {id:'battle_axe', rate: 2}, {id:'scale_mail', rate: 4}, {id:'studded_leather', rate: 3}, {id:'boots_long', rate: 0.3}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'book_vampire', rate: 0.5}, {id:'book_slow', rate: 0.5}] }
+        { id: 'lycan', name: '萊肯', level: 17, hp: 120, ac: -4, exp: 26, atkSpeed: 2000, dice: '1d12+3', isWerewolf: true, weight: 83, adena: [56,102], drops: [{id:'dual_bronze', rate: 0.08}, {id:'crystal_elf_wind_shot', rate: 0.06}, {id:'fauchard', rate: 1}, {id:'battle_axe', rate: 2}, {id:'scale_mail', rate: 4}, {id:'studded_leather', rate: 3}, {id:'boots_long', rate: 0.3}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'book_vampire', rate: 0.5}, {id:'book_slow', rate: 0.5}] }
     ]},
     knight_cave_1f: { name: '騎士洞穴1樓', monsters: [
         { id: 'orc', name: '妖魔', level: 2, hp: 6, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'dagger_orc', rate: 1}, {id:'short_sword_orc', rate: 5}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'book_light', rate: 1}] },
-        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
+        { id: 'orc_archer', name: '妖魔弓箭手', level: 3, hp: 12, ac: 10, exp: 10, atkSpeed: 3000, dice: '1d2+1d6', weight: 97, adena: [11,32], drops: [{id:'crossbow_diad', rate: 0.08}, {id:'crossbow_ivory', rate: 0.08}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'book_light', rate: 1}] },
         { id: 'werewolf', name: '狼人', level: 9, hp: 50, ac: 4, exp: 82, atkSpeed: 2000, dice: '1d8+2', weight: 91, adena: [22,50], drops: [{id:'long_sword', rate: 2}, {id:'studded_leather', rate: 3}, {id:'boots_short', rate: 1}, {id:'boots_long', rate: 0.3}, {id:'book_shield', rate: 0.5}, {id:'book_dex', rate: 0.5}, {id:'book_vampire', rate: 0.5}] },
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 94, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
-        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 92, adena: [20,45], drops: [{id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
+        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 92, adena: [20,45], drops: [{id:'book_knight_reduction_armor', rate: 0.05}, {id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 86, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] }
     ]},
     knight_cave_2f: { name: '騎士洞穴2樓', monsters: [
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 20, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
     ]},
     knight_cave_3f: { name: '騎士洞穴3樓', monsters: [
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
+        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'book_str_buff', rate: 0.08}, {id:'crystal_dark_shadow_armor', rate: 0.05}, {id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
     ]},
     knight_cave_4f: { name: '騎士洞穴4樓', monsters: [
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
+        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'book_str_buff', rate: 0.08}, {id:'crystal_dark_shadow_armor', rate: 0.05}, {id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
     ]},
     gludio_dungeon: { name: '古魯丁地監周邊', monsters: [
-        { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 10, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_cure_path', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 10, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'dagger_mithril', rate: 0.5}] },
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 10, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 10, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 10, adena: [20,45], drops: [{id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [135,225], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 10, adena: [20,45], drops: [{id:'book_knight_reduction_armor', rate: 0.05}, {id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [135,225], drops: [{id:'book_str_buff', rate: 0.08}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
         { id: 'elder', name: '長者', level: 21, hp: 250, ac: -5, exp: 442, atkSpeed: 2000, dice: '2d8+5', weight: 79, adena: [80,140], drops: [{id:'cloak_protector', rate: 5}, {id:'book_call_lightning', rate: 0.8}, {id:'book_high_heal', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_lightning_storm', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'book_heal', rate: 1}, {id:'book_mid_heal', rate: 0.8}, {id:'dagger_ori', rate: 0.1}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'casto', name: '卡司特', level: 21, hp: 200, ac: -10, exp: 442, atkSpeed: 2000, dice: '4d8+3', hitBonus: 5, weight: 79, adena: [80,140], drops: [{id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'book_slow', rate: 0.5}, {id:'book_summon', rate: 0.02}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'casto', name: '卡司特', level: 21, hp: 200, ac: -10, exp: 442, atkSpeed: 2000, dice: '4d8+3', hitBonus: 5, weight: 79, adena: [80,140], drops: [{id:'book_weapon_break', rate: 0.2}, {id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'book_slow', rate: 0.5}, {id:'book_summon', rate: 0.02}] },
         { id: 'casto_king', name: '卡司特王', level: 33, hp: 300, ac: -13, exp: 1090, atkSpeed: 2000, dice: '4d12+5', hitBonus: 5, weight: 67, adena: [184,302], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'book_slow', rate: 0.5}, {id:'book_full_heal', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] }
     ]},
     gludio_1f: { name: '古魯丁地監1樓', monsters: [
         { id: 'orc', name: '妖魔', level: 2, hp: 6, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'dagger_orc', rate: 1}, {id:'short_sword_orc', rate: 5}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'book_light', rate: 1}] },
-        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 92, adena: [20,45], drops: [{id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
+        { id: 'orc_fighter', name: '妖魔鬥士', level: 8, hp: 50, ac: 5, exp: 65, atkSpeed: 2000, dice: '1d12', weight: 92, adena: [20,45], drops: [{id:'book_knight_reduction_armor', rate: 0.05}, {id:'helm_orc', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'orc_cloak', rate: 5}, {id:'antic_chain_mail', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'chain_mail_orc', rate: 1}, {id:'arkai_shield', rate: 10}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'helm_skeleton', rate: 1}, {id:'armor_skeleton', rate: 1}, {id:'shield_skeleton', rate: 1}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}] }
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}] }
     ]},
     gludio_2f: { name: '古魯丁地監2樓', monsters: [
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 85, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'helm_skeleton', rate: 1}, {id:'armor_skeleton', rate: 1}, {id:'shield_skeleton', rate: 1}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 86, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] }
     ]},
     gludio_3f: { name: '古魯丁地監3樓', monsters: [
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 85, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'helm_skeleton', rate: 1}, {id:'armor_skeleton', rate: 1}, {id:'shield_skeleton', rate: 1}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 86, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] }
     ]},
     gludio_4f: { name: '古魯丁地監4樓', monsters: [
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 85, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'helm_skeleton', rate: 1}, {id:'armor_skeleton', rate: 1}, {id:'shield_skeleton', rate: 1}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 86, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] }
     ]},
     gludio_5f: { name: '古魯丁地監5樓', monsters: [
         { id: 'zombie', name: '人形殭屍', level: 6, hp: 45, ac: 8, exp: 37, atkSpeed: 2000, dice: '2d4', isUndead: true, weight: 85, adena: [10,120], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_dark', rate: 0.1}, {id:'book_zombie', rate: 0.1}] },
         { id: 'skeleton', name: '骷髏', level: 10, hp: 80, ac: 3, exp: 101, atkSpeed: 2000, dice: '1d8+4', isUndead: true, weight: 90, adena: [25,54], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}, {id:'book_dex', rate: 0.5}, {id:'helm_skeleton', rate: 1}, {id:'armor_skeleton', rate: 1}, {id:'shield_skeleton', rate: 1}] },
         { id: 'cerberus', name: '夏洛伯', level: 14, hp: 100, ac: 3, exp: 101, atkSpeed: 1000, dice: '1d8+1', weight: 86, adena: [41,78], drops: [{id:'book_slow', rate: 0.5}, {id:'book_earth', rate: 0.1}, {id:'book_sleep_mist', rate: 0.2}] },
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
-        { id: 'death_knight', name: '死亡騎士', level: 52, hp: 4000, ac: -67, mr: 65, exp: 3026, atkSpeed: 1200, dice: '5d8+12', hitBonus: 18, isBoss: true, weight: 15, adena: [1500,3000], drops: [
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
+        { id: 'death_knight', name: '死亡騎士', level: 52, hp: 4000, ac: -67, mr: 65, exp: 3026, atkSpeed: 1200, dice: '5d8+12', hitBonus: 18, isBoss: true, weight: 15, adena: [1500,3000], drops: [{id:'book_knight_shock_stun', rate: 0.3}, 
             {id:'katana', rate: 10}, {id:'sword_two_handed', rate: 10}, {id:'sword_dk_fire', rate: 1}, {id:'helm_dk', rate: 5}, {id:'armor_dk', rate: 5}, {id:'gloves_dk', rate: 5}, {id:'boots_dk', rate: 5},
             {id:'antic_chain_mail', rate: 10}, {id:'armor_metal', rate: 10}, {id:'gloves_normal', rate: 10}, {id:'amulet_str', rate: 3}, {id:'ring_wind', rate: 1.5}, {id:'belt_soul', rate: 0.1}, {id:'belt_mind', rate: 0.1},
             {id:'book_vampire', rate: 5}, {id:'book_tame', rate: 3}, {id:'book_str_buff', rate: 1}, {id:'book_fire_arrow', rate: 2}, {id:'book_tornado', rate: 1}, {id:'book_disease', rate: 1}, {id:'book_resurrect', rate: 50}, {id:'book_immune', rate: 0.3}, {id:'book_fire_storm', rate: 0.5}
         ] }
     ]},
     gludio_6f: { name: '古魯丁地監6樓', monsters: [
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
-        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
+        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'book_str_buff', rate: 0.08}, {id:'crystal_dark_shadow_armor', rate: 0.05}, {id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] },
         { id: 'wizard', name: '魔法師', level: 42, hp: 800, ac: -32, exp: 1765, atkSpeed: 2000, dice: '4d10+7', hitBonus: 13, weight: 58, adena: [292,470], drops: [{id:'staff_mana', rate: 1}, {id:'cloak_protector', rate: 5}, {id:'gloves_normal', rate: 1}, {id:'amulet_dex', rate: 0.1}, {id:'amulet_str', rate: 0.3}, {id:'amulet_int', rate: 0.1}, {id:'amulet_wis', rate: 0.1}, {id:'book_high_heal', rate: 0.5}, {id:'book_dex', rate: 0.5}, {id:'book_call_lightning', rate: 0.8}, {id:'book_greater_haste', rate: 0.1}] }
     ]},
     gludio_7f: { name: '古魯丁地監7樓', monsters: [
-        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'ghoul', name: '食屍鬼', level: 16, hp: 110, ac: -4, exp: 257, atkSpeed: 2000, dice: '2d10+3', isUndead: true, weight: 84, adena: [50,93], drops: [{id:'book_slow', rate: 0.5}, {id:'book_zombie', rate: 0.25}, {id:'book_berserker', rate: 0.1}, {id:'book_enchant_weapon', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}, {id:'dagger_mithril', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'troll', name: '食人妖精', level: 22, hp: 250, ac: -6, exp: 485, atkSpeed: 2000, dice: '3d8+5', hitBonus: 3, weight: 78, adena: [46,359], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_fire_arrow', rate: 0.2}] },
-        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
-        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] }
+        { id: 'hellhound', name: '地獄犬', level: 24, hp: 120, ac: -20, exp: 577, atkSpeed: 2000, dice: '3d10+3', hitBonus: 3, weight: 76, adena: [102,173], drops: [{id:'crystal_elf_fire_weapon', rate: 0.05}, {id:'magic_staff', rate: 2}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_immune', rate: 0.03}] },
+        { id: 'troll_king', name: '食人妖精王', level: 30, hp: 400, ac: -13, exp: 901, atkSpeed: 2000, dice: '4d8+6', hitBonus: 5, weight: 70, adena: [153,254], drops: [{id:'book_str_buff', rate: 0.08}, {id:'crystal_dark_shadow_armor', rate: 0.05}, {id:'club', rate: 5}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_disease', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] }
     ]},
     dragon_valley: { name: '龍之谷', monsters: [
-        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [135,225], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'gloves_str', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [135,225], drops: [{id:'book_str_buff', rate: 0.08}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'gloves_str', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
         { id: 'skeleton_guard', name: '骷髏警衛', level: 27, hp: 270, ac: -15, exp: 730, atkSpeed: 2000, dice: '4d10', hitBonus: 5, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'steel_helmet', rate: 1}, {id:'broad_spear', rate: 5}] },
-        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
+        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'bow_lastabad', rate: 0.06}, {id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
         { id: 'skeleton_fighter', name: '骷髏鬥士', level: 29, hp: 280, ac: -15, exp: 842, atkSpeed: 2000, dice: '3d10+10', hitBonus: 5, isUndead: true, weight: 71, adena: [70,210], drops: [{id:'ring', rate: 0.8}, {id:'book_dex', rate: 0.5}, {id:'book_haste', rate: 0.1}, {id:'battle_axe', rate: 2}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}] },
-        { id: 'scorpion', name: '毒蠍', level: 26, hp: 200, ac: -15, exp: 677, atkSpeed: 2000, dice: '4d6+12', hitBonus: 5, weight: 74, adena: [60,150], drops: [{id:'helm_dex_magic', rate: 0.5}, {id:'book_call_lightning', rate: 0.8}, {id:'book_cancel', rate: 0.1}, {id:'book_quake', rate: 0.05}] },
-        { id: 'arian', name: '亞力安', level: 34, hp: 500, ac: -20, exp: 1157, atkSpeed: 2000, dice: '4d8+8', hitBonus: 7, weight: 66, adena: [0,0], drops: [{id:'book_high_heal', rate: 0.5}, {id:'book_slow', rate: 0.5}, {id:'book_earth_prison', rate: 0.6}, {id:'book_haste', rate: 0.1}, {id:'book_earth', rate: 0.1}, {id:'book_quake', rate: 0.05}, {id:'book_greater_haste', rate: 0.1}] },
+        { id: 'scorpion', name: '毒蠍', level: 26, hp: 200, ac: -15, exp: 677, atkSpeed: 2000, dice: '4d6+12', hitBonus: 5, weight: 74, adena: [60,150], drops: [{id:'crystal_dark_enchant_venom', rate: 0.35}, {id:'helm_dex_magic', rate: 0.5}, {id:'book_call_lightning', rate: 0.8}, {id:'book_cancel', rate: 0.1}, {id:'book_quake', rate: 0.05}] },
+        { id: 'arian', name: '亞力安', level: 34, hp: 500, ac: -20, exp: 1157, atkSpeed: 2000, dice: '4d8+8', hitBonus: 7, weight: 66, adena: [0,0], drops: [{id:'crystal_elf_storm_shot', rate: 0.02}, {id:'book_high_heal', rate: 0.5}, {id:'book_slow', rate: 0.5}, {id:'book_earth_prison', rate: 0.6}, {id:'book_haste', rate: 0.1}, {id:'book_earth', rate: 0.1}, {id:'book_quake', rate: 0.05}, {id:'book_greater_haste', rate: 0.1}] },
         { id: 'harpy', name: '哈維', level: 26, hp: 230, ac: -18, exp: 677, atkSpeed: 1000, dice: '2d8+8', hitBonus: 9, weight: 74, adena: [118,198], drops: [{id:'book_vampire', rate: 0.5}, {id:'book_haste', rate: 0.1}, {id:'book_greater_haste', rate: 0.1}, {id:'ring_harpy', rate: 0.01}, {id:'bow_hunter', rate: 1}, {id:'crossbow', rate: 0.4}] },
-        { id: 'black_elder', name: '黑長者', level: 50, hp: 1500, ac: -45, mr: 90, exp: 2501, atkSpeed: 2000, dice: '6d8+8', hitBonus: 16, isBoss: true, weight: 26, adena: [0,0], drops: [{id:'hammer_thor', rate: 0.005}, {id:'robe_black_elder', rate: 0.05}, {id:'sandals_black_elder', rate: 0.05}, {id:'book_blizzard', rate: 0.1}, {id:'book_tornado', rate: 0.1}, {id:'helm_antic_magic', rate: 0.1}, {id:'antic_cloak', rate: 1}, {id:'gloves_normal', rate: 1}, {id:'claw_dark', rate: 0.2}, {id:'dual_blade_dark', rate: 0.2}] },
-        { id: 'wyrm', name: '飛龍', level: 48, hp: 1800, ac: -45, mr: 70, exp: 5777, atkSpeed: 2000, dice: '7d8+10', hitBonus: 18, weight: 24, adena: [0,0], drops: [{id:'dagger_ori', rate: 0.1}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_tame', rate: 0.3}, {id:'book_str_buff', rate: 0.1}, {id:'book_haste', rate: 0.1}, {id:'book_summon', rate: 0.02}, {id:'book_greater_haste', rate: 0.1}, {id:'book_quake', rate: 0.05}, {id:'wyrm_claw', rate: 0.5}, {id:'gem_high_ruby', rate: 0.3}, {id:'gem_high_sapphire', rate: 0.3}] }
+        { id: 'black_elder', name: '黑長者', level: 50, hp: 1500, ac: -45, mr: 90, exp: 2501, atkSpeed: 2000, dice: '6d8+8', hitBonus: 16, isBoss: true, weight: 26, adena: [0,0], drops: [{id:'book_immune', rate: 0.1}, {id:'book_lightning_storm', rate: 0.15}, {id:'hammer_thor', rate: 0.005}, {id:'robe_black_elder', rate: 0.05}, {id:'sandals_black_elder', rate: 0.05}, {id:'book_blizzard', rate: 0.1}, {id:'book_tornado', rate: 0.1}, {id:'helm_antic_magic', rate: 0.1}, {id:'antic_cloak', rate: 1}, {id:'gloves_normal', rate: 1}, {id:'claw_dark', rate: 0.2}, {id:'dual_blade_dark', rate: 0.2}] },
+        { id: 'wyrm', name: '飛龍', level: 48, hp: 1800, ac: -45, mr: 70, exp: 5777, atkSpeed: 2000, dice: '7d8+10', hitBonus: 18, weight: 24, adena: [0,0], drops: [{id:'book_sleep_mist', rate: 0.01}, {id:'crystal_elf_iron_skin', rate: 0.02}, {id:'dagger_ori', rate: 0.1}, {id:'book_fireball', rate: 0.5}, {id:'book_weapon_break', rate: 0.4}, {id:'book_tame', rate: 0.3}, {id:'book_str_buff', rate: 0.1}, {id:'book_haste', rate: 0.1}, {id:'book_summon', rate: 0.02}, {id:'book_greater_haste', rate: 0.1}, {id:'book_quake', rate: 0.05}, {id:'wyrm_claw', rate: 0.5}, {id:'gem_high_ruby', rate: 0.3}, {id:'gem_high_sapphire', rate: 0.3}] }
     ]},
     dragon_valley_1f: { name: '龍之谷地監1樓', monsters: [
-        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}] },
-        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
+        { id: 'spartoi', name: '史巴托', level: 16, hp: 120, ac: -3, exp: 257, atkSpeed: 2000, dice: '3d6+4', hitBonus: 2, isUndead: true, weight: 84, adena: [50,93], drops: [{id:'dual_spike', rate: 0.06}, {id:'scimitar', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'shield_large', rate: 3}, {id:'armor_bronze', rate: 0.3}, {id:'book_enchant_weapon', rate: 0.5}, {id:'book_detection', rate: 0.5}] },
+        { id: 'yangolian', name: '楊果里恩', level: 18, hp: 200, ac: -5, exp: 325, atkSpeed: 1000, dice: '2d8+3', hitBonus: 2, weight: 82, adena: [61,110], drops: [{id:'book_disease', rate: 0.3}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_sleep_mist', rate: 0.2}] },
         { id: 'skeleton_guard', name: '骷髏警衛', level: 27, hp: 270, ac: -15, exp: 730, atkSpeed: 2000, dice: '4d10', hitBonus: 5, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'steel_helmet', rate: 1}, {id:'broad_spear', rate: 5}] },
-        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
+        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'bow_lastabad', rate: 0.06}, {id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
         { id: 'skeleton_fighter', name: '骷髏鬥士', level: 29, hp: 280, ac: -15, exp: 842, atkSpeed: 2000, dice: '3d10+10', hitBonus: 5, isUndead: true, weight: 71, adena: [70,210], drops: [{id:'ring', rate: 0.8}, {id:'book_dex', rate: 0.5}, {id:'book_haste', rate: 0.1}, {id:'battle_axe', rate: 2}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}] },
-        { id: 'doro', name: '多羅', level: 28, hp: 270, ac: -15, exp: 785, atkSpeed: 2000, dice: '4d10', hitBonus: 5, weight: 72, adena: [135,225], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_doro', rate: 0.3}, {id:'book_high_heal', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_full_heal', rate: 0.1}] }
+        { id: 'doro', name: '多羅', level: 28, hp: 270, ac: -15, exp: 785, atkSpeed: 2000, dice: '4d10', hitBonus: 5, weight: 72, adena: [135,225], drops: [{id:'dual_steel', rate: 0.05}, {id:'claw_bronze', rate: 0.06}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_doro', rate: 0.3}, {id:'book_high_heal', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_full_heal', rate: 0.1}] }
     ]},
     dragon_valley_2f: { name: '龍之谷地監2樓', monsters: [
         { id: 'skeleton_guard', name: '骷髏警衛', level: 27, hp: 270, ac: -15, exp: 730, atkSpeed: 2000, dice: '4d10', hitBonus: 5, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'steel_helmet', rate: 1}, {id:'broad_spear', rate: 5}] },
-        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
+        { id: 'skeleton_marksman', name: '骷髏神射手', level: 27, hp: 250, ac: -15, exp: 730, atkSpeed: 2000, dice: '2d15+10', hitBonus: 9, isUndead: true, weight: 73, adena: [70,210], drops: [{id:'bow_lastabad', rate: 0.06}, {id:'book_dex', rate: 0.5}, {id:'book_tame', rate: 0.3}] },
         { id: 'skeleton_fighter', name: '骷髏鬥士', level: 29, hp: 280, ac: -15, exp: 842, atkSpeed: 2000, dice: '3d10+10', hitBonus: 5, isUndead: true, weight: 71, adena: [70,210], drops: [{id:'ring', rate: 0.8}, {id:'book_dex', rate: 0.5}, {id:'book_haste', rate: 0.1}, {id:'battle_axe', rate: 2}, {id:'antic_cloak', rate: 1}, {id:'shield_large', rate: 3}] },
-        { id: 'doro', name: '多羅', level: 28, hp: 270, ac: -15, exp: 785, atkSpeed: 2000, dice: '4d10', hitBonus: 5, weight: 72, adena: [135,225], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_doro', rate: 0.3}, {id:'book_high_heal', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_full_heal', rate: 0.1}] },
+        { id: 'doro', name: '多羅', level: 28, hp: 270, ac: -15, exp: 785, atkSpeed: 2000, dice: '4d10', hitBonus: 5, weight: 72, adena: [135,225], drops: [{id:'dual_steel', rate: 0.05}, {id:'claw_bronze', rate: 0.06}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_doro', rate: 0.3}, {id:'book_high_heal', rate: 0.5}, {id:'book_zombie', rate: 0.1}, {id:'book_full_heal', rate: 0.1}] },
         { id: 'monia', name: '莫妮亞', level: 30, hp: 350, ac: -12, exp: 901, atkSpeed: 1000, dice: '2d10+7', hitBonus: 8, weight: 70, adena: [145,235], drops: [{id:'cloak_protector', rate: 5}, {id:'book_high_heal', rate: 0.5}, {id:'book_slow', rate: 0.5}] }
     ]},
     heine_lake: { name: '海音湖岸', monsters: [
         { id: 'crocodile', name: '鱷魚', level: 35, hp: 520, ac: -22, exp: 1320, atkSpeed: 2000, dice: '4d8+8', hitBonus: 8, weight: 82, adena: [160,260], drops: [{id:'helm_heal_magic', rate: 0.4}, {id:'potion_haste', rate: 3}, {id:'gem_emerald', rate: 2}, {id:'gem_sapphire', rate: 1.5}] },
         { id: 'cave_dweller', name: '穴居人', level: 40, hp: 720, ac: -28, exp: 1600, atkSpeed: 2000, dice: '4d10+10', hitBonus: 10, weight: 76, adena: [200,330], drops: [{id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'armor_rattan', rate: 2}, {id:'gem_diamond', rate: 2}, {id:'gem_quality_diamond', rate: 0.4}] },
-        { id: 'lamia', name: '蛇女', level: 45, hp: 900, ac: -34, exp: 1900, atkSpeed: 1800, dice: '5d8+12', hitBonus: 12, weight: 68, adena: [230,380], drops: [{id:'scroll_weapon', rate: 0.5}, {id:'book_weapon_break', rate: 0.3}, {id:'gem_ruby', rate: 2}, {id:'gem_quality_ruby', rate: 0.5}] },
-        { id: 'doppleganger', name: '變形怪', level: 48, hp: 1000, ac: -36, exp: 2150, atkSpeed: 1600, dice: '5d10+12', hitBonus: 13, weight: 60, adena: [250,420], drops: [{id:'potion_blue', rate: 2}, {id:'mana_cloak', rate: 0.08}, {id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.5}] },
+        { id: 'lamia', name: '蛇女', level: 45, hp: 900, ac: -34, exp: 1900, atkSpeed: 1800, dice: '5d8+12', hitBonus: 12, weight: 68, adena: [230,380], drops: [{id:'crystal_elf_fire_weapon', rate: 0.12}, {id:'scroll_weapon', rate: 0.5}, {id:'book_weapon_break', rate: 0.3}, {id:'gem_ruby', rate: 2}, {id:'gem_quality_ruby', rate: 0.5}] },
+        { id: 'doppleganger', name: '變形怪', level: 48, hp: 1000, ac: -36, exp: 2150, atkSpeed: 1600, dice: '5d10+12', hitBonus: 13, weight: 60, adena: [250,420], drops: [{id:'crossbow_shadow', rate: 0.02}, {id:'crossbow_dark', rate: 0.02}, {id:'potion_blue', rate: 2}, {id:'mana_cloak', rate: 0.08}, {id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.5}] },
         { id: 'giant_crocodile', name: '巨大鱷魚', level: 52, hp: 1400, ac: -40, exp: 2600, atkSpeed: 2000, dice: '6d10+14', hitBonus: 15, weight: 42, adena: [300,520], drops: [{id:'scroll_armor', rate: 0.8}, {id:'book_call_lightning', rate: 0.2}, {id:'eva_shield', rate: 0.08}, {id:'gem_quality_emerald', rate: 0.5}, {id:'gem_quality_sapphire', rate: 0.5}] }
     ]},
     eva_kingdom: { name: '伊娃王國地監', monsters: [
         { id: 'crabman', name: '蟹人', level: 48, hp: 950, ac: -36, exp: 2150, atkSpeed: 2000, dice: '5d10+10', hitBonus: 12, weight: 74, adena: [250,420], drops: [{id:'scroll_armor', rate: 0.4}, {id:'book_str_buff', rate: 0.2}, {id:'gem_sapphire', rate: 3}, {id:'gem_quality_sapphire', rate: 0.6}] },
         { id: 'starfish', name: '海星', level: 52, hp: 1150, ac: -38, exp: 2500, atkSpeed: 1800, dice: '5d12+10', hitBonus: 14, weight: 70, adena: [280,450], drops: [{id:'potion_haste', rate: 4}, {id:'potion_blue', rate: 2}, {id:'gem_emerald', rate: 2}, {id:'gem_quality_emerald', rate: 0.6}] },
         { id: 'shark', name: '鯊魚', level: 55, hp: 1400, ac: -42, exp: 2900, atkSpeed: 1600, dice: '6d10+14', hitBonus: 16, weight: 62, adena: [320,520], drops: [{id:'mana_cloak', rate: 0.06}, {id:'belt_mind', rate: 0.03}, {id:'gem_sapphire', rate: 3}, {id:'gem_quality_sapphire', rate: 0.8}] },
-        { id: 'water_spirit_lord', name: '水靈王', level: 62, hp: 2600, ac: -50, mr: 65, exp: 3800, atkSpeed: 1800, dice: '7d10+18', hitBonus: 20, isBoss: true, weight: 18, adena: [600,1100], drops: [{id:'eva_shield', rate: 0.3}, {id:'water_dragon_scale', rate: 0.3}, {id:'gem_high_sapphire', rate: 0.5}, {id:'gem_high_emerald', rate: 0.3}] },
+        { id: 'water_spirit_lord', name: '水靈王', level: 62, hp: 2600, ac: -50, mr: 65, exp: 3800, atkSpeed: 1800, dice: '7d10+18', hitBonus: 20, isBoss: true, weight: 18, adena: [600,1100], drops: [{id:'crystal_elf_iron_skin', rate: 0.3}, {id:'eva_shield', rate: 0.3}, {id:'water_dragon_scale', rate: 0.3}, {id:'gem_high_sapphire', rate: 0.5}, {id:'gem_high_emerald', rate: 0.3}] },
         { id: 'fafurion', name: '法利昂', level: 90, hp: 82000, ac: -98, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+22', hitBonus: 35, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'katana', rate: 3}, {id:'armor_crystal', rate: 3}, {id:'eva_shield', rate: 1}, {id:'water_dragon_scale', rate: 5}, {id:'water_dragon_scale_armor', rate: 0.05}, {id:'gem_high_sapphire', rate: 2}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     fire_dragon_cave: { name: '火龍窟', monsters: [
@@ -800,29 +800,29 @@ const MAPS = {
         { id: 'fire_salamander', name: '火蜥蜴', level: 62, hp: 1700, ac: -50, exp: 3800, atkSpeed: 1800, dice: '6d12+18', hitBonus: 20, weight: 58, adena: [400,700], drops: [{id:'book_fire_storm', rate: 0.15}, {id:'fire_dragon_scale', rate: 0.4}, {id:'gem_quality_ruby', rate: 1}, {id:'gem_high_ruby', rate: 0.15}] },
         { id: 'fire_egg', name: '火炎蛋', level: 63, hp: 2100, ac: -52, exp: 4000, atkSpeed: 2200, dice: '6d10+20', hitBonus: 18, weight: 54, adena: [430,760], drops: [{id:'scroll_armor', rate: 0.8}, {id:'fire_dragon_scale', rate: 0.5}, {id:'gem_quality_ruby', rate: 1}, {id:'gem_high_ruby', rate: 0.15}] },
         { id: 'lava_golem', name: '熔岩高崙', level: 68, hp: 3200, ac: -58, exp: 4800, atkSpeed: 2200, dice: '7d12+22', hitBonus: 22, weight: 38, adena: [520,900], drops: [{id:'armor_metal', rate: 1}, {id:'fire_dragon_scale', rate: 0.5}, {id:'gem_quality_diamond', rate: 1}, {id:'gem_high_diamond', rate: 0.15}] },
-        { id: 'ifrit', name: '伊弗利特', level: 75, hp: 9000, ac: -70, mr: 70, exp: 6500, atkSpeed: 1600, dice: '8d10+25', hitBonus: 26, isBoss: true, weight: 10, adena: [900,1800], drops: [{id:'katana', rate: 1}, {id:'fire_dragon_scale', rate: 2}, {id:'book_fire_storm', rate: 0.5}, {id:'gem_high_ruby', rate: 0.8}] },
+        { id: 'ifrit', name: '伊弗利特', level: 75, hp: 9000, ac: -70, mr: 70, exp: 6500, atkSpeed: 1600, dice: '8d10+25', hitBonus: 26, isBoss: true, weight: 10, adena: [900,1800], drops: [{id:'crystal_elf_elemental_fire', rate: 0.15}, {id:'katana', rate: 1}, {id:'fire_dragon_scale', rate: 2}, {id:'book_fire_storm', rate: 0.5}, {id:'gem_high_ruby', rate: 0.8}] },
         { id: 'phoenix', name: '不死鳥', level: 80, hp: 18000, ac: -78, mr: 85, exp: 7600, atkSpeed: 1400, dice: '8d12+28', hitBonus: 30, isBoss: true, weight: 6, adena: [1200,2400], drops: [{id:'katana', rate: 2}, {id:'scroll_weapon_blessed', rate: 0.3}, {id:'fire_dragon_scale', rate: 3}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_diamond', rate: 0.4}] },
-        { id: 'valakas', name: '巴拉卡斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+24', hitBonus: 36, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'fire_dragon_scale', rate: 5}, {id:'fire_dragon_scale_armor', rate: 0.05}, {id:'valakas_heart', rate: 0.05}, {id:'katana', rate: 3}, {id:'scroll_weapon_blessed', rate: 0.5}, {id:'gem_high_ruby', rate: 2}, {id:'gem_high_diamond', rate: 1}] }
+        { id: 'valakas', name: '巴拉卡斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+24', hitBonus: 36, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'crystal_elf_elemental_fire', rate: 0.2}, {id:'book_fire_storm', rate: 0.2}, {id:'fire_dragon_scale', rate: 5}, {id:'fire_dragon_scale_armor', rate: 0.05}, {id:'valakas_heart', rate: 0.05}, {id:'katana', rate: 3}, {id:'scroll_weapon_blessed', rate: 0.5}, {id:'gem_high_ruby', rate: 2}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     oren_ivory: { name: '歐瑞與象牙塔', monsters: [
         { id: 'ice_man', name: '冰人', level: 58, hp: 1400, ac: -45, exp: 3300, atkSpeed: 2000, dice: '6d10+14', hitBonus: 17, weight: 70, adena: [330,580], drops: [{id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.8}, {id:'potion_blue', rate: 2}] },
         { id: 'snow_tiger', name: '冰原老虎', level: 60, hp: 1500, ac: -48, exp: 3500, atkSpeed: 1400, dice: '6d12+14', hitBonus: 22, weight: 68, adena: [350,600], drops: [{id:'potion_haste', rate: 4}, {id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.6}] },
-        { id: 'iron_golem', name: '鋼鐵高崙', level: 65, hp: 3600, ac: -60, exp: 4300, atkSpeed: 2200, dice: '7d12+22', hitBonus: 22, weight: 44, adena: [450,820], drops: [{id:'armor_metal', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'gem_quality_diamond', rate: 1}, {id:'gem_high_diamond', rate: 0.15}] },
+        { id: 'iron_golem', name: '鋼鐵高崙', level: 65, hp: 3600, ac: -60, exp: 4300, atkSpeed: 2200, dice: '7d12+22', hitBonus: 22, weight: 44, adena: [450,820], drops: [{id:'sword_damascus_two_handed', rate: 0.02}, {id:'armor_metal', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'gem_quality_diamond', rate: 1}, {id:'gem_high_diamond', rate: 0.15}] },
         { id: 'living_armor', name: '活鎧甲', level: 62, hp: 2200, ac: -54, exp: 3800, atkSpeed: 1800, dice: '7d10+18', hitBonus: 20, weight: 58, adena: [390,720], drops: [{id:'armor_metal', rate: 1}, {id:'scroll_armor', rate: 0.5}, {id:'gem_quality_diamond', rate: 0.6}] },
-        { id: 'ivory_wizard', name: '象牙塔魔法師', level: 66, hp: 2400, ac: -55, mr: 75, exp: 4500, atkSpeed: 2000, dice: '7d10+20', hitBonus: 22, weight: 48, adena: [500,900], drops: [{id:'book_blizzard', rate: 0.3}, {id:'book_tornado', rate: 0.3}, {id:'mana_cloak', rate: 0.08}, {id:'gem_quality_sapphire', rate: 0.8}] },
-        { id: 'ice_queen', name: '冰之女王', level: 82, hp: 20000, ac: -80, mr: 95, exp: 7800, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 5, adena: [1300,2600], drops: [{id:'ice_queen_staff', rate: 0.2}, {id:'ice_queen_earring', rate: 0.2}, {id:'scroll_armor_blessed', rate: 0.3}, {id:'gem_high_sapphire', rate: 1.5}, {id:'gem_high_diamond', rate: 0.6}] },
-        { id: 'demon', name: '惡魔', level: 85, hp: 26000, ac: -84, mr: 95, exp: 8000, atkSpeed: 1500, dice: '8d12+30', hitBonus: 32, isBoss: true, weight: 4, adena: [1500,3000], drops: [{id:'demon_blood', rate: 2}, {id:'book_immune', rate: 0.3}, {id:'scroll_weapon_blessed', rate: 0.3}, {id:'gem_high_diamond', rate: 1}, {id:'gem_high_ruby', rate: 0.5}] }
+        { id: 'ivory_wizard', name: '象牙塔魔法師', level: 66, hp: 2400, ac: -55, mr: 75, exp: 4500, atkSpeed: 2000, dice: '7d10+20', hitBonus: 22, weight: 48, adena: [500,900], drops: [{id:'crystal_dark_armor_break', rate: 0.01}, {id:'bow_ivory_long', rate: 0.03}, {id:'book_blizzard', rate: 0.3}, {id:'book_tornado', rate: 0.3}, {id:'mana_cloak', rate: 0.08}, {id:'gem_quality_sapphire', rate: 0.8}] },
+        { id: 'ice_queen', name: '冰之女王', level: 82, hp: 20000, ac: -80, mr: 95, exp: 7800, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 5, adena: [1300,2600], drops: [{id:'book_blizzard', rate: 0.2}, {id:'ice_queen_staff', rate: 0.2}, {id:'ice_queen_earring', rate: 0.2}, {id:'scroll_armor_blessed', rate: 0.3}, {id:'gem_high_sapphire', rate: 1.5}, {id:'gem_high_diamond', rate: 0.6}] },
+        { id: 'demon', name: '惡魔', level: 85, hp: 26000, ac: -84, mr: 95, exp: 8000, atkSpeed: 1500, dice: '8d12+30', hitBonus: 32, isBoss: true, weight: 4, adena: [1500,3000], drops: [{id:'book_knight_counter_barrier', rate: 0.1}, {id:'claw_hades', rate: 0.05}, {id:'demon_blood', rate: 2}, {id:'book_immune', rate: 0.3}, {id:'scroll_weapon_blessed', rate: 0.3}, {id:'gem_high_diamond', rate: 1}, {id:'gem_high_ruby', rate: 0.5}] }
     ]},
     forgotten_island: { name: '遺忘之島', monsters: [
         { id: 'harpy_queen', name: '哈維女皇', level: 72, hp: 8000, ac: -68, mr: 60, exp: 6000, atkSpeed: 1300, dice: '7d12+22', hitBonus: 28, isBoss: true, weight: 14, adena: [800,1600], drops: [{id:'ring_harpy', rate: 0.2}, {id:'ancient_scroll', rate: 0.5}, {id:'gem_high_emerald', rate: 0.6}, {id:'gem_high_sapphire', rate: 0.4}] },
         { id: 'arian_king', name: '亞力安王', level: 74, hp: 9000, ac: -70, mr: 65, exp: 6300, atkSpeed: 1600, dice: '8d10+24', hitBonus: 28, isBoss: true, weight: 13, adena: [850,1700], drops: [{id:'ancient_scroll', rate: 0.5}, {id:'scroll_weapon', rate: 1}, {id:'gem_high_ruby', rate: 0.5}, {id:'gem_high_emerald', rate: 0.5}] },
-        { id: 'wyrm_king', name: '飛龍王', level: 78, hp: 13000, ac: -76, mr: 80, exp: 7200, atkSpeed: 1600, dice: '8d12+26', hitBonus: 31, isBoss: true, weight: 10, adena: [1000,2000], drops: [{id:'wyrm_claw', rate: 1}, {id:'ancient_scroll', rate: 0.6}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_sapphire', rate: 1}] },
+        { id: 'wyrm_king', name: '飛龍王', level: 78, hp: 13000, ac: -76, mr: 80, exp: 7200, atkSpeed: 1600, dice: '8d12+26', hitBonus: 31, isBoss: true, weight: 10, adena: [1000,2000], drops: [{id:'claw_beast_king', rate: 0.05}, {id:'wyrm_claw', rate: 1}, {id:'ancient_scroll', rate: 0.6}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_sapphire', rate: 1}] },
         { id: 'ogre_king_fi', name: '歐吉王', level: 76, hp: 12000, ac: -74, mr: 55, exp: 6800, atkSpeed: 2000, dice: '8d12+28', hitBonus: 28, isBoss: true, weight: 12, adena: [900,1800], drops: [{id:'belt_ogre', rate: 0.3}, {id:'ancient_scroll', rate: 0.5}, {id:'gem_high_diamond', rate: 0.7}, {id:'gem_high_emerald', rate: 0.4}] },
         { id: 'great_minotaur', name: '巨大牛人', level: 80, hp: 16000, ac: -80, mr: 70, exp: 7600, atkSpeed: 1800, dice: '8d12+30', hitBonus: 31, isBoss: true, weight: 8, adena: [1100,2200], drops: [{id:'ancient_scroll', rate: 0.8}, {id:'ancient_great_sword', rate: 0.1}, {id:'gem_high_diamond', rate: 1}, {id:'gem_high_ruby', rate: 0.5}] },
-        { id: 'ancient_guardian', name: '古代守護者', level: 88, hp: 42000, ac: -90, mr: 95, exp: 8101, atkSpeed: 1700, dice: '9d12+34', hitBonus: 34, isBoss: true, weight: 3, adena: [1800,3600], drops: [{id:'ancient_scroll', rate: 2}, {id:'ancient_great_sword', rate: 0.2}, {id:'ancient_leather_armor', rate: 0.2}, {id:'gem_high_diamond', rate: 1.5}, {id:'gem_high_sapphire', rate: 1}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_emerald', rate: 1}] }
+        { id: 'ancient_guardian', name: '古代守護者', level: 88, hp: 42000, ac: -90, mr: 95, exp: 8101, atkSpeed: 1700, dice: '9d12+34', hitBonus: 34, isBoss: true, weight: 3, adena: [1800,3600], drops: [{id:'ancient_sword', rate: 0.01}, {id:'ancient_crossbow', rate: 0.01}, {id:'ancient_dual_blade', rate: 0.01}, {id:'ancient_staff', rate: 0.01}, {id:'ancient_robe_armor', rate: 0.01}, {id:'ancient_metal_armor', rate: 0.01}, {id:'ancient_scroll', rate: 2}, {id:'ancient_great_sword', rate: 0.01}, {id:'ancient_leather_armor', rate: 0.01}, {id:'gem_high_diamond', rate: 1.5}, {id:'gem_high_sapphire', rate: 1}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_emerald', rate: 1}] }
     ]},
     antaras_lair: { name: '安塔瑞斯棲息地', monsters: [
-        { id: 'antaras', name: '安塔瑞斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+20', hitBonus: 35, isBoss: true, weight: 1, adena: [1305,2054], drops: [
+        { id: 'antaras', name: '安塔瑞斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+20', hitBonus: 35, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'book_knight_counter_barrier', rate: 0.2}, 
             {id:'katana', rate: 3}, {id:'sword_tsurugi', rate: 1}, {id:'armor_crystal', rate: 3}, {id:'armor_metal', rate: 1}, {id:'gloves_normal', rate: 1}, 
             {id:'amulet_wis', rate: 0.1}, {id:'amulet_con', rate: 0.1}, {id:'ring_earth', rate: 0.01}, {id:'belt_body', rate: 0.01}, {id:'belt_soul', rate: 0.01}, {id:'belt_mind', rate: 0.01}, 
             {id:'book_weapon_break', rate: 0.4}, {id:'book_slow', rate: 0.5}, {id:'book_tame', rate: 0.3}, {id:'book_str_buff', rate: 0.1}, {id:'book_earth', rate: 0.1}, {id:'book_full_heal', rate: 0.1}, {id:'book_summon', rate: 0.02}, {id:'book_resurrect', rate: 5}
@@ -858,11 +858,9 @@ Object.assign(ITEMS, {
     crystal_elf_soul_to_mind: { name: '精靈水晶(魂體轉換)', type: 'book', spellId: 'elf_soul_to_mind' },
     crystal_elf_triple_arrow: { name: '精靈水晶(三重矢)', type: 'book', spellId: 'elf_triple_arrow' },
     crystal_elf_clear_mind: { name: '精靈水晶(淨化精神)', type: 'book', spellId: 'elf_clear_mind', price: 40000 },
-    crystal_elf_resist_elemental: { name: '精靈水晶(屬性防禦)', type: 'book', spellId: 'elf_resist_elemental', price: 25000 },
     crystal_elf_fire_weapon: { name: '精靈水晶(火焰武器)', type: 'book', spellId: 'elf_fire_weapon', price: 30000 },
     crystal_elf_wind_shot: { name: '精靈水晶(風之神射)', type: 'book', spellId: 'elf_wind_shot', price: 30000 },
     crystal_elf_earth_skin: { name: '精靈水晶(大地防護)', type: 'book', spellId: 'elf_earth_skin', price: 30000 },
-    crystal_elf_water_life: { name: '精靈水晶(水之元氣)', type: 'book', spellId: 'elf_water_life' },
     crystal_elf_storm_shot: { name: '精靈水晶(暴風神射)', type: 'book', spellId: 'elf_storm_shot' },
     crystal_elf_iron_skin: { name: '精靈水晶(鋼鐵防護)', type: 'book', spellId: 'elf_iron_skin' },
     crystal_elf_elemental_fire: { name: '精靈水晶(烈焰之魂)', type: 'book', spellId: 'elf_elemental_fire' },
@@ -872,6 +870,7 @@ Object.assign(ITEMS, {
     crystal_dark_shadow_fang: { name: '黑暗精靈水晶(暗影之牙)', type: 'book', spellId: 'de_shadow_fang' },
     crystal_dark_uncanny_dodge: { name: '黑暗精靈水晶(暗影閃避)', type: 'book', spellId: 'de_uncanny_dodge' },
     crystal_dark_double_break: { name: '黑暗精靈水晶(雙重破壞)', type: 'book', spellId: 'de_double_break' },
+    crystal_dark_armor_break: { name: '黑暗精靈水晶(破壞盔甲)', type: 'book', spellId: 'de_armor_break' },
     crystal_dark_dress_mighty: { name: '黑暗精靈水晶(力量提升)', type: 'book', spellId: 'de_dress_mighty' },
     book_knight_shock_stun: { name: '技術書(衝擊之暈)', type: 'book', spellId: 'knight_shock_stun' },
     book_knight_reduction_armor: { name: '技術書(增幅防禦)', type: 'book', spellId: 'knight_reduction_armor' },
@@ -885,111 +884,71 @@ Object.assign(SPELLS, {
     elf_soul_to_mind: { id: 'elf_soul_to_mind', name: '魂體轉換', level: 3, type: 'mp_convert', mp: 0, hpCost: 50, mpGain: 15, classes: ['elf'] },
     elf_triple_arrow: { id: 'elf_triple_arrow', name: '三重矢', level: 3, type: 'buff', mp: 10, duration: 600, classes: ['elf'] },
     elf_clear_mind: { id: 'elf_clear_mind', name: '淨化精神', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'] },
-    elf_resist_elemental: { id: 'elf_resist_elemental', name: '屬性防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'] },
-    elf_fire_weapon: { id: 'elf_fire_weapon', name: '火焰武器', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
-    elf_wind_shot: { id: 'elf_wind_shot', name: '風之神射', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
-    elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
-    elf_water_life: { id: 'elf_water_life', name: '水之元氣', level: 4, type: 'buff', mp: 20, duration: 600, classes: ['elf'] },
-    elf_storm_shot: { id: 'elf_storm_shot', name: '暴風神射', level: 5, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
-    elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
-    elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 6, type: 'buff', mp: 30, duration: 1200, classes: ['elf'] },
+    elf_fire_weapon: { id: 'elf_fire_weapon', name: '火焰武器', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
+    elf_wind_shot: { id: 'elf_wind_shot', name: '風之神射', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
+    elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
+    elf_storm_shot: { id: 'elf_storm_shot', name: '暴風神射', level: 4, type: 'buff', mp: 16, duration: 1200, classes: ['elf'] },
+    elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
+    elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
     de_enchant_venom: { id: 'de_enchant_venom', name: '附加劇毒', level: 1, type: 'buff', mp: 8, duration: 1200, classes: ['dark_elf'] },
     de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 1, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'] },
     de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 2, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'] },
     de_shadow_fang: { id: 'de_shadow_fang', name: '暗影之牙', level: 2, type: 'buff', mp: 20, duration: 1200, classes: ['dark_elf'] },
     de_uncanny_dodge: { id: 'de_uncanny_dodge', name: '暗影閃避', level: 3, type: 'buff', mp: 25, duration: 600, classes: ['dark_elf'] },
     de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 3, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'] },
+    de_armor_break: { id: 'de_armor_break', name: '破壞盔甲', level: 4, type: 'buff', mp: 45, duration: 600, classes: ['dark_elf'] },
     de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 3, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'] },
     knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'] },
     knight_reduction_armor: { id: 'knight_reduction_armor', name: '增幅防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['knight'] },
-    knight_solid_carriage: { id: 'knight_solid_carriage', name: '堅固防護', level: 4, type: 'buff', mp: 15, duration: 600, classes: ['knight'] },
-    knight_counter_barrier: { id: 'knight_counter_barrier', name: '反擊屏障', level: 5, type: 'buff', mp: 20, duration: 600, classes: ['knight'] }
+    knight_solid_carriage: { id: 'knight_solid_carriage', name: '堅固防護', level: 3, type: 'buff', mp: 15, duration: 600, classes: ['knight'] },
+    knight_counter_barrier: { id: 'knight_counter_barrier', name: '反擊屏障', level: 3, type: 'buff', mp: 20, duration: 600, classes: ['knight'] }
 });
 
 Object.assign(MAPS, {
     giant_ant_cave: { name: '巨蟻洞穴', monsters: [
-        { id: 'giant_ant', name: '巨大螞蟻', level: 22, hp: 220, ac: -8, exp: 500, atkSpeed: 1800, dice: '3d8+6', hitBonus: 4, weight: 70, adena: [80,180], drops: [{id:'gem_diamond', rate: 2}, {id:'gem_quality_diamond', rate: 0.4}, {id:'shield_elven', rate: 0.2}] },
+        { id: 'giant_ant', name: '巨大螞蟻', level: 22, hp: 220, ac: -8, exp: 500, atkSpeed: 1800, dice: '3d8+6', hitBonus: 4, weight: 70, adena: [80,180], drops: [{id:'crystal_elf_earth_skin', rate: 0.08}, {id:'gem_diamond', rate: 2}, {id:'gem_quality_diamond', rate: 0.4}, {id:'shield_elven', rate: 0.2}] },
         { id: 'giant_ant_soldier', name: '巨大兵蟻', level: 28, hp: 420, ac: -18, exp: 820, atkSpeed: 1700, dice: '4d8+8', hitBonus: 6, weight: 62, adena: [140,260], drops: [{id:'armor_elven_chain', rate: 0.15}, {id:'gem_diamond', rate: 2}, {id:'gem_quality_diamond', rate: 0.5}] },
         { id: 'giant_ant_queen', name: '巨大蟻后', level: 58, hp: 9000, ac: -62, mr: 60, exp: 5200, atkSpeed: 1600, dice: '7d10+20', hitBonus: 24, isBoss: true, weight: 8, adena: [900,1800], drops: [{id:'ring_abyss', rate: 0.12}, {id:'scroll_armor_blessed', rate: 0.2}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     pirate_island: { name: '海賊島', monsters: [
         { id: 'kiwi_parrot', name: '奇異鸚鵡', level: 42, hp: 720, ac: -28, exp: 1700, atkSpeed: 1400, dice: '4d10+10', hitBonus: 12, weight: 70, adena: [190,330], drops: [{id:'potion_haste', rate: 3}, {id:'gem_emerald', rate: 2}] },
         { id: 'pirate_skeleton', name: '海賊骷髏', level: 48, hp: 1000, ac: -36, exp: 2200, atkSpeed: 1600, dice: '5d10+12', hitBonus: 15, isUndead: true, weight: 65, adena: [260,430], drops: [{id:'sword_silver_long', rate: 0.4}, {id:'dagger_ori', rate: 0.08}, {id:'crystal_elf_wind_shot', rate: 0.15}] },
-        { id: 'lizardman_warrior', name: '蜥蜴人戰士', level: 52, hp: 1350, ac: -42, exp: 2700, atkSpeed: 1700, dice: '6d10+14', hitBonus: 17, weight: 58, adena: [320,560], drops: [{id:'silver_sword', rate: 1}, {id:'helm_antic_magic', rate: 0.4}, {id:'crystal_dark_burning_spirit', rate: 0.12}] },
-        { id: 'drake_pirate', name: '海賊島飛龍', level: 68, hp: 9000, ac: -66, mr: 70, exp: 6100, atkSpeed: 1500, dice: '8d10+22', hitBonus: 27, isBoss: true, weight: 12, adena: [900,1900], drops: [{id:'bow_flame', rate: 0.15}, {id:'crystal_elf_storm_shot', rate: 0.25}, {id:'gem_high_ruby', rate: 0.8}] }
+        { id: 'lizardman_warrior', name: '蜥蜴人戰士', level: 52, hp: 1350, ac: -42, exp: 2700, atkSpeed: 1700, dice: '6d10+14', hitBonus: 17, weight: 58, adena: [320,560], drops: [{id:'dual_abyss', rate: 0.02}, {id:'dual_damascus', rate: 0.02}, {id:'claw_shadow_high', rate: 0.02}, {id:'silver_sword', rate: 1}, {id:'helm_antic_magic', rate: 0.4}, {id:'crystal_dark_burning_spirit', rate: 0.12}] },
+        { id: 'drake_pirate', name: '海賊島飛龍', level: 68, hp: 9000, ac: -66, mr: 70, exp: 6100, atkSpeed: 1500, dice: '8d10+22', hitBonus: 27, isBoss: true, weight: 12, adena: [900,1900], drops: [{id:'bow_flame', rate: 0.15}, {id:'crystal_elf_storm_shot', rate: 0.15}, {id:'gem_high_ruby', rate: 0.8}] }
     ]},
     underwater_tunnel: { name: '地底湖與海底隧道', monsters: [
-        { id: 'shellman', name: '貝殼人', level: 50, hp: 1200, ac: -40, exp: 2450, atkSpeed: 1900, dice: '5d12+12', hitBonus: 15, weight: 70, adena: [280,460], drops: [{id:'eva_shield', rate: 0.08}, {id:'gem_sapphire', rate: 3}, {id:'crystal_elf_water_life', rate: 0.12}] },
-        { id: 'mermaid', name: '人魚', level: 54, hp: 1300, ac: -42, mr: 45, exp: 2850, atkSpeed: 1600, dice: '5d12+16', hitBonus: 17, weight: 64, adena: [320,520], drops: [{id:'cloak_elven', rate: 0.12}, {id:'gem_quality_sapphire', rate: 0.8}, {id:'crystal_elf_water_life', rate: 0.18}] },
+        { id: 'shellman', name: '貝殼人', level: 50, hp: 1200, ac: -40, exp: 2450, atkSpeed: 1900, dice: '5d12+12', hitBonus: 15, weight: 70, adena: [280,460], drops: [{id:'eva_shield', rate: 0.08}, {id:'gem_sapphire', rate: 3}] },
+        { id: 'mermaid', name: '人魚', level: 54, hp: 1300, ac: -42, mr: 45, exp: 2850, atkSpeed: 1600, dice: '5d12+16', hitBonus: 17, weight: 64, adena: [320,520], drops: [{id:'crystal_dark_shadow_armor', rate: 0.18}, {id:'cloak_elven', rate: 0.12}, {id:'gem_quality_sapphire', rate: 0.8}] },
         { id: 'deep_sea_horror', name: '深海恐怖', level: 70, hp: 11000, ac: -70, mr: 75, exp: 6400, atkSpeed: 1500, dice: '8d12+24', hitBonus: 28, isBoss: true, weight: 10, adena: [1000,2100], drops: [{id:'earring_freedom', rate: 0.12}, {id:'water_dragon_scale', rate: 2}, {id:'gem_high_sapphire', rate: 1}] }
     ]},
     elven_grave: { name: '精靈墓穴', monsters: [
         { id: 'spirit_guardian', name: '精靈守護者', level: 55, hp: 1600, ac: -46, mr: 65, exp: 3100, atkSpeed: 1700, dice: '6d10+16', hitBonus: 19, weight: 55, adena: [360,650], drops: [{id:'bow_elven', rate: 0.25}, {id:'shield_elven', rate: 0.2}, {id:'crystal_elf_fire_weapon', rate: 0.18}] },
         { id: 'ancient_elf', name: '古代精靈', level: 62, hp: 2600, ac: -54, mr: 80, exp: 4000, atkSpeed: 1700, dice: '7d10+18', hitBonus: 22, weight: 45, adena: [480,850], drops: [{id:'armor_elven_chain', rate: 0.2}, {id:'crystal_elf_iron_skin', rate: 0.18}, {id:'crystal_elf_elemental_fire', rate: 0.08}] },
-        { id: 'spirit_elder', name: '精靈長老', level: 74, hp: 13000, ac: -74, mr: 90, exp: 7000, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'bow_moon', rate: 0.12}, {id:'crystal_elf_elemental_fire', rate: 0.25}, {id:'gem_high_emerald', rate: 1}] }
+        { id: 'spirit_elder', name: '精靈長老', level: 74, hp: 13000, ac: -74, mr: 90, exp: 7000, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'crystal_elf_storm_shot', rate: 0.2}, {id:'crystal_elf_iron_skin', rate: 0.4}, {id:'bow_sayha', rate: 0.1}, {id:'bow_moon', rate: 0.12}, {id:'crystal_elf_elemental_fire', rate: 0.1}, {id:'gem_high_emerald', rate: 1}] }
     ]},
     shadow_temple: { name: '暗影神殿', monsters: [
         { id: 'shadow_beast', name: '影子魔獸', level: 58, hp: 1800, ac: -50, mr: 70, exp: 3600, atkSpeed: 1500, dice: '7d10+18', hitBonus: 22, weight: 48, adena: [420,760], drops: [{id:'cloak_shadow', rate: 0.18}, {id:'crystal_dark_shadow_armor', rate: 0.18}, {id:'gem_quality_diamond', rate: 0.8}] },
-        { id: 'cursed_dark_elf_fighter', name: '受詛咒的黑暗妖精鬥士', level: 62, hp: 2400, ac: -56, mr: 75, exp: 4300, atkSpeed: 1300, dice: '7d12+20', hitBonus: 26, weight: 42, adena: [500,900], drops: [{id:'claw_bloody', rate: 0.12}, {id:'crystal_dark_burning_spirit', rate: 0.25}, {id:'crystal_dark_shadow_fang', rate: 0.18}] },
-        { id: 'succubus_queen', name: '思克巴女皇', level: 70, hp: 12000, ac: -72, mr: 90, exp: 6600, atkSpeed: 1500, dice: '8d10+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'crystal_dark_uncanny_dodge', rate: 0.35}, {id:'ring_abyss', rate: 0.12}, {id:'gem_high_diamond', rate: 1}] }
+        { id: 'cursed_dark_elf_fighter', name: '受詛咒的黑暗妖精鬥士', level: 62, hp: 2400, ac: -56, mr: 75, exp: 4300, atkSpeed: 1300, dice: '7d12+20', hitBonus: 26, weight: 42, adena: [500,900], drops: [{id:'claw_bloody', rate: 0.12}, {id:'crystal_dark_burning_spirit', rate: 0.25}, {id:'crystal_dark_shadow_fang', rate: 0.02}] },
+        { id: 'succubus_queen', name: '思克巴女皇', level: 70, hp: 12000, ac: -72, mr: 90, exp: 6600, atkSpeed: 1500, dice: '8d10+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'crystal_dark_uncanny_dodge', rate: 0.5}, {id:'ring_abyss', rate: 0.12}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     lastavard: { name: '拉斯塔巴德地下洞穴', monsters: [
-        { id: 'dark_black_knight', name: '暗黑黑騎士', level: 64, hp: 2800, ac: -58, mr: 65, exp: 4600, atkSpeed: 1500, dice: '7d12+22', hitBonus: 25, weight: 38, adena: [560,980], drops: [{id:'book_knight_reduction_armor', rate: 0.25}, {id:'book_knight_solid_carriage', rate: 0.18}, {id:'sword_red_knight', rate: 0.15}] },
+        { id: 'dark_black_knight', name: '暗黑黑騎士', level: 64, hp: 2800, ac: -58, mr: 65, exp: 4600, atkSpeed: 1500, dice: '7d12+22', hitBonus: 25, weight: 38, adena: [560,980], drops: [{id:'claw_balanka', rate: 0.03}, {id:'book_knight_reduction_armor', rate: 0.25}, {id:'book_knight_solid_carriage', rate: 0.03}, {id:'sword_red_knight', rate: 0.15}] },
         { id: 'dark_elf_mage', name: '黑暗妖精法師', level: 66, hp: 2400, ac: -56, mr: 90, exp: 4800, atkSpeed: 1800, dice: '7d10+24', hitBonus: 24, weight: 36, adena: [600,1050], drops: [{id:'staff_sorcery', rate: 0.15}, {id:'robe_mage', rate: 0.15}, {id:'crystal_dark_dress_mighty', rate: 0.18}] },
-        { id: 'elite_black_knight', name: '菁英黑騎士', level: 72, hp: 7000, ac: -72, mr: 75, exp: 6800, atkSpeed: 1400, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 12, adena: [1100,2200], drops: [{id:'book_knight_shock_stun', rate: 0.35}, {id:'crystal_dark_double_break', rate: 0.35}, {id:'dual_blade_bloody', rate: 0.12}] },
-        { id: 'lord_of_lastavard', name: '拉斯塔巴德將軍', level: 82, hp: 26000, ac: -86, mr: 95, exp: 8000, atkSpeed: 1500, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 4, adena: [1700,3400], drops: [{id:'book_knight_counter_barrier', rate: 0.25}, {id:'blade_ronde', rate: 0.08}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'scroll_weapon_blessed', rate: 0.5}] }
+        { id: 'elite_black_knight', name: '菁英黑騎士', level: 72, hp: 7000, ac: -72, mr: 75, exp: 6800, atkSpeed: 1400, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 12, adena: [1100,2200], drops: [{id:'crossbow_lastabad_heavy', rate: 0.1}, {id:'book_knight_shock_stun', rate: 0.35}, {id:'crystal_dark_double_break', rate: 0.35}, {id:'dual_blade_bloody', rate: 0.12}] },
+        { id: 'lord_of_lastavard', name: '拉斯塔巴德將軍', level: 82, hp: 26000, ac: -86, mr: 95, exp: 8000, atkSpeed: 1500, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 4, adena: [1700,3400], drops: [{id:'dual_red_shadow', rate: 0.1}, {id:'book_knight_counter_barrier', rate: 0.15}, {id:'blade_ronde', rate: 0.08}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'scroll_weapon_blessed', rate: 0.5}] }
     ]},
     demon_temple: { name: '魔族神殿', monsters: [
         { id: 'chaos_guardian', name: '混沌守護者', level: 68, hp: 4200, ac: -66, mr: 85, exp: 5600, atkSpeed: 1600, dice: '8d10+24', hitBonus: 28, weight: 25, adena: [760,1400], drops: [{id:'sword_mail_breaker', rate: 0.1}, {id:'crystal_elf_storm_shot', rate: 0.15}, {id:'crystal_dark_shadow_fang', rate: 0.15}] },
         { id: 'death_sword_unlucky', name: '不幸的死亡之劍', level: 70, hp: 6000, ac: -70, mr: 80, exp: 6200, atkSpeed: 1300, dice: '8d12+26', hitBonus: 30, weight: 18, adena: [900,1700], drops: [{id:'sword_silence', rate: 0.1}, {id:'crystal_dark_burning_spirit', rate: 0.3}, {id:'book_knight_shock_stun', rate: 0.15}] },
-        { id: 'mammoth', name: '猛瑪象', level: 76, hp: 14000, ac: -76, mr: 65, exp: 7200, atkSpeed: 2000, dice: '9d12+30', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'book_knight_counter_barrier', rate: 0.18}, {id:'crystal_elf_iron_skin', rate: 0.3}, {id:'gem_high_diamond', rate: 1}] }
+        { id: 'mammoth', name: '猛瑪象', level: 76, hp: 14000, ac: -76, mr: 65, exp: 7200, atkSpeed: 2000, dice: '9d12+30', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'claw_purgatory', rate: 0.05}, {id:'book_knight_counter_barrier', rate: 0.18}, {id:'crystal_elf_iron_skin', rate: 0.3}, {id:'gem_high_diamond', rate: 1}] }
     ]}
 });
 
-const DROP_PATCHES = {
-    goblin: [{id:'crystal_elf_resist_magic', rate: 0.2}],
-    orc_archer: [{id:'crystal_elf_triple_arrow', rate: 0.03}],
-    hv_crabman: [{id:'crystal_elf_soul_to_mind', rate: 0.01}],
-    hv_beholder: [{id:'crystal_elf_triple_arrow', rate: 0.02}],
-    living_armor: [{id:'crystal_elf_soul_to_mind', rate: 0.08}],
-    orc_fighter: [{id:'sword_red_knight', rate: 0.15}, {id:'shield_red_knight', rate: 0.15}, {id:'book_knight_reduction_armor', rate: 0.05}],
-    black_knight: [{id:'book_knight_shock_stun', rate: 0.12}, {id:'book_knight_reduction_armor', rate: 0.12}, {id:'sword_red_knight', rate: 0.12}],
-    death_knight: [{id:'book_knight_counter_barrier', rate: 0.18}, {id:'book_knight_shock_stun', rate: 0.18}, {id:'shield_red_knight', rate: 0.18}],
-    elder: [{id:'robe_mage', rate: 0.18}, {id:'staff_sorcery', rate: 0.18}],
-    black_elder: [{id:'robe_mage', rate: 0.2}, {id:'staff_sorcery', rate: 0.2}, {id:'crystal_dark_uncanny_dodge', rate: 0.18}],
-    harpy: [{id:'bow_elven', rate: 0.25}, {id:'crystal_elf_wind_shot', rate: 0.15}],
-    arian: [{id:'bow_elven', rate: 0.18}, {id:'shield_elven', rate: 0.18}, {id:'crystal_elf_triple_arrow', rate: 0.03}],
-    lamia: [{id:'crystal_elf_water_life', rate: 0.12}, {id:'crystal_dark_enchant_venom', rate: 0.12}],
-    doppleganger: [{id:'cloak_shadow', rate: 0.12}, {id:'armor_shadow', rate: 0.1}],
-    drake: [{id:'bow_flame', rate: 0.12}, {id:'crystal_elf_storm_shot', rate: 0.18}],
-    fire_archer: [{id:'crystal_elf_triple_arrow', rate: 0.04}],
-    wyrm: [{id:'bow_yumi', rate: 0.12}, {id:'crystal_elf_iron_skin', rate: 0.12}],
-    ifrit: [{id:'crystal_elf_fire_weapon', rate: 0.25}, {id:'crystal_elf_elemental_fire', rate: 0.12}],
-    succubus: [{id:'crystal_dark_shadow_armor', rate: 0.15}, {id:'crystal_dark_uncanny_dodge', rate: 0.08}],
-    succubus_queen: [{id:'crystal_dark_uncanny_dodge', rate: 0.25}, {id:'crystal_elf_triple_arrow', rate: 0.03}],
-    demon: [{id:'book_knight_counter_barrier', rate: 0.12}, {id:'crystal_dark_double_break', rate: 0.18}, {id:'crystal_elf_elemental_fire', rate: 0.12}],
-    antaras: [{id:'book_knight_counter_barrier', rate: 0.4}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'crystal_elf_elemental_fire', rate: 0.4}, {id:'bow_moon', rate: 0.12}, {id:'blade_ronde', rate: 0.12}]
-};
-Object.keys(MAPS).forEach(mapId => {
-    MAPS[mapId].monsters.forEach(monster => {
-        let additions = DROP_PATCHES[monster.id];
-        if (additions) {
-            monster.drops = monster.drops || [];
-            additions.forEach(drop => {
-                if (!monster.drops.some(existing => existing.id === drop.id)) monster.drops.push(drop);
-            });
-        }
-        if (monster.isBoss) {
-            monster.drops = monster.drops || [];
-            if (!monster.drops.some(existing => existing.id === 'crystal_elf_soul_to_mind')) monster.drops.push({id:'crystal_elf_soul_to_mind', rate: 0.01});
-        }
-    });
-});
 
-Object.assign(CLASSES.knight, { spellMaxLevel: 5, magicMaxLevel: 1, magicLevelStep: 50, classMagicLevelStep: 10, allowedWeaponClasses: ['melee', 'bow'] });
+Object.assign(CLASSES.knight, { spellMaxLevel: 5, magicMaxLevel: 5, magicLevelStep: 40, classMagicLevelStep: 10, allowedWeaponClasses: ['melee', 'bow'] });
 Object.assign(CLASSES.elf, { magicMaxLevel: 6, magicLevelStep: 8, classMagicLevelStep: 10, allowedWeaponClasses: ['melee', 'bow'] });
 Object.assign(CLASSES.wizard, { magicMaxLevel: 10, magicLevelStep: 4, classMagicLevelStep: 4, allowedWeaponClasses: ['melee', 'bow'] });
-Object.assign(CLASSES.dark_elf, { magicMaxLevel: 2, magicLevelStep: 12, classMagicLevelStep: 15, allowedWeaponClasses: ['melee', 'bow', 'claw', 'dual_blade'] });
+Object.assign(CLASSES.dark_elf, { magicMaxLevel: 4, magicLevelStep: 12, classMagicLevelStep: 10, allowedWeaponClasses: ['melee', 'bow', 'claw', 'dual_blade'] });
 
 Object.assign(ITEMS, {
     leather_jacket: { name: '皮夾克', type: 'armor', safe: 4, ac: -1, dropRate: 20 },
@@ -1041,12 +1000,10 @@ Object.assign(ITEMS, {
 });
 
 Object.assign(SPELLS, {
-    elf_storm_eye: { id: 'elf_storm_eye', name: '暴風之眼', level: 5, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
-    elf_release_elemental: { id: 'elf_release_elemental', name: '釋放元素', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
-    invisibility: { id: 'invisibility', name: '隱身術', level: 6, type: 'buff', mp: 15, duration: 600, classes: ['wizard','dark_elf'] }
+    elf_release_elemental: { id: 'elf_release_elemental', name: '釋放元素', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
+    invisibility: { id: 'invisibility', name: '隱身術', level: 6, type: 'buff', mp: 15, duration: 600, classes: ['wizard'] }
 });
 Object.assign(ITEMS, {
-    crystal_elf_storm_eye: { name: '精靈水晶(暴風之眼)', type: 'book', spellId: 'elf_storm_eye' },
     crystal_elf_release_elemental: { name: '精靈水晶(釋放元素)', type: 'book', spellId: 'elf_release_elemental' },
     book_invisibility: { name: '魔法書(隱身術)', type: 'book', spellId: 'invisibility' }
 });
@@ -1088,17 +1045,17 @@ Object.assign(ITEMS, {
 Object.assign(MAPS, {
     burning_forest: { name: '燃柳周遭', monsters: [
         { id: 'high_orc', name: '高等妖魔', level: 18, hp: 130, ac: -4, exp: 260, atkSpeed: 1000, dice: '2d8+4', hitBonus: 4, weight: 80, adena: [80,150], drops: [{id:'sword_damascus', rate: 0.3}, {id:'amulet_orc_warrior', rate: 0.5}, {id:'potion_orange', rate: 8}, {id:'scroll_armor', rate: 0.5}] },
-        { id: 'casto', name: '卡司特', level: 21, hp: 200, ac: -10, exp: 442, atkSpeed: 2000, dice: '4d8+3', hitBonus: 5, weight: 79, adena: [120,220], drops: [{id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'book_slow', rate: 0.5}, {id:'book_summon', rate: 0.02}] },
-        { id: 'dark_elf_monster', name: '黑暗精靈', level: 27, hp: 260, ac: -14, exp: 760, atkSpeed: 800, dice: '2d8+4', hitBonus: 12, weight: 73, adena: [100,240], drops: [{id:'elven_breastplate', rate: 3}, {id:'potion_blue', rate: 2}, {id:'bow_elven', rate: 1}, {id:'cloak_elven', rate: 1}, {id:'elven_wafer', rate: 1}, {id:'crystal_elf_wind_shot', rate: 0.5}, {id:'boots_dark', rate: 0.3}, {id:'crystal_elf_storm_eye', rate: 0.3}, {id:'sandals_dark_elf', rate: 0.1}, {id:'crystal_elf_release_elemental', rate: 0.1}, {id:'book_tornado', rate: 0.1}, {id:'book_invisibility', rate: 0.01}, {id:'dual_steel', rate: 1}, {id:'claw_steel', rate: 1}] },
-        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [180,320], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'gloves_str', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
+        { id: 'casto', name: '卡司特', level: 21, hp: 200, ac: -10, exp: 442, atkSpeed: 2000, dice: '4d8+3', hitBonus: 5, weight: 79, adena: [120,220], drops: [{id:'book_weapon_break', rate: 0.2}, {id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'book_slow', rate: 0.5}, {id:'book_summon', rate: 0.02}] },
+        { id: 'dark_elf_monster', name: '黑暗精靈', level: 27, hp: 260, ac: -14, exp: 760, atkSpeed: 800, dice: '2d8+4', hitBonus: 12, weight: 73, adena: [100,240], drops: [{id:'elven_breastplate', rate: 3}, {id:'potion_blue', rate: 2}, {id:'bow_elven', rate: 1}, {id:'cloak_elven', rate: 1}, {id:'elven_wafer', rate: 1}, {id:'crystal_elf_wind_shot', rate: 0.5}, {id:'boots_dark', rate: 0.3}, {id:'sandals_dark_elf', rate: 0.1}, {id:'crystal_elf_release_elemental', rate: 0.02}, {id:'book_tornado', rate: 0.1}, {id:'dual_steel', rate: 1}, {id:'claw_steel', rate: 1}] },
+        { id: 'ogre', name: '歐吉', level: 28, hp: 500, ac: -18, exp: 785, atkSpeed: 2000, dice: '4d10+8', weight: 72, adena: [180,320], drops: [{id:'book_str_buff', rate: 0.08}, {id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_str_magic', rate: 0.2}, {id:'armor_rattan', rate: 3}, {id:'belt_ogre', rate: 0.05}, {id:'gloves_str', rate: 0.05}, {id:'dagger_ori', rate: 0.1}] },
         { id: 'casto_king', name: '卡司特王', level: 33, hp: 300, ac: -13, exp: 1090, atkSpeed: 2000, dice: '4d12+5', hitBonus: 5, weight: 67, adena: [220,420], drops: [{id:'battle_axe', rate: 2}, {id:'berserk_axe', rate: 1}, {id:'giant_axe', rate: 2}, {id:'helm_heal_magic', rate: 0.5}, {id:'book_slow', rate: 0.5}, {id:'book_full_heal', rate: 0.1}, {id:'dagger_ori', rate: 0.1}] }
     ]}
 });
 
 MAPS.gludio_5f.monsters = MAPS.gludio_5f.monsters.filter(m => m.id !== 'death_knight');
 if (MAPS.gludio_7f && !MAPS.gludio_7f.monsters.some(m => m.id === 'death_knight')) {
-    MAPS.gludio_7f.monsters.push({ id: 'death_knight', name: '死亡騎士', level: 52, hp: 4000, ac: -67, mr: 65, exp: 3026, atkSpeed: 1200, dice: '5d8+12', hitBonus: 18, isBoss: true, weight: 10, adena: [1500,3000], drops: [{id:'katana', rate: 10}, {id:'sword_two_handed', rate: 10}, {id:'sword_dk_fire', rate: 1}, {id:'helm_dk', rate: 5}, {id:'armor_dk', rate: 5}, {id:'gloves_dk', rate: 5}, {id:'boots_dk', rate: 5}, {id:'book_knight_counter_barrier', rate: 0.18}] });
-    MAPS.gludio_7f.monsters.push({ id: 'orin_easter', name: '歐林', level: 1, hp: 1, ac: 10, exp: 1, atkSpeed: 9999, dice: '1d1', hitBonus: 0, weight: 1, adena: [0,0], drops: [{id:'potion_red', rate: 100}, {id:'potion_orange', rate: 50}, {id:'potion_clear', rate: 30}, {id:'scroll_armor', rate: 100}, {id:'scroll_weapon_blessed', rate: 1}, {id:'scroll_armor_blessed', rate: 1}] });
+    MAPS.gludio_7f.monsters.push({ id: 'death_knight', name: '死亡騎士', level: 52, hp: 4000, ac: -67, mr: 65, exp: 3026, atkSpeed: 1200, dice: '5d8+12', hitBonus: 18, isBoss: true, weight: 10, adena: [1500,3000], drops: [{id:'book_knight_shock_stun', rate: 0.3}, {id:'katana', rate: 10}, {id:'sword_two_handed', rate: 10}, {id:'sword_dk_fire', rate: 1}, {id:'helm_dk', rate: 5}, {id:'armor_dk', rate: 5}, {id:'gloves_dk', rate: 5}, {id:'boots_dk', rate: 5}, {id:'book_knight_counter_barrier', rate: 0.18}] });
+    MAPS.gludio_7f.monsters.push({ id: 'orin_easter', name: '歐林', level: 1, hp: 1, ac: 10, exp: 1, atkSpeed: 9999, dice: '1d1', hitBonus: 0, weight: 25, adena: [0,0], drops: [{id:'potion_red', rate: 100}, {id:'potion_orange', rate: 50}, {id:'potion_clear', rate: 30}, {id:'scroll_armor', rate: 100}, {id:'scroll_weapon_blessed', rate: 1}, {id:'scroll_armor_blessed', rate: 1}] });
 }
 
 const HIDDEN_VALLEY_STARTER_DROPS = [
@@ -1360,8 +1317,8 @@ const game = {
         if (this.state.classId === 'wizard' && spellId === 'light_arrow') return 1;
         if (spell.classes && spell.classes.includes('elf')) return spell.level * (cls.classMagicLevelStep || 10);
         if (spell.classes && spell.classes.includes('dark_elf')) return spell.level * (cls.classMagicLevelStep || 15);
-        if (spell.classes && spell.classes.includes('knight')) return spell.level >= 5 ? 50 : Math.max(50, spell.level * 10);
-        if (this.state.classId === 'knight') return spell.level === 1 ? 50 : 999;
+        if (spell.classes && spell.classes.includes('knight')) return spell.level * (cls.classMagicLevelStep || 10);
+        if (this.state.classId === 'knight') return spell.level * (cls.magicLevelStep || 40);
         return spell.level * (cls.magicLevelStep || 4);
     },
     getSpellMaxLevelForClass: function(spellId) {
@@ -1634,9 +1591,8 @@ const game = {
             }
         }
         let sets = this.getSetBonuses();
-        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += 3;
-        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += 5;
-        if (weaponClass === 'bow' && this.state.buffs.elf_storm_eye) wpnHit += 2;
+        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += 5;
+        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += 8;
         if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) wpnHit += 30;
         if (weaponClass === 'bow') return dexBonus * 2 + wpnHit + sets.hit + Math.floor(this.state.level / 10);
         if (this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) return strBonus + dexBonus + wpnHit + sets.hit + 2;
@@ -1666,6 +1622,8 @@ const game = {
         if (this.state.buffs.de_burning_spirit) wpnDmg += 3;
         if (this.state.buffs.de_shadow_fang) wpnDmg += 5;
         if (this.state.buffs.de_dress_mighty) wpnDmg += 2;
+        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnDmg += 3;
+        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnDmg += 6;
         if (this.state.buffs.berserkers) wpnDmg += 5;
         let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
         if (this.state.buffs.player_weapon_break > 0 && !(wDef && wDef.unbreakable) && !['bow','claw','dual_blade'].includes(weaponClass)) wpnDmg -= 10;
@@ -1784,7 +1742,6 @@ const game = {
         if(this.state.buffs.tame_monster) buffHtml += '<span class="c-warn mr-2">[迷魅術]</span>';
         if(this.state.buffs.elf_resist_magic) buffHtml += '<span class="c-success mr-2">[魔法防禦]</span>';
         if(this.state.buffs.elf_clear_mind) buffHtml += '<span class="c-success mr-2">[淨化精神]</span>';
-        if(this.state.buffs.elf_resist_elemental) buffHtml += '<span class="c-success mr-2">[屬性防禦]</span>';
         if(this.state.buffs.elf_earth_skin) buffHtml += '<span class="c-success mr-2">[大地防護]</span>';
         if(this.state.buffs.elf_fire_weapon) buffHtml += '<span class="c-success mr-2">[火焰武器]</span>';
         if(this.state.buffs.elf_wind_shot) buffHtml += '<span class="c-success mr-2">[風之神射]</span>';
@@ -2287,10 +2244,30 @@ const game = {
         }
         return false;
     },
-    canExchangeGems: function(exchangeId) {
+    getExchangeGemToSpend: function(exchangeId) {
         let exchange = GEM_EXCHANGES[exchangeId];
-        if (!exchange) return false;
-        return Object.keys(exchange.cost).every(itemId => this.getItemCount(itemId) >= exchange.cost[itemId]);
+        if (!exchange || !exchange.gems) return null;
+        let bestId = null;
+        let bestCount = 0;
+        exchange.gems.forEach(itemId => {
+            let count = this.getItemCount(itemId);
+            if (count > bestCount) {
+                bestId = itemId;
+                bestCount = count;
+            }
+        });
+        return bestCount > 0 ? bestId : null;
+    },
+    canExchangeGems: function(exchangeId) {
+        return !!this.getExchangeGemToSpend(exchangeId);
+    },
+    getGemExchangeOdds: function(exchange) {
+        let total = exchange.rewards.reduce((sum, reward) => sum + reward.weight, 0);
+        return exchange.rewards.map(reward => {
+            let def = ITEMS[reward.id];
+            let chance = total > 0 ? (reward.weight / total) * 100 : 0;
+            return { ...reward, name: def ? def.name : reward.id, chance };
+        });
     },
     renderGemExchange: function() {
         const list = document.getElementById('gem-exchange-list');
@@ -2298,26 +2275,34 @@ const game = {
         list.innerHTML = '';
         Object.keys(GEM_EXCHANGES).forEach(exchangeId => {
             let exchange = GEM_EXCHANGES[exchangeId];
-            let costText = Object.keys(exchange.cost).map(itemId => `${ITEMS[itemId].name} ${this.getItemCount(itemId)}/${exchange.cost[itemId]}`).join('、');
-            let disabled = this.canExchangeGems(exchangeId) ? '' : 'disabled';
+            let spendId = this.getExchangeGemToSpend(exchangeId);
+            let gemText = exchange.gems.map(itemId => `${ITEMS[itemId].name} ${this.getItemCount(itemId)}`).join('、');
+            let spendText = spendId ? `本次將優先扣除：${ITEMS[spendId].name}` : '需要任一顆指定品質寶石';
+            let odds = this.getGemExchangeOdds(exchange);
+            let oddsText = odds.map(row => `${row.name} x${row.count || 1}: ${row.chance.toFixed(2)}%`).join(' / ');
+            let oddsHtml = odds.map(row => `<span class="mr-2">${row.name} ${row.chance.toFixed(2)}%</span>`).join('');
+            let disabled = spendId ? '' : 'disabled';
             list.insertAdjacentHTML('beforeend', `
                 <div class="list-item">
-                    <div>
+                    <div class="min-w-0 pr-3">
                         <div class="c-enchant">${exchange.name}</div>
-                        <div class="text-xs c-sys mt-1">${costText}</div>
+                        <div class="text-xs c-sys mt-1">可用寶石：${gemText}</div>
+                        <div class="text-xs c-warn mt-1">${spendText}</div>
+                        <div class="text-xs c-sys mt-1 leading-relaxed" title="${oddsText}">${oddsHtml}</div>
                     </div>
-                    <button class="btn-ui !px-3 !py-1" ${disabled} onclick="game.exchangeGems('${exchangeId}')">交換</button>
+                    <button class="btn-ui !px-3 !py-1 shrink-0" ${disabled} onclick="game.exchangeGems('${exchangeId}')">交換</button>
                 </div>
             `);
         });
     },
     exchangeGems: function(exchangeId) {
         let exchange = GEM_EXCHANGES[exchangeId];
-        if (!exchange || !this.canExchangeGems(exchangeId)) {
+        let spendId = this.getExchangeGemToSpend(exchangeId);
+        if (!exchange || !spendId) {
             this.logSystem(`寶石不足，無法交換。`, 'danger');
             return;
         }
-        Object.keys(exchange.cost).forEach(itemId => this.removeItemById(itemId, exchange.cost[itemId]));
+        this.removeItemById(spendId, 1);
         let total = exchange.rewards.reduce((sum, reward) => sum + reward.weight, 0);
         let roll = Math.random() * total;
         let selected = exchange.rewards[0];
@@ -2325,8 +2310,8 @@ const game = {
             roll -= reward.weight;
             if (roll <= 0) { selected = reward; break; }
         }
-        this.addInventory(selected.id, selected.count, 0, false);
-        this.logSystem(`${exchange.name} 開出了 ${ITEMS[selected.id].name} x${selected.count}。`, 'reward');
+        this.addInventory(selected.id, selected.count || 1, 0, false);
+        this.logSystem(`${exchange.name} 扣除了 ${ITEMS[spendId].name}，開出了 ${ITEMS[selected.id].name} x${selected.count || 1}！`, 'reward');
         this.renderGemExchange();
         this.renderInventory();
         this.updateUI();
@@ -2460,6 +2445,21 @@ const game = {
         this.updateSettingsUI();
     },
 
+    darkElfArmorBreakCounter: function() {
+        if (!this.state.targetMonster || !this.state.targetMonster.isBoss) return;
+        let wKey = this.state.equipment.weapon;
+        let wpn = wKey && this.state.inventory[wKey] ? this.state.inventory[wKey] : null;
+        let wDef = wpn ? ITEMS[wpn.itemId] : null;
+        let weaponClass = wpn ? this.getWeaponClass(wpn.itemId) : 'melee';
+        if (!['claw','dual_blade'].includes(weaponClass)) return;
+        let dice = wDef && wDef.dice ? wDef.dice : '1d2';
+        let dmg = Math.max(1, getDiceMax(dice) + (wpn ? Number(wpn.enchant) : 0) + this.getMeleeDmg());
+        this.state.targetMonster.hp -= dmg;
+        this.logCombat(`破壞盔甲反擊 ${this.state.targetMonster.name}，造成 ${dmg} 點傷害！`, 'success');
+        this.updateMonsterHpBar();
+        if (this.state.targetMonster.hp <= 0) this.monsterDied();
+    },
+
     calcMagicDmgToMonster: function(base) {
         let targetMR = this.state.targetMonster.mr || 0;
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
@@ -2472,7 +2472,8 @@ const game = {
 
     takeMagicDmg: function(base) {
         if (this.state.buffs.de_uncanny_dodge && Math.random() < 0.25) {
-            this.logCombat(`暗影殘影閃過了魔法傷害。`, 'success');
+            this.logCombat(`暗影閃避避開了魔法傷害。`, 'success');
+            if (this.state.buffs.de_armor_break && this.state.classId === 'dark_elf' && this.state.targetMonster && this.state.targetMonster.isBoss) this.darkElfArmorBreakCounter();
             return 0;
         }
         let targetMR = this.getMR();
@@ -2588,6 +2589,12 @@ const game = {
         
         document.getElementById('target-hp-container').classList.remove('hidden');
         this.updateMonsterHpBar();
+        if (this.state.targetMonster.id === 'orin_easter') {
+            this.logCombat("巴土瑟：歐林，你這homo！你躲在哪?", "danger");
+            this.logCombat("卡士伯：歐林，你不可能躲得過我們會員制魔法學徒！", "danger");
+            this.logCombat("馬庫爾：出來並向偉大的純平法師乞求饒你的狗胃吧！", "danger");
+            this.logCombat("西瑪：樓梯呢？樓梯在哪？", "danger");
+        }
     },
     updateMonsterHpBar: function() {
         if(!this.state.targetMonster) return;
@@ -2603,15 +2610,17 @@ const game = {
         let weaponClass = wpn ? this.getWeaponClass(wpn.itemId) : 'melee';
         
         let dbf = this.state.targetMonster.debuffs || {};
-        let doubleBreakTriggered = this.state.buffs.de_double_break && ['claw','dual_blade'].includes(weaponClass) && Math.random() < 0.35;
-        let tAc = this.state.targetMonster.ac + (dbf.disease > 0 ? 8 : 0) + (dbf.armor_break > 0 ? 30 : 0);
+        let isDarkElfBossMelee = this.state.classId === 'dark_elf' && this.state.targetMonster.isBoss && ['claw','dual_blade'].includes(weaponClass);
+        let doubleBreakChance = this.state.buffs.de_double_break && weaponClass === 'dual_blade' ? (isDarkElfBossMelee ? 0.4 : 0.35) : 0;
+        let doubleBreakTriggered = doubleBreakChance > 0 && Math.random() < doubleBreakChance;
+        let tAc = this.state.targetMonster.ac + (dbf.disease > 0 ? 8 : 0) + (dbf.armor_break > 0 ? 30 : 0) + (this.state.buffs.de_double_break && isDarkElfBossMelee ? 15 : 0);
         if (doubleBreakTriggered) tAc = Math.max(0, tAc);
         let roll = rollDice('1d20');
         let isCrit = false;
         
         if(roll === 1) isHit = false;
         else if(roll === 20) { isHit = true; isCrit = true; }
-        else if(roll + this.getMeleeHit() + (this.state.level - this.state.targetMonster.level) >= 10 - tAc) isHit = true;
+        else if(roll + this.getMeleeHit() + (this.state.buffs.de_armor_break && isDarkElfBossMelee ? 15 : 0) + (this.state.level - this.state.targetMonster.level) >= 10 - tAc) isHit = true;
         if(!isHit && roll !== 1 && Math.random() < 0.25) isGraze = true;
         if(isHit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass) && Math.random() < 0.12) isCrit = true;
         
@@ -2623,16 +2632,17 @@ const game = {
                 dDmg = getDiceMax(dice) + (wpn ? Number(wpn.enchant) : 0);
                 isCrit = true;
             }
-            if (isCrit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) dDmg = Math.floor(dDmg * 1.5);
+            if (isCrit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) dDmg = Math.floor(dDmg * (this.state.buffs.de_double_break && isDarkElfBossMelee && weaponClass === 'claw' ? 1.8 : 1.5));
             let bonusUndead = 0;
             if (wDef && wDef.isUndeadSlayer && (this.state.targetMonster.isUndead || this.state.targetMonster.isWerewolf)) {
                 bonusUndead = Math.floor(Math.random() * 4) + 3; 
             }
             let quiverKey = this.state.equipment.quiver;
             let qDef = quiverKey && this.state.inventory[quiverKey] ? ITEMS[this.state.inventory[quiverKey].itemId] : null;
+            let rangedPierceDr = weaponClass === 'bow' && this.state.buffs.elf_storm_shot ? 2 : 0;
             if (weaponClass === 'bow' && qDef && qDef.undeadBonus && (this.state.targetMonster.isUndead || this.state.targetMonster.isWerewolf)) bonusUndead += Math.floor(Math.random() * 4) + 3;
-            dmg = Math.max(1, dDmg + this.getMeleeDmg() + bonusUndead);
-            if (isGraze) dmg = Math.max(1, Math.floor((getDiceMax(dice) + Math.max(0, this.getMeleeDmg())) * 0.3));
+            dmg = Math.max(1, dDmg + this.getMeleeDmg() + bonusUndead + rangedPierceDr);
+            if (isGraze) dmg = Math.max(1, Math.floor((getDiceMax(dice) + Math.max(0, this.getMeleeDmg()) + rangedPierceDr) * 0.3));
             let cls = this.getClassDef();
             if (this.state.targetMonster.isBoss && cls.bossDmgBonus) dmg = Math.max(1, Math.floor(dmg * (1 + cls.bossDmgBonus)));
             if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) dmg = Math.max(1, Math.floor(dmg * 1.3));
@@ -2653,7 +2663,8 @@ const game = {
                 this.logCombat(`附加劇毒侵蝕了 ${this.state.targetMonster.name}，造成 ${poisonDmg} 點傷害。`, 'magic');
             }
             if (this.state.buffs.de_burning_spirit && this.state.classId === 'dark_elf' && (isCrit || dDmg >= getDiceMax(dice))) {
-                let leech = Math.max(1, Math.floor(dmg * 0.1));
+                let leechRate = this.state.hp < this.state.maxHp * 0.4 ? 0.2 : 0.1;
+                let leech = Math.max(1, Math.floor(dmg * leechRate));
                 this.state.hp = Math.min(this.state.maxHp, this.state.hp + leech);
                 this.logCombat(`燃燒鬥志吸收了 ${leech} 點體力。`, 'success');
             }
@@ -2831,6 +2842,7 @@ const game = {
         
         if(Math.random()*100 <= this.getER()) {
             this.logCombat(`你閃避了 ${this.state.targetMonster.name} 的攻擊！`, 'success');
+            if (this.state.buffs.de_armor_break && this.state.classId === 'dark_elf' && this.state.targetMonster && this.state.targetMonster.isBoss) this.darkElfArmorBreakCounter();
             return;
         }
         
@@ -3244,7 +3256,7 @@ const game = {
                 }
 
                 if (tm.isBoss && ['antaras','death_knight','black_elder','valakas','fafurion','ice_queen','demon'].includes(tmId) && st % 18 === 0 && Math.random() < 0.35) {
-                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','de_double_break','de_uncanny_dodge','de_burning_spirit'].forEach(b => delete this.state.buffs[b]);
+                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
                     this.logCombat(`${tm.name} 施展魔法相消術，強制洗掉了你的主要增益狀態！`, 'danger');
                     needUpdate = true;
                 }
