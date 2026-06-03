@@ -406,6 +406,7 @@ const ITEMS = {
     amulet_int: { name: '智力項鍊', type: 'amulet', safe: 0, ac: 0, dropRate: 0.1, desc: '智力+1' },
     ring_wind: { name: '風靈戒指', type: 'ring', safe: 0, ac: 0, mr: 6, dropRate: 0.15 },
     amulet_str: { name: '力量項鍊', type: 'amulet', safe: 0, ac: 0, dropRate: 0.3, desc: '力量+1' },
+    amulet_hidden_valley: { name: '隱藏之谷項鍊', type: 'amulet', safe: 0, ac: 0, hp: 5, mp: 5, dropRate: 100, unique: true, desc: 'HP+5 / MP+5' },
     scroll_weapon: { name: '對武器施法的卷軸', type: 'scroll', target: 'weapon', isBlessed: false, price: 75000 },
     scroll_weapon_blessed: { name: '受祝福的對武器施法的卷軸', type: 'scroll', target: 'weapon', isBlessed: true },
     scroll_armor: { name: '對盔甲施法的卷軸', type: 'scroll', target: 'armor', isBlessed: false, price: 30000 },
@@ -604,6 +605,19 @@ const GEM_EXCHANGES = {
 };
 
 const MAPS = {
+    hidden_valley: { name: '隱藏之谷', monsters: [
+        { id: 'hv_orc_zombie', name: '弱化妖魔殭屍', level: 2, hp: 18, mp: 25, ac: 10, alignment: -7, size: 'small', exp: 35, atkSpeed: 2600, dice: '1d3', weight: 96, adena: [8,18], adenaAlways: true, drops: [{id:'potion_red', rate: 10}, {id:'potion_orange', rate: 3}, {id:'potion_haste', rate: 1}] },
+        { id: 'hv_crocodile', name: '弱化鱷魚', level: 1, hp: 12, mp: 10, ac: 10, alignment: -4, size: 'small', exp: 30, atkSpeed: 2600, dice: '1d2', weight: 96, adena: [8,18], adenaAlways: true, drops: [{id:'potion_red', rate: 10}, {id:'potion_orange', rate: 2}, {id:'potion_haste', rate: 1}] },
+        { id: 'hv_lizardman', name: '弱化蜥蜴人', level: 3, hp: 20, mp: 10, ac: 9, alignment: -7, size: 'small', exp: 55, atkSpeed: 2500, dice: '1d3+1', weight: 92, adena: [12,28], adenaAlways: true, drops: [{id:'potion_red', rate: 12}, {id:'potion_orange', rate: 3}, {id:'potion_haste', rate: 1.2}] },
+        { id: 'hv_ghoul', name: '弱化食屍鬼', level: 4, hp: 28, mp: 0, ac: 8, alignment: -9, size: 'small', exp: 80, atkSpeed: 2600, dice: '1d4+1', weight: 88, adena: [16,36], adenaAlways: true, drops: [{id:'potion_red', rate: 12}, {id:'potion_orange', rate: 4}, {id:'potion_haste', rate: 1.5}] },
+        { id: 'hv_lamia', name: '弱化蛇女', level: 4, hp: 26, mp: 30, ac: 8, alignment: -9, size: 'large', exp: 80, atkSpeed: 2500, dice: '1d4+1', weight: 88, adena: [16,36], adenaAlways: true, drops: [{id:'potion_red', rate: 12}, {id:'potion_orange', rate: 4}, {id:'potion_haste', rate: 1.5}] },
+        { id: 'hv_crabman', name: '弱化蟹人', level: 4, hp: 30, mp: 0, ac: 8, alignment: -10, size: 'small', exp: 90, atkSpeed: 2500, dice: '1d4+1', weight: 84, adena: [20,45], adenaAlways: true, drops: [{id:'potion_red', rate: 14}, {id:'potion_orange', rate: 5}, {id:'potion_haste', rate: 2}] },
+        { id: 'hv_beholder', name: '弱化多眼怪', level: 4, hp: 24, mp: 20, ac: 9, alignment: -10, size: 'large', exp: 90, atkSpeed: 2500, dice: '1d4', weight: 84, adena: [20,45], adenaAlways: true, drops: [{id:'potion_red', rate: 14}, {id:'potion_orange', rate: 5}, {id:'potion_haste', rate: 2}] },
+        { id: 'hv_troll', name: '弱化食人妖精', level: 5, hp: 36, mp: 30, ac: 7, alignment: -10, size: 'large', exp: 120, atkSpeed: 2600, dice: '1d5+1', weight: 78, adena: [25,58], adenaAlways: true, drops: [{id:'potion_red', rate: 16}, {id:'potion_orange', rate: 6}, {id:'potion_haste', rate: 2.5}] },
+        { id: 'hv_black_knight', name: '弱化黑騎士', level: 5, hp: 34, mp: 0, ac: 7, alignment: -7, size: 'small', exp: 130, atkSpeed: 2500, dice: '1d5+1', weight: 72, adena: [10,24], adenaAlways: true, drops: [{id:'potion_red', rate: 12}, {id:'potion_orange', rate: 3}, {id:'potion_haste', rate: 1}, {id:'cloak_protector', rate: 0.1}] },
+        { id: 'hv_ogre', name: '弱化歐吉', level: 5, hp: 38, mp: 0, ac: 7, alignment: -10, size: 'large', exp: 140, atkSpeed: 2700, dice: '1d5+2', weight: 54, adena: [25,62], adenaAlways: true, drops: [{id:'potion_red', rate: 16}, {id:'potion_orange', rate: 6}, {id:'potion_haste', rate: 2.5}, {id:'gloves_str', rate: 0.01}] },
+        { id: 'hv_cursed_aruba', name: '受詛咒的阿魯巴', level: 11, hp: 120, mp: 50, ac: 0, alignment: -15, size: 'large', exp: 122, atkSpeed: 1800, dice: '2d8+5', hitBonus: 2, isBoss: true, weight: 8, adena: [38,90], adenaAlways: true, drops: [{id:'amulet_hidden_valley', rate: 100}, {id:'potion_orange', rate: 20}, {id:'potion_clear', rate: 8}, {id:'potion_haste', rate: 8}] }
+    ]},
     knight_village: { name: '騎士村周邊', monsters: [
         { id: 'goblin', name: '哥布林', level: 2, hp: 3, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'broadsword', rate: 1}, {id:'book_light', rate: 1}, {id:'book_shield', rate: 0.5}] },
         { id: 'orc', name: '妖魔', level: 2, hp: 6, ac: 10, exp: 5, atkSpeed: 2000, dice: '1d4', weight: 98, adena: [10,30], drops: [{id:'dagger_orc', rate: 1}, {id:'short_sword_orc', rate: 5}, {id:'helm_orc', rate: 1}, {id:'ring_mail_orc', rate: 5}, {id:'book_light', rate: 1}] },
@@ -1059,6 +1073,16 @@ if (MAPS.gludio_7f && !MAPS.gludio_7f.monsters.some(m => m.id === 'death_knight'
     MAPS.gludio_7f.monsters.push({ id: 'orin_easter', name: '歐林', level: 1, hp: 1, ac: 10, exp: 1, atkSpeed: 9999, dice: '1d1', hitBonus: 0, weight: 1, adena: [0,0], drops: [{id:'potion_red', rate: 100}, {id:'potion_orange', rate: 50}, {id:'potion_clear', rate: 30}, {id:'scroll_armor', rate: 100}, {id:'scroll_weapon_blessed', rate: 1}, {id:'scroll_armor_blessed', rate: 1}] });
 }
 
+const HIDDEN_VALLEY_STARTER_DROPS = [
+    {id:'dagger_orc', rate: 3}, {id:'leather_jacket', rate: 3},
+    {id:'bow_short', rate: 2.5}, {id:'quiver_normal', rate: 2.5},
+    {id:'staff_sorcery', rate: 1.5}, {id:'robe_mage', rate: 1.5},
+    {id:'dual_steel', rate: 1.5}, {id:'claw_steel', rate: 1.5}
+];
+MAPS.hidden_valley.monsters.forEach(m => {
+    if (m.id !== 'hv_cursed_aruba') m.drops.push(...HIDDEN_VALLEY_STARTER_DROPS);
+});
+
 MAPS.forgotten_island.monsters.forEach(m => {
     if (m.id === 'great_minotaur') m.drops.push({id:'sealed_forgotten_great_sword', rate: 0.2}, {id:'sealed_forgotten_crossbow', rate: 0.2});
     if (m.id === 'ancient_guardian') m.drops.push({id:'sealed_forgotten_sword', rate: 0.3}, {id:'sealed_forgotten_dual_blade', rate: 0.3}, {id:'sealed_forgotten_staff', rate: 0.3}, {id:'sealed_forgotten_leather_armor', rate: 0.3}, {id:'sealed_forgotten_robe_armor', rate: 0.3}, {id:'sealed_forgotten_metal_armor', rate: 0.3});
@@ -1079,9 +1103,9 @@ const game = {
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50 },
-        currentMap: 'knight_village', targetMonster: null,
+        currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, autoHealCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0
+        potionCooldown: 0, autoHealCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false
     },
 
     init: function() {
@@ -1137,7 +1161,7 @@ const game = {
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
-            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil
+            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated
         };
         localStorage.setItem('lineageIdleSave', JSON.stringify(saveData));
         this.logSystem('遊戲進度已儲存。', 'reward');
@@ -1188,8 +1212,9 @@ const game = {
                 this.state.createPoints = parseInt(savedData.createPoints) || 0;
                 this.state.bonusPoints = parseInt(savedData.bonusPoints) || 0;
                 this.state.spells = Array.isArray(savedData.spells) ? savedData.spells.filter(id => SPELLS[id]) : [];
-                this.state.currentMap = savedData.currentMap || 'knight_village';
+                this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
+                this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
                 
                 this.state.settings = { ...this.state.settings, ...(savedData.settings || {}) };
                 this.state.settings.autoHpThreshold = parseInt(this.state.settings.autoHpThreshold) || 5;
@@ -1225,7 +1250,7 @@ const game = {
                 
                 let mapSel = document.getElementById('map-select');
                 if (Array.from(mapSel.options).some(o => o.value === this.state.currentMap)) mapSel.value = this.state.currentMap;
-                else { this.state.currentMap = 'knight_village'; mapSel.value = 'knight_village'; }
+                else { this.state.currentMap = 'hidden_valley'; mapSel.value = 'hidden_valley'; }
                 
                 this.logSystem('讀取存檔成功！歡迎回來。', 'reward');
                 this.startLoops();
@@ -1290,6 +1315,7 @@ const game = {
         let spell = SPELLS[spellId];
         if (!spell) return 999;
         let cls = this.getClassDef();
+        if (this.state.classId === 'wizard' && spellId === 'light_arrow') return 1;
         if (spell.classes && spell.classes.includes('elf')) return spell.level * (cls.classMagicLevelStep || 10);
         if (spell.classes && spell.classes.includes('dark_elf')) return spell.level * (cls.classMagicLevelStep || 15);
         if (spell.classes && spell.classes.includes('knight')) return spell.level >= 5 ? 50 : Math.max(50, spell.level * 10);
@@ -1327,11 +1353,18 @@ const game = {
     startGame: function() {
         document.getElementById('char-creation-modal').style.display = 'none';
         document.getElementById('main-ui').classList.remove('hidden');
+        this.state.currentMap = 'hidden_valley';
+        this.state.hiddenValleyArubaDefeated = false;
+        let mapSel = document.getElementById('map-select');
+        if (mapSel) mapSel.value = 'hidden_valley';
         this.addInventory('dagger_orc', 1, 0, false);
         this.addInventory('leather_jacket', 1, 0, false);
         this.state.equipment.weapon = this.getItemKey('dagger_orc', 0, false);
         this.state.equipment.armor = this.getItemKey('leather_jacket', 0, false);
-        if (this.state.classId === 'wizard' && !this.state.spells.includes('light_arrow')) this.state.spells.push('light_arrow');
+        if (this.state.classId === 'wizard') {
+            if (!this.state.spells.includes('light_arrow')) this.state.spells.push('light_arrow');
+            this.state.settings.autoAttack = 'light_arrow';
+        }
         if (this.state.classId === 'elf') {
             this.addInventory('bow_short', 1, 0, false);
             this.addInventory('quiver_normal', 1, 0, false);
@@ -1697,6 +1730,7 @@ const game = {
         if(this.state.buffs.str_buff) buffHtml += '<span class="c-success mr-2">[體魄強健]</span>';
         if(this.state.buffs.enchant_weapon) buffHtml += '<span class="c-success mr-2">[擬似魔武]</span>';
         if(this.state.buffs.haste) buffHtml += '<span class="c-success mr-2">[加速術]</span>';
+        if(this.state.currentMap === 'hidden_valley') buffHtml += '<span class="c-success mr-2">[隱藏之谷加速]</span>';
         if(this.state.buffs.greater_haste) buffHtml += '<span class="c-success mr-2">[強力加速]</span>';
         if(this.state.buffs.shield) buffHtml += '<span class="c-info mr-2">[保護罩]</span>';
         if(this.state.buffs.immune_to_harm) buffHtml += '<span class="c-warn mr-2">[聖結界]</span>';
@@ -2369,7 +2403,26 @@ const game = {
         return d;
     },
 
+    forceLeaveHiddenValley: function() {
+        this.stopBattle();
+        this.state.currentMap = 'knight_village';
+        this.state.targetMonster = null;
+        let mapSel = document.getElementById('map-select');
+        if (mapSel) mapSel.value = 'knight_village';
+        document.getElementById('target-name').innerText = '尋找目標中...';
+        document.getElementById('target-name').className = 'c-err font-bold text-2xl mb-4';
+        document.getElementById('target-hp-container').classList.add('hidden');
+        this.logSystem('您已超過13等，警衛將您帶到銀騎士村', 'danger');
+        this.updateUI();
+        clearTimeout(this.state.mapChangeLoop);
+        this.state.mapChangeLoop = setTimeout(() => this.startBattle(), 1000);
+    },
+
     changeMap: function(mapId) {
+        if (mapId === 'hidden_valley' && this.state.level > 13) {
+            this.forceLeaveHiddenValley();
+            return;
+        }
         if (mapId === 'antaras_lair' && this.state.antarasDeadUntil && Date.now() < this.state.antarasDeadUntil) {
             this.stopBattle();
             this.state.currentMap = mapId;
@@ -2394,6 +2447,10 @@ const game = {
     },
     spawnMonster: function() {
         if(this.state.hp <= 0) return;
+        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) {
+            this.forceLeaveHiddenValley();
+            return;
+        }
         
         if (this.state.currentMap === 'antaras_lair' && this.state.antarasDeadUntil && Date.now() < this.state.antarasDeadUntil) {
             document.getElementById('target-name').innerText = `安塔瑞斯尚未重生... (${Math.ceil((this.state.antarasDeadUntil - Date.now()) / 1000)}秒)`;
@@ -2411,10 +2468,15 @@ const game = {
             return this.spawnMonster();
         }
 
-        let totalW = map.monsters.reduce((s, m) => s + m.weight, 0);
-        let r = Math.random() * totalW;
         let selected = map.monsters[0];
-        for(let m of map.monsters) { if(r < m.weight) { selected = m; break; } r -= m.weight; }
+        if (this.state.currentMap === 'hidden_valley' && this.state.level >= 12 && !this.state.hiddenValleyArubaDefeated) {
+            selected = map.monsters.find(m => m.id === 'hv_cursed_aruba') || selected;
+            this.logSystem('隱藏之谷深處傳來詛咒的氣息，受詛咒的阿魯巴現身了！', 'danger');
+        } else {
+            let totalW = map.monsters.reduce((s, m) => s + m.weight, 0);
+            let r = Math.random() * totalW;
+            for(let m of map.monsters) { if(r < m.weight) { selected = m; break; } r -= m.weight; }
+        }
         
         this.state.targetMonster = { ...selected, maxHp: selected.hp, debuffs: {} };
         this.state.zombieTick = 0;
@@ -2814,6 +2876,7 @@ const game = {
         }
         
         if (m.id === 'antaras') this.state.antarasDeadUntil = Date.now() + 600000;
+        if (m.id === 'hv_cursed_aruba') this.state.hiddenValleyArubaDefeated = true;
 
         document.getElementById('target-name').innerText = '尋找目標中...';
         document.getElementById('target-name').className = 'c-err font-bold text-2xl mb-4';
@@ -2844,17 +2907,28 @@ const game = {
     },
     playerDied: function() {
         this.stopBattle();
-        let req = EXP_TABLE[this.state.level] || 36065092;
-        let pen = Math.floor(req * 0.1);
-        this.state.exp = Math.max(0, this.state.exp - pen);
-        this.state.hp = Math.floor(this.state.maxHp * 0.1);
-        this.logSystem(`你死亡了！失去經驗值。`, 'danger');
+        this.state.targetMonster = null;
+        this.state.zombieTick = 0;
+        this.state.monsterSpecialTick = 0;
+        if (this.state.currentMap !== 'hidden_valley') {
+            let req = EXP_TABLE[this.state.level] || 36065092;
+            let pen = Math.floor(req * 0.1);
+            this.state.exp = Math.max(0, this.state.exp - pen);
+        }
+        this.state.hp = this.state.maxHp;
+        this.state.mp = this.state.maxMp;
+        if (this.state.currentMap === 'hidden_valley') this.logSystem(`你在隱藏之谷死亡了，不會失去經驗值。`, 'danger');
+        else this.logSystem(`你死亡了！失去經驗值。`, 'danger');
         this.updateUI();
         
         document.getElementById('target-name').innerText = '尋找目標中...';
         document.getElementById('target-name').className = 'c-err font-bold text-2xl mb-4';
+        document.getElementById('target-hp-container').classList.add('hidden');
         
-        setTimeout(() => { this.logSystem('在村莊中復活。'); this.startBattle(); }, 3000);
+        setTimeout(() => {
+            this.logSystem(this.state.currentMap === 'hidden_valley' ? '在隱藏之谷中復活。' : '在村莊中復活。');
+            this.startBattle();
+        }, 3000);
     },
     checkLevelUp: function() {
         let req = EXP_TABLE[this.state.level] || 36065092;
@@ -2874,6 +2948,7 @@ const game = {
             this.updateSettingsUI();
             this.renderSkills(); 
             this.checkLevelUp();
+            if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) this.forceLeaveHiddenValley();
         }
     },
 
@@ -3263,7 +3338,7 @@ const game = {
             let speed = (wKey && this.state.inventory[wKey]) ? (ITEMS[this.state.inventory[wKey].itemId]?.speed || 1200) : 1200;
             
             let reduction = 0;
-            if (this.state.buffs.haste || this.state.buffs.potion_haste) reduction += 0.2;
+            if (this.state.buffs.haste || this.state.buffs.potion_haste || this.state.currentMap === 'hidden_valley') reduction += 0.2;
             if (this.state.buffs.greater_haste) reduction += 0.3;
             speed = speed * (1 - reduction);
             
