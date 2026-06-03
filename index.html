@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>天堂放置版 - 傳說巨龍篇</title>
+    <title>天堂放置版 - 拉斯塔巴德篇</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -111,12 +111,6 @@
                 <div class="mt-4 border-t border-gray-800 pt-4 text-xl"><span class="c-warn">金幣: <span id="ui-adena" class="font-bold">0</span></span></div>
                 <div id="ui-buffs" class="mt-3 text-sm min-h-[28px] text-gray-400"></div>
             </div>
-            <div class="panel-border p-3 flex-shrink-0 rounded-md bg-zinc-900 border-zinc-800 flex items-center justify-between gap-3 shadow-inner">
-                <span class="c-magic font-bold ml-1">自動施放攻擊魔法:</span>
-                <select id="cfg-auto-attack" class="bg-black c-sys border border-gray-600 py-1 px-2 flex-1 rounded outline-none cursor-pointer" onchange="game.updateSettings()">
-                    <option value="none">無 (純物理攻擊)</option>
-                </select>
-            </div>
             <div class="panel-border p-4 flex-1 flex flex-col min-h-0 rounded-md">
                 <div class="c-title mb-2 text-xl border-b border-gray-800 pb-2"><span>系統與獲得資訊</span></div>
                 <div id="system-log" class="log-area flex-1 custom-scroll"></div>
@@ -128,7 +122,8 @@
             <div class="flex text-lg items-end gap-1 px-1">
                 <button class="tab-btn active" onclick="game.switchTab('inv')">裝備與背包</button>
                 <button class="tab-btn" onclick="game.switchTab('magic')">已學習魔法</button>
-                <button class="tab-btn" onclick="game.switchTab('shop')">商店與設定</button>
+                <button class="tab-btn" onclick="game.switchTab('shop')">商店交換和製作</button>
+                <button class="tab-btn" onclick="game.switchTab('settings')">設定</button>
             </div>
             <div class="panel-border p-5 flex-1 flex flex-col min-h-0 relative rounded-b-md rounded-tr-md">
                 <div id="tab-inv" class="flex-1 flex gap-3 h-full overflow-hidden">
@@ -163,9 +158,12 @@
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">象牙塔職業書商人</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
                             <div class="list-item"><span class="c-info">精靈水晶(魔法防禦)</span> <div class="flex items-center gap-3"><span class="c-warn">15,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_resist_magic')">購買</button></div></div>
-                            <div class="list-item"><span class="c-info">精靈水晶(魂體轉換)</span> <div class="flex items-center gap-3"><span class="c-warn">20,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_body_to_mind')">購買</button></div></div>
-                            <div class="list-item"><span class="c-info">精靈水晶(三重矢)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_triple_arrow')">購買</button></div></div>
+                            <div class="list-item"><span class="c-info">精靈水晶(心靈轉換)</span> <div class="flex items-center gap-3"><span class="c-warn">20,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_body_to_mind')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(淨化精神)</span> <div class="flex items-center gap-3"><span class="c-warn">40,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_clear_mind')">購買</button></div></div>
+                            <div class="list-item"><span class="c-info">精靈水晶(屬性防禦)</span> <div class="flex items-center gap-3"><span class="c-warn">25,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_resist_elemental')">購買</button></div></div>
+                            <div class="list-item"><span class="c-info">精靈水晶(大地防護)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_earth_skin')">購買</button></div></div>
+                            <div class="list-item"><span class="c-info">精靈水晶(火焰武器)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_fire_weapon')">購買</button></div></div>
+                            <div class="list-item"><span class="c-info">精靈水晶(風之神射)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_wind_shot')">購買</button></div></div>
                             <div class="list-item border-t border-gray-800 pt-4"><span class="c-magic">黑暗精靈水晶(附加劇毒)</span> <div class="flex items-center gap-3"><span class="c-warn">20,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_dark_enchant_venom')">購買</button></div></div>
                             <div class="list-item"><span class="c-magic">黑暗精靈水晶(暗影防護)</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_dark_shadow_armor')">購買</button></div></div>
                         </div>
@@ -184,9 +182,19 @@
                             <div class="list-item"><span class="c-legendary">古老的長袍盔甲</span> <button class="btn-ui !px-3 !py-1" onclick="game.craftAncientItem('sealed_forgotten_robe_armor','ancient_robe_armor')">製作</button></div>
                             <div class="list-item"><span class="c-legendary">古老的金屬盔甲</span> <button class="btn-ui !px-3 !py-1" onclick="game.craftAncientItem('sealed_forgotten_metal_armor','ancient_metal_armor')">製作</button></div>
                         </div>
+                    </div>
+                </div>
+                <div id="tab-settings" class="flex-1 flex flex-col h-full overflow-hidden hidden">
+                    <div class="flex-1 overflow-y-auto custom-scroll pr-2">
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">自動功能設定</div>
                         <div class="space-y-4 c-sys bg-gray-900 p-4 rounded border border-gray-800 mb-8">
                             <div class="flex items-center flex-wrap gap-3">
+                                <span class="c-magic font-bold">自動施放攻擊魔法:</span>
+                                <select id="cfg-auto-attack" class="bg-black c-sys border border-gray-600 py-1 px-2 rounded outline-none cursor-pointer flex-1" onchange="game.updateSettings()">
+                                    <option value="none">無 (純物理攻擊)</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center flex-wrap gap-3 border-t border-gray-700 pt-4">
                                 <span>體力低於</span><input type="number" id="cfg-hp-threshold" class="w-20 bg-black border border-gray-600 text-center text-white py-1 rounded" value="5" onchange="game.updateSettings()">
                                 <span>時自動使用:</span>
                                 <select id="cfg-hp-type" class="bg-black border border-gray-600 text-white py-1 px-2 rounded" onchange="game.updateSettings()">
@@ -211,6 +219,12 @@
                                 <select id="cfg-heal-spell" class="bg-black border border-gray-600 text-white py-1 px-2 rounded flex-1" onchange="game.updateSettings()"><option value="none">無</option></select>
                             </div>
                             <div class="text-xs c-sys italic">治癒法術冷卻時間為 3 秒。必須先學會對應法術才會顯示。</div>
+                            <div class="flex items-center flex-wrap gap-3 pt-2 border-t border-gray-700 mt-2">
+                                <span class="c-magic">魔力低於</span><input type="number" id="cfg-auto-mp-skill-threshold" class="w-20 bg-black border border-gray-600 text-center text-white py-1 rounded" value="20" onchange="game.updateSettings()">
+                                <span class="c-magic">時自動施放回魔技能:</span>
+                                <select id="cfg-auto-mp-skill" class="bg-black border border-gray-600 text-white py-1 px-2 rounded flex-1" onchange="game.updateSettings()"><option value="none">無</option></select>
+                            </div>
+                            <div class="text-xs c-sys italic">回魔技能會消耗體力轉換魔力；體力不足時不會施放。</div>
                             <div class="flex items-center flex-wrap gap-3 pt-2 border-t border-gray-700 mt-2">
                                 <span class="c-magic">魔力大於</span><input type="number" id="cfg-auto-attack-mp" class="w-20 bg-black border border-gray-600 text-center text-white py-1 rounded" value="0" onchange="game.updateSettings()">
                                 <span class="c-magic">時才允許施放自動攻擊魔法</span>
@@ -794,7 +808,7 @@ const MAPS = {
         { id: 'ice_man', name: '冰人', level: 58, hp: 1400, ac: -45, exp: 3300, atkSpeed: 2000, dice: '6d10+14', hitBonus: 17, weight: 70, adena: [330,580], drops: [{id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.8}, {id:'potion_blue', rate: 2}] },
         { id: 'snow_tiger', name: '冰原老虎', level: 60, hp: 1500, ac: -48, exp: 3500, atkSpeed: 1400, dice: '6d12+14', hitBonus: 22, weight: 68, adena: [350,600], drops: [{id:'potion_haste', rate: 4}, {id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.6}] },
         { id: 'iron_golem', name: '鋼鐵高崙', level: 65, hp: 3600, ac: -60, exp: 4300, atkSpeed: 2200, dice: '7d12+22', hitBonus: 22, weight: 44, adena: [450,820], drops: [{id:'armor_metal', rate: 1}, {id:'steel_helmet', rate: 1}, {id:'gem_quality_diamond', rate: 1}, {id:'gem_high_diamond', rate: 0.15}] },
-        { id: 'living_armor', name: '活盔甲', level: 62, hp: 2200, ac: -54, exp: 3800, atkSpeed: 1800, dice: '7d10+18', hitBonus: 20, weight: 58, adena: [390,720], drops: [{id:'armor_metal', rate: 1}, {id:'scroll_armor', rate: 0.5}, {id:'gem_quality_diamond', rate: 0.6}] },
+        { id: 'living_armor', name: '活鎧甲', level: 62, hp: 2200, ac: -54, exp: 3800, atkSpeed: 1800, dice: '7d10+18', hitBonus: 20, weight: 58, adena: [390,720], drops: [{id:'armor_metal', rate: 1}, {id:'scroll_armor', rate: 0.5}, {id:'gem_quality_diamond', rate: 0.6}] },
         { id: 'ivory_wizard', name: '象牙塔魔法師', level: 66, hp: 2400, ac: -55, mr: 75, exp: 4500, atkSpeed: 2000, dice: '7d10+20', hitBonus: 22, weight: 48, adena: [500,900], drops: [{id:'book_blizzard', rate: 0.3}, {id:'book_tornado', rate: 0.3}, {id:'mana_cloak', rate: 0.08}, {id:'gem_quality_sapphire', rate: 0.8}] },
         { id: 'ice_queen', name: '冰之女王', level: 82, hp: 20000, ac: -80, mr: 95, exp: 7800, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 5, adena: [1300,2600], drops: [{id:'ice_queen_staff', rate: 0.2}, {id:'ice_queen_earring', rate: 0.2}, {id:'scroll_armor_blessed', rate: 0.3}, {id:'gem_high_sapphire', rate: 1.5}, {id:'gem_high_diamond', rate: 0.6}] },
         { id: 'demon', name: '惡魔', level: 85, hp: 26000, ac: -84, mr: 95, exp: 8000, atkSpeed: 1500, dice: '8d12+30', hitBonus: 32, isBoss: true, weight: 4, adena: [1500,3000], drops: [{id:'demon_blood', rate: 2}, {id:'book_immune', rate: 0.3}, {id:'scroll_weapon_blessed', rate: 0.3}, {id:'gem_high_diamond', rate: 1}, {id:'gem_high_ruby', rate: 0.5}] }
@@ -840,12 +854,14 @@ Object.assign(ITEMS, {
     helm_darkness: { name: '黑暗頭飾', type: 'helmet', safe: 4, ac: -2, mr: 4, dropRate: 0.2 },
     gauntlet_dark: { name: '黑暗手套', type: 'gloves', safe: 4, ac: -1, dropRate: 0.2, desc: '黑暗妖精任務獎勵改為掉落。' },
     crystal_elf_resist_magic: { name: '精靈水晶(魔法防禦)', type: 'book', spellId: 'elf_resist_magic', price: 15000 },
-    crystal_elf_body_to_mind: { name: '精靈水晶(魂體轉換)', type: 'book', spellId: 'elf_body_to_mind', price: 20000 },
-    crystal_elf_triple_arrow: { name: '精靈水晶(三重矢)', type: 'book', spellId: 'elf_triple_arrow', price: 30000 },
+    crystal_elf_body_to_mind: { name: '精靈水晶(心靈轉換)', type: 'book', spellId: 'elf_body_to_mind', price: 20000 },
+    crystal_elf_soul_to_mind: { name: '精靈水晶(魂體轉換)', type: 'book', spellId: 'elf_soul_to_mind' },
+    crystal_elf_triple_arrow: { name: '精靈水晶(三重矢)', type: 'book', spellId: 'elf_triple_arrow' },
     crystal_elf_clear_mind: { name: '精靈水晶(淨化精神)', type: 'book', spellId: 'elf_clear_mind', price: 40000 },
-    crystal_elf_fire_weapon: { name: '精靈水晶(火焰武器)', type: 'book', spellId: 'elf_fire_weapon' },
-    crystal_elf_wind_shot: { name: '精靈水晶(風之神射)', type: 'book', spellId: 'elf_wind_shot' },
-    crystal_elf_earth_skin: { name: '精靈水晶(大地防護)', type: 'book', spellId: 'elf_earth_skin' },
+    crystal_elf_resist_elemental: { name: '精靈水晶(屬性防禦)', type: 'book', spellId: 'elf_resist_elemental', price: 25000 },
+    crystal_elf_fire_weapon: { name: '精靈水晶(火焰武器)', type: 'book', spellId: 'elf_fire_weapon', price: 30000 },
+    crystal_elf_wind_shot: { name: '精靈水晶(風之神射)', type: 'book', spellId: 'elf_wind_shot', price: 30000 },
+    crystal_elf_earth_skin: { name: '精靈水晶(大地防護)', type: 'book', spellId: 'elf_earth_skin', price: 30000 },
     crystal_elf_water_life: { name: '精靈水晶(水之元氣)', type: 'book', spellId: 'elf_water_life' },
     crystal_elf_storm_shot: { name: '精靈水晶(暴風神射)', type: 'book', spellId: 'elf_storm_shot' },
     crystal_elf_iron_skin: { name: '精靈水晶(鋼鐵防護)', type: 'book', spellId: 'elf_iron_skin' },
@@ -865,9 +881,11 @@ Object.assign(ITEMS, {
 
 Object.assign(SPELLS, {
     elf_resist_magic: { id: 'elf_resist_magic', name: '魔法防禦', level: 1, type: 'buff', mp: 5, duration: 1200, classes: ['elf'] },
-    elf_body_to_mind: { id: 'elf_body_to_mind', name: '魂體轉換', level: 2, type: 'passive', mp: 0, classes: ['elf'] },
+    elf_body_to_mind: { id: 'elf_body_to_mind', name: '心靈轉換', level: 2, type: 'mp_convert', mp: 0, hpCost: 8, mpGain: 2, classes: ['elf'] },
+    elf_soul_to_mind: { id: 'elf_soul_to_mind', name: '魂體轉換', level: 3, type: 'mp_convert', mp: 0, hpCost: 50, mpGain: 15, classes: ['elf'] },
     elf_triple_arrow: { id: 'elf_triple_arrow', name: '三重矢', level: 3, type: 'buff', mp: 10, duration: 600, classes: ['elf'] },
     elf_clear_mind: { id: 'elf_clear_mind', name: '淨化精神', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'] },
+    elf_resist_elemental: { id: 'elf_resist_elemental', name: '屬性防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'] },
     elf_fire_weapon: { id: 'elf_fire_weapon', name: '火焰武器', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
     elf_wind_shot: { id: 'elf_wind_shot', name: '風之神射', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
     elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 4, type: 'buff', mp: 15, duration: 1200, classes: ['elf'] },
@@ -876,12 +894,12 @@ Object.assign(SPELLS, {
     elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
     elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 6, type: 'buff', mp: 30, duration: 1200, classes: ['elf'] },
     de_enchant_venom: { id: 'de_enchant_venom', name: '附加劇毒', level: 1, type: 'buff', mp: 8, duration: 1200, classes: ['dark_elf'] },
-    de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 2, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'] },
-    de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 3, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'] },
-    de_shadow_fang: { id: 'de_shadow_fang', name: '暗影之牙', level: 3, type: 'buff', mp: 20, duration: 1200, classes: ['dark_elf'] },
-    de_uncanny_dodge: { id: 'de_uncanny_dodge', name: '暗影閃避', level: 4, type: 'buff', mp: 25, duration: 600, classes: ['dark_elf'] },
-    de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 4, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'] },
-    de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 4, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'] },
+    de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 1, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'] },
+    de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 2, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'] },
+    de_shadow_fang: { id: 'de_shadow_fang', name: '暗影之牙', level: 2, type: 'buff', mp: 20, duration: 1200, classes: ['dark_elf'] },
+    de_uncanny_dodge: { id: 'de_uncanny_dodge', name: '暗影閃避', level: 3, type: 'buff', mp: 25, duration: 600, classes: ['dark_elf'] },
+    de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 3, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'] },
+    de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 3, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'] },
     knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'] },
     knight_reduction_armor: { id: 'knight_reduction_armor', name: '增幅防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['knight'] },
     knight_solid_carriage: { id: 'knight_solid_carriage', name: '堅固防護', level: 4, type: 'buff', mp: 15, duration: 600, classes: ['knight'] },
@@ -930,31 +948,41 @@ Object.assign(MAPS, {
 
 const DROP_PATCHES = {
     goblin: [{id:'crystal_elf_resist_magic', rate: 0.2}],
+    orc_archer: [{id:'crystal_elf_triple_arrow', rate: 0.03}],
+    hv_crabman: [{id:'crystal_elf_soul_to_mind', rate: 0.01}],
+    hv_beholder: [{id:'crystal_elf_triple_arrow', rate: 0.02}],
+    living_armor: [{id:'crystal_elf_soul_to_mind', rate: 0.08}],
     orc_fighter: [{id:'sword_red_knight', rate: 0.15}, {id:'shield_red_knight', rate: 0.15}, {id:'book_knight_reduction_armor', rate: 0.05}],
     black_knight: [{id:'book_knight_shock_stun', rate: 0.12}, {id:'book_knight_reduction_armor', rate: 0.12}, {id:'sword_red_knight', rate: 0.12}],
     death_knight: [{id:'book_knight_counter_barrier', rate: 0.18}, {id:'book_knight_shock_stun', rate: 0.18}, {id:'shield_red_knight', rate: 0.18}],
     elder: [{id:'robe_mage', rate: 0.18}, {id:'staff_sorcery', rate: 0.18}],
     black_elder: [{id:'robe_mage', rate: 0.2}, {id:'staff_sorcery', rate: 0.2}, {id:'crystal_dark_uncanny_dodge', rate: 0.18}],
     harpy: [{id:'bow_elven', rate: 0.25}, {id:'crystal_elf_wind_shot', rate: 0.15}],
-    arian: [{id:'bow_elven', rate: 0.18}, {id:'shield_elven', rate: 0.18}, {id:'crystal_elf_triple_arrow', rate: 0.12}],
+    arian: [{id:'bow_elven', rate: 0.18}, {id:'shield_elven', rate: 0.18}, {id:'crystal_elf_triple_arrow', rate: 0.03}],
     lamia: [{id:'crystal_elf_water_life', rate: 0.12}, {id:'crystal_dark_enchant_venom', rate: 0.12}],
     doppleganger: [{id:'cloak_shadow', rate: 0.12}, {id:'armor_shadow', rate: 0.1}],
     drake: [{id:'bow_flame', rate: 0.12}, {id:'crystal_elf_storm_shot', rate: 0.18}],
+    fire_archer: [{id:'crystal_elf_triple_arrow', rate: 0.04}],
     wyrm: [{id:'bow_yumi', rate: 0.12}, {id:'crystal_elf_iron_skin', rate: 0.12}],
     ifrit: [{id:'crystal_elf_fire_weapon', rate: 0.25}, {id:'crystal_elf_elemental_fire', rate: 0.12}],
     succubus: [{id:'crystal_dark_shadow_armor', rate: 0.15}, {id:'crystal_dark_uncanny_dodge', rate: 0.08}],
-    succubus_queen: [{id:'crystal_dark_uncanny_dodge', rate: 0.25}],
+    succubus_queen: [{id:'crystal_dark_uncanny_dodge', rate: 0.25}, {id:'crystal_elf_triple_arrow', rate: 0.03}],
     demon: [{id:'book_knight_counter_barrier', rate: 0.12}, {id:'crystal_dark_double_break', rate: 0.18}, {id:'crystal_elf_elemental_fire', rate: 0.12}],
     antaras: [{id:'book_knight_counter_barrier', rate: 0.4}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'crystal_elf_elemental_fire', rate: 0.4}, {id:'bow_moon', rate: 0.12}, {id:'blade_ronde', rate: 0.12}]
 };
 Object.keys(MAPS).forEach(mapId => {
     MAPS[mapId].monsters.forEach(monster => {
         let additions = DROP_PATCHES[monster.id];
-        if (!additions) return;
-        monster.drops = monster.drops || [];
-        additions.forEach(drop => {
-            if (!monster.drops.some(existing => existing.id === drop.id)) monster.drops.push(drop);
-        });
+        if (additions) {
+            monster.drops = monster.drops || [];
+            additions.forEach(drop => {
+                if (!monster.drops.some(existing => existing.id === drop.id)) monster.drops.push(drop);
+            });
+        }
+        if (monster.isBoss) {
+            monster.drops = monster.drops || [];
+            if (!monster.drops.some(existing => existing.id === 'crystal_elf_soul_to_mind')) monster.drops.push({id:'crystal_elf_soul_to_mind', rate: 0.01});
+        }
     });
 });
 
@@ -1015,7 +1043,7 @@ Object.assign(ITEMS, {
 Object.assign(SPELLS, {
     elf_storm_eye: { id: 'elf_storm_eye', name: '暴風之眼', level: 5, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
     elf_release_elemental: { id: 'elf_release_elemental', name: '釋放元素', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
-    invisibility: { id: 'invisibility', name: '隱身術', level: 7, type: 'buff', mp: 15, duration: 600, classes: ['wizard','dark_elf'] }
+    invisibility: { id: 'invisibility', name: '隱身術', level: 6, type: 'buff', mp: 15, duration: 600, classes: ['wizard','dark_elf'] }
 });
 Object.assign(ITEMS, {
     crystal_elf_storm_eye: { name: '精靈水晶(暴風之眼)', type: 'book', spellId: 'elf_storm_eye' },
@@ -1088,6 +1116,13 @@ MAPS.forgotten_island.monsters.forEach(m => {
     if (m.id === 'ancient_guardian') m.drops.push({id:'sealed_forgotten_sword', rate: 0.3}, {id:'sealed_forgotten_dual_blade', rate: 0.3}, {id:'sealed_forgotten_staff', rate: 0.3}, {id:'sealed_forgotten_leather_armor', rate: 0.3}, {id:'sealed_forgotten_robe_armor', rate: 0.3}, {id:'sealed_forgotten_metal_armor', rate: 0.3});
     if (m.isBoss) m.drops.push({id:'quiver_ancient', rate: 0.08});
 });
+Object.keys(MAPS).forEach(mapId => {
+    MAPS[mapId].monsters.forEach(m => {
+        if (!m.isBoss) return;
+        m.drops = m.drops || [];
+        if (!m.drops.some(drop => drop.id === 'crystal_elf_soul_to_mind')) m.drops.push({id:'crystal_elf_soul_to_mind', rate: 0.01});
+    });
+});
 ['lastavard','demon_temple','forgotten_island','shadow_temple'].forEach(mapId => {
     if (!MAPS[mapId]) return;
     MAPS[mapId].monsters.forEach(m => {
@@ -1102,10 +1137,10 @@ const game = {
         baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0,
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
-        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50 },
+        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, autoHealCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
+        potionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
     },
 
     init: function() {
@@ -1222,11 +1257,14 @@ const game = {
                 this.state.settings.autoHealThreshold = parseInt(this.state.settings.autoHealThreshold) || 50;
                 this.state.settings.autoAttackMpThreshold = parseInt(this.state.settings.autoAttackMpThreshold) || 0;
                 if(!this.state.settings.autoHealSpell) this.state.settings.autoHealSpell = 'none';
+                this.state.settings.autoMpSkillThreshold = parseInt(this.state.settings.autoMpSkillThreshold) || 20;
+                if(!this.state.settings.autoMpSkill) this.state.settings.autoMpSkill = 'none';
 
                 this.state.buffs = {}; 
                 this.state.targetMonster = null;
                 this.state.zombieTick = 0;
                 this.state.monsterSpecialTick = 0;
+                this.state.autoMpSkillCd = 0;
                 
                 document.getElementById('char-creation-modal').style.display = 'none';
                 document.getElementById('main-ui').classList.remove('hidden');
@@ -1248,6 +1286,7 @@ const game = {
                 document.getElementById('cfg-auto-haste').checked = !!this.state.settings.autoBuyHaste;
                 document.getElementById('cfg-auto-attack-mp').value = this.state.settings.autoAttackMpThreshold;
                 document.getElementById('cfg-heal-threshold').value = this.state.settings.autoHealThreshold;
+                document.getElementById('cfg-auto-mp-skill-threshold').value = this.state.settings.autoMpSkillThreshold;
                 
                 let mapSel = document.getElementById('map-select');
                 if (Array.from(mapSel.options).some(o => o.value === this.state.currentMap)) mapSel.value = this.state.currentMap;
@@ -1285,12 +1324,14 @@ const game = {
         document.getElementById('tab-inv').classList.add('hidden');
         document.getElementById('tab-magic').classList.add('hidden');
         document.getElementById('tab-shop').classList.add('hidden');
+        document.getElementById('tab-settings').classList.add('hidden');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
         let target = evt && evt.target ? evt.target : document.querySelector(`.tab-btn[onclick*="'${tabId}'"]`);
         if(target) target.classList.add('active');
         if(tabId === 'inv') this.renderInventory();
         if(tabId === 'magic') this.renderSkills();
+        if(tabId === 'settings') this.updateSettingsUI();
     },
 
     getClassDef: function() {
@@ -1370,6 +1411,7 @@ const game = {
         if (this.state.classId === 'elf') {
             this.addInventory('bow_short', 1, 0, false);
             this.addInventory('quiver_normal', 1, 0, false);
+            this.state.equipment.weapon = this.getItemKey('bow_short', 0, false);
             this.state.equipment.quiver = this.getItemKey('quiver_normal', 0, false);
         }
         this.addInventory('potion_red', 50, 0, false);
@@ -1506,7 +1548,7 @@ const game = {
         let sets = this.getSetBonuses();
         ac -= sets.ac;
         if(this.state.buffs.shield) ac -= 2;
-        if(this.state.buffs.elf_earth_skin) ac -= 3;
+        if(this.state.buffs.elf_earth_skin) ac -= 6;
         if(this.state.buffs.de_shadow_armor) ac -= 2;
         if(this.state.buffs.berserkers) ac += 10;
         return ac;
@@ -1740,6 +1782,13 @@ const game = {
         if(this.state.buffs.create_zombie) buffHtml += '<span class="c-warn mr-2">[隨從:殭屍]</span>';
         if(this.state.buffs.summon_ogre) buffHtml += '<span class="c-warn mr-2">[隨從:食妖]</span>';
         if(this.state.buffs.tame_monster) buffHtml += '<span class="c-warn mr-2">[迷魅術]</span>';
+        if(this.state.buffs.elf_resist_magic) buffHtml += '<span class="c-success mr-2">[魔法防禦]</span>';
+        if(this.state.buffs.elf_clear_mind) buffHtml += '<span class="c-success mr-2">[淨化精神]</span>';
+        if(this.state.buffs.elf_resist_elemental) buffHtml += '<span class="c-success mr-2">[屬性防禦]</span>';
+        if(this.state.buffs.elf_earth_skin) buffHtml += '<span class="c-success mr-2">[大地防護]</span>';
+        if(this.state.buffs.elf_fire_weapon) buffHtml += '<span class="c-success mr-2">[火焰武器]</span>';
+        if(this.state.buffs.elf_wind_shot) buffHtml += '<span class="c-success mr-2">[風之神射]</span>';
+        if(this.state.buffs.elf_triple_arrow) buffHtml += '<span class="c-success mr-2">[三重矢]</span>';
         if(this.state.buffs.potion_blue) buffHtml += '<span class="c-potion-blue mr-2">[藍色藥水]</span>';
         if(this.state.buffs.potion_wisdom) buffHtml += '<span class="c-potion-purple mr-2">[慎重藥水]</span>';
         if(this.state.buffs.potion_haste) buffHtml += '<span class="c-potion-purple mr-2">[加速藥水]</span>';
@@ -2297,6 +2346,7 @@ const game = {
     updateSettingsUI: function() {
         let atkSel = document.getElementById('cfg-auto-attack');
         let healSel = document.getElementById('cfg-heal-spell');
+        let mpSkillSel = document.getElementById('cfg-auto-mp-skill');
         let availSpells = this.getAvailableSpells();
         let currentAtk = this.state.settings.autoAttack;
         atkSel.innerHTML = '<option value="none">無 (純物理攻擊)</option>';
@@ -2317,6 +2367,16 @@ const game = {
         });
         if (Array.from(healSel.options).some(opt => opt.value === currentHeal)) healSel.value = currentHeal;
         else { healSel.value = 'none'; this.state.settings.autoHealSpell = 'none'; }
+
+        let currentMpSkill = this.state.settings.autoMpSkill;
+        mpSkillSel.innerHTML = '<option value="none">無</option>';
+        availSpells.forEach(id => {
+            let sp = SPELLS[id];
+            if(!sp) return;
+            if(sp.type === 'mp_convert' && this.state.level >= this.getSpellRequiredLevel(id)) mpSkillSel.innerHTML += `<option value="${id}">${sp.name}</option>`;
+        });
+        if (Array.from(mpSkillSel.options).some(opt => opt.value === currentMpSkill)) mpSkillSel.value = currentMpSkill;
+        else { mpSkillSel.value = 'none'; this.state.settings.autoMpSkill = 'none'; }
         
         document.getElementById('ui-max-spell-lv').innerText = getChineseNumber(Math.max(1, Math.max(...this.getAvailableSpells().map(id => SPELLS[id].level))));
         let hasteChk = document.getElementById('cfg-auto-haste');
@@ -2332,6 +2392,8 @@ const game = {
         this.state.settings.autoAttack = document.getElementById('cfg-auto-attack').value;
         this.state.settings.autoHealThreshold = parseInt(document.getElementById('cfg-heal-threshold').value) || 50;
         this.state.settings.autoHealSpell = document.getElementById('cfg-heal-spell').value;
+        this.state.settings.autoMpSkillThreshold = parseInt(document.getElementById('cfg-auto-mp-skill-threshold').value) || 20;
+        this.state.settings.autoMpSkill = document.getElementById('cfg-auto-mp-skill').value;
         this.state.settings.autoAttackMpThreshold = parseInt(document.getElementById('cfg-auto-attack-mp').value) || 0;
     },
     toggleAutoBuff: function(spellId, isChecked) {
@@ -2349,6 +2411,20 @@ const game = {
         }
         return Math.max(1, spell.mp - reduction);
     },
+    castMpConvert: function(spellId) {
+        let spell = SPELLS[spellId];
+        if (!spell || spell.type !== 'mp_convert') return false;
+        if (!this.getAvailableSpells().includes(spellId)) return false;
+        if (this.state.level < this.getSpellRequiredLevel(spellId)) return false;
+        let hpCost = spell.hpCost || 0;
+        let mpGain = spell.mpGain || 0;
+        if (this.state.hp <= hpCost) return false;
+        if (this.state.mp >= this.state.maxMp) return false;
+        this.state.hp -= hpCost;
+        this.state.mp = Math.min(this.state.maxMp, this.state.mp + mpGain);
+        this.logCombat(`自動施放了 ${spell.name}，消耗 ${hpCost} 點體力轉換 ${mpGain} 點魔力。`, 'magic');
+        return true;
+    },
     renderSkills: function() {
         const list = document.getElementById('skill-list');
         list.innerHTML = '';
@@ -2364,16 +2440,18 @@ const game = {
                 let groupHtml = `<div class="mb-4"><div class="text-sm c-sys border-b border-gray-800 pb-1 mb-2">${getChineseNumber(lvl)}階魔法</div><div class="grid grid-cols-5 gap-2">`;
                 spellsByLevel[lvl].forEach(spell => {
                     let canUse = this.state.level >= this.getSpellRequiredLevel(spell.id);
-                    let isBuff = spell.type === 'buff', isPassive = spell.type === 'passive', isHeal = spell.type === 'heal';
+                    let isBuff = spell.type === 'buff', isPassive = spell.type === 'passive', isHeal = spell.type === 'heal', isMpConvert = spell.type === 'mp_convert';
                     let checked = this.state.settings.autoBuffs.includes(spell.id) ? 'checked' : '';
                     let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
+                    let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
                     
                     let autoHtml = '';
                     if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
+                    else if (isMpConvert) autoHtml = `<span class="c-sys text-xs mt-1 block">回魔技能</span>`;
                     else if (isBuff && canUse && !isHeal) autoHtml = `<label class="cursor-pointer c-sys hover:text-white mt-1 text-xs"><input type="checkbox" class="w-3 h-3 align-middle" ${checked} onchange="game.toggleAutoBuff('${spell.id}', this.checked)"> 自動</label>`;
                     else if (!canUse) this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== spell.id);
 
-                    groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${spell.mp!==undefined?'MP:'+spell.mp:''}</span>${autoHtml}</div>`;
+                    groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive||isMpConvert?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${costText}</span>${autoHtml}</div>`;
                 });
                 groupHtml += `</div></div>`;
                 list.insertAdjacentHTML('beforeend', groupHtml);
@@ -3239,6 +3317,17 @@ const game = {
                         }
                     } else if (!availSpells.includes(sId)) {
                         this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== sId);
+                    }
+                }
+
+                if (this.state.autoMpSkillCd > 0) this.state.autoMpSkillCd--;
+                if (this.state.autoMpSkillCd <= 0 && this.state.mp < this.state.settings.autoMpSkillThreshold) {
+                    let mpSkillId = this.state.settings.autoMpSkill;
+                    if (mpSkillId && mpSkillId !== 'none' && availSpells.includes(mpSkillId)) {
+                        if (this.castMpConvert(mpSkillId)) {
+                            this.state.autoMpSkillCd = 3;
+                            needUpdate = true;
+                        }
                     }
                 }
                 
