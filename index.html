@@ -139,6 +139,11 @@
                     </div>
                     <div class="flex-1 flex flex-col h-full bg-zinc-900 border border-zinc-700 rounded-md p-3">
                         <div class="c-title mb-2 text-lg border-b border-zinc-700 pb-1"><span>背包清單</span></div>
+                        <div class="flex flex-wrap justify-end gap-2 mb-2">
+                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllNonAccessoryEquipment()">一鍵出售所有飾品以外的裝備</button>
+                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllAccessories()">一鍵出售所有飾品</button>
+                            <button class="btn-ui c-sys border-gray-700" onclick="game.sellAllBooks()">一鍵出售所有技能書/精靈水晶/法書</button>
+                        </div>
                         <div id="inventory-list" class="flex-1 overflow-y-auto custom-scroll space-y-1 pr-1"></div>
                     </div>
                 </div>
@@ -350,19 +355,19 @@ const ITEMS = {
     fauchard: { name: '法丘', type: 'weapon', hands: 2, speed: 1200, safe: 6, dice: '1d16', hit: 0, dropRate: 1 },
     battle_axe: { name: '戰斧', type: 'weapon', hands: 2, speed: 1400, safe: 6, dice: '1d18', hit: 0, dropRate: 2 },
     scimitar: { name: '彎刀', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d8', hit: 0, dropRate: 1 },
-    magic_staff: { name: '巫術魔法杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: 0, mDmg: 1, dropRate: 2 },
+    magic_staff: { name: '巫術魔法杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: 0, mDmg: 1, dropRate: 2 , classes: ['wizard'] },
     giant_axe: { name: '巨斧', type: 'weapon', hands: 2, speed: 1200, safe: 6, dice: '1d23', hit: 0, dropRate: 2 },
     berserk_axe: { name: '狂戰士斧', type: 'weapon', hands: 2, speed: 1000, safe: 6, dice: '1d19', hit: 0, dropRate: 1 },
     dagger_ori: { name: '奧里哈魯根短劍', type: 'weapon', hands: 1, speed: 900, safe: 6, dice: '1d7', hit: 0, isUndeadSlayer: true, dropRate: 0.1 },
     dagger_mithril: { name: '米索莉短劍', type: 'weapon', hands: 1, speed: 800, safe: 6, dice: '1d6', hit: 0, isUndeadSlayer: true, dropRate: 0.5 },
     silver_sword: { name: '銀劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d7', hit: 0, isUndeadSlayer: true, dropRate: 1 },
-    sword_tsurugi: { name: '瑟魯基之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d13', hit: 2, dropRate: 1 },
-    katana: { name: '武士刀', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d11', hit: 1, dropRate: 3 },
+    sword_tsurugi: { name: '瑟魯基之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d13', hit: 2, dropRate: 1 , classes: ['knight'] },
+    katana: { name: '武士刀', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d11', hit: 1, dropRate: 3 , classes: ['knight'] },
     hammer_thor: { name: '雷神之槌', type: 'weapon', hands: 2, speed: 1200, safe: 6, dice: '1d11', hit: 3, dropRate: 0.005, legendary: true, desc: '攻擊時有機率發動極道落雷。' },
     broad_spear: { name: '闊矛', type: 'weapon', hands: 2, speed: 1000, safe: 6, dice: '1d14', hit: 0, dropRate: 5 },
-    staff_mana: { name: '瑪那魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: -3, dropRate: 1, desc: '命中時吸收魔力，強化越高平均吸收量越高。' },
-    sword_dk_fire: { name: '死亡騎士的烈炎之劍', type: 'weapon', hands: 1, speed: 800, safe: 6, dice: '1d13', hit: 5, dropRate: 0.1, legendary: true, desc: '攻擊時有機率發動烈炎術。' },
-    sword_two_handed: { name: '雙手劍', type: 'weapon', hands: 2, speed: 1100, safe: 6, dice: '1d19', hit: 0, dropRate: 1 },
+    staff_mana: { name: '瑪那魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: -3, dropRate: 1, desc: '命中時吸收魔力，強化越高平均吸收量越高。' , classes: ['wizard'] },
+    sword_dk_fire: { name: '死亡騎士的烈炎之劍', type: 'weapon', hands: 1, speed: 800, safe: 6, dice: '1d13', hit: 5, dropRate: 0.1, legendary: true, desc: '攻擊時有機率發動烈炎術。' , classes: ['knight'] },
+    sword_two_handed: { name: '雙手劍', type: 'weapon', hands: 2, speed: 1100, safe: 6, dice: '1d19', hit: 0, dropRate: 1 , classes: ['knight'] },
     bow_hunter: { name: '獵人之弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 900, safe: 6, dice: '1d6', hit: 2, dropRate: 1, desc: '遠距離武器，命中與傷害主要受敏捷影響。' },
     crossbow: { name: '十字弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 1000, safe: 6, dice: '1d8', hit: 3, dropRate: 0.5, desc: '遠距離武器，命中與傷害主要受敏捷影響。' },
     bow_yumi: { name: '尤米弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 900, safe: 6, dice: '1d10', hit: 4, dropRate: 0.1, legendary: true, desc: '高階弓，適合妖精長時間狩獵。' },
@@ -450,7 +455,7 @@ const ITEMS = {
     water_dragon_scale_armor: { name: '水龍鱗盔甲', type: 'armor', safe: 4, ac: -8, mr: 10, dropRate: 0.01, legendary: true },
     fire_dragon_scale_armor: { name: '火龍鱗盔甲', type: 'armor', safe: 4, ac: -8, dropRate: 0.01, legendary: true, desc: '火龍鱗打造的高階盔甲。' },
     valakas_heart: { name: '巴拉卡斯之心', type: 'quest', unique: true },
-    ice_queen_staff: { name: '冰之女王魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: 0, mDmg: 2, dropRate: 0.03, legendary: true },
+    ice_queen_staff: { name: '冰之女王魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: 0, mDmg: 2, dropRate: 0.03, legendary: true , classes: ['wizard'] },
     ice_queen_earring: { name: '冰之女王耳環', type: 'earring', safe: 0, ac: -1, mr: 3, dropRate: 0.03, legendary: true },
     demon_blood: { name: '惡魔之血', type: 'quest', dropRate: 0.05 },
     ancient_scroll: { name: '古代的卷軸', type: 'quest', dropRate: 0.02 },
@@ -831,11 +836,11 @@ const MAPS = {
 };
 
 Object.assign(ITEMS, {
-    sword_red_knight: { name: '紅騎士之劍', type: 'weapon', hands: 1, speed: 950, safe: 6, dice: '1d9', hit: 1, dropRate: 0.2, desc: '騎士任務獎勵改為掉落。' },
+    sword_red_knight: { name: '紅騎士之劍', type: 'weapon', hands: 1, speed: 950, safe: 6, dice: '1d9', hit: 1, dropRate: 0.2, desc: '騎士任務獎勵改為掉落。' , classes: ['knight'] },
     shield_red_knight: { name: '紅騎士盾牌', type: 'shield', safe: 4, ac: -2, dropRate: 0.2, desc: '騎士任務獎勵改為掉落。' },
     sword_silver_long: { name: '銀長劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d8', hit: 1, isUndeadSlayer: true, dropRate: 0.4 },
-    sword_mail_breaker: { name: '破甲之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d12', hit: 2, dropRate: 0.08, legendary: true },
-    sword_silence: { name: '沉默之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d11', hit: 1, dropRate: 0.08, legendary: true },
+    sword_mail_breaker: { name: '破甲之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d12', hit: 2, dropRate: 0.08, legendary: true , classes: ['knight'] },
+    sword_silence: { name: '沉默之劍', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d11', hit: 1, dropRate: 0.08, legendary: true , classes: ['knight'] },
     bow_elven: { name: '妖精弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 900, safe: 6, dice: '1d7', hit: 3, dropRate: 0.5, desc: '妖精任務獎勵改為掉落。' },
     bow_flame: { name: '赤焰之弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 900, safe: 6, dice: '1d12', hit: 4, dropRate: 0.08, legendary: true },
     bow_moon: { name: '沙哈之弓', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 850, safe: 6, dice: '1d14', hit: 6, dmg: 5, dropRate: 0.04, legendary: true },
@@ -843,7 +848,7 @@ Object.assign(ITEMS, {
     cloak_elven: { name: '精靈斗篷', type: 'cloak', safe: 6, ac: -1, mr: 5, dropRate: 0.5, desc: '妖精任務獎勵改為掉落。' },
     armor_elven_chain: { name: '精靈鏈甲', type: 'armor', safe: 6, ac: -5, mr: 4, dropRate: 0.4 },
     robe_mage: { name: '法師長袍', type: 'armor', safe: 4, ac: -3, mr: 4, dropRate: 0.4, desc: '法師任務獎勵改為掉落。' },
-    staff_sorcery: { name: '巫術魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d4', hit: 0, mDmg: 2, dropRate: 0.3, desc: '法師任務獎勵改為掉落。' },
+    staff_sorcery: { name: '巫術魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d4', hit: 0, mDmg: 2, dropRate: 0.3, desc: '法師任務獎勵改為掉落。' , classes: ['wizard'] },
     cloak_shadow: { name: '影子斗篷', type: 'cloak', safe: 4, ac: -2, mr: 5, dropRate: 0.3, desc: '黑暗妖精任務獎勵改為掉落。' },
     armor_shadow: { name: '影子盔甲', type: 'armor', safe: 4, ac: -6, mr: 6, dropRate: 0.25, desc: '黑暗妖精任務獎勵改為掉落。' },
     claw_bloody: { name: '血腥鋼爪', type: 'weapon', weaponClass: 'claw', hands: 1, speed: 800, safe: 6, dice: '1d14', hit: 3, dropRate: 0.08, legendary: true },
@@ -975,8 +980,8 @@ Object.assign(ITEMS, {
     elven_wafer: { name: '精靈餅乾', type: 'potion_buff', buffId: 'potion_haste', duration: 600, price: 500, classes: ['elf'] },
     boots_dark: { name: '黑暗長靴', type: 'boots', safe: 4, ac: -2, dropRate: 0.3, classes: ['dark_elf'] },
     sandals_dark_elf: { name: '黑暗妖精涼鞋', type: 'boots', safe: 4, ac: -3, mpRegen: 3, dropRate: 0.1, legendary: true, classes: ['dark_elf'] },
-    quiver_normal: { name: '普通箭桶', type: 'quiver', safe: 0, arrowDmg: 0, price: 1000, desc: '無限普通箭。' },
-    quiver_silver: { name: '銀箭桶', type: 'quiver', safe: 0, arrowDmg: 0, undeadBonus: true, price: 8000, desc: '無限銀箭，對不死族與狼人追加 3~6 傷害。' },
+    quiver_normal: { name: '普通箭桶', type: 'quiver', safe: 0, arrowDmg: 0, price: 1000, desc: '無限普通箭。' , classes: ['knight','elf','wizard','dark_elf'] },
+    quiver_silver: { name: '銀箭桶', type: 'quiver', safe: 0, arrowDmg: 0, undeadBonus: true, price: 8000, desc: '無限銀箭，對不死族與狼人追加 3~6 傷害。' , classes: ['knight','elf','wizard','dark_elf'] },
     quiver_mithril: { name: '米索莉箭桶', type: 'quiver', safe: 0, arrowDmg: 3, undeadBonus: true, dropRate: 0.5, desc: '無限米索莉箭，遠程傷害+3。' },
     quiver_oriharukon: { name: '奧里哈魯根箭桶', type: 'quiver', safe: 0, arrowDmg: 5, undeadBonus: true, pierceDr: 2, dropRate: 0.08, legendary: true, desc: '遠程傷害+5，無視 2 點減傷。' },
     quiver_black_mithril: { name: '黑色米索莉箭桶', type: 'quiver', safe: 0, arrowDmg: 7, dropRate: 0.06, legendary: true, desc: '遠程傷害+7。' },
@@ -1960,16 +1965,9 @@ const game = {
 
             let canSell = false;
             let sellPrice = 0;
-            if (['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type) && Number(item.enchant) === 0 && !def.unique) {
-                if(item.isBlessed || def.isBlessed) { canSell = true; sellPrice = 100000; }
-                else { 
-                    canSell = true;
-                    let dr = def.dropRate || 1;
-                    let realDr = dr / 100;
-                    if(def.type === 'weapon') sellPrice = Math.floor(60 / realDr);
-                    else if(['amulet','ring','belt','earring'].includes(def.type)) sellPrice = Math.floor(100 / realDr);
-                    else sellPrice = Math.floor(30 / realDr);
-                }
+            if (['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) {
+                sellPrice = this.getEquipmentSellPrice(item, def);
+                canSell = sellPrice > 0;
             } else if (def.type === 'book') {
                 canSell = true;
                 sellPrice = 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
@@ -2106,6 +2104,90 @@ const game = {
             this.renderSkills();
             this.updateSettingsUI();
         }
+    },
+
+    getEquipmentSellPrice: function(item, def) {
+        if (!item || !def) return 0;
+        if (!['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) return 0;
+        if (Number(item.enchant) !== 0 || def.unique) return 0;
+        if (item.isBlessed || def.isBlessed) return 100000;
+        let dr = def.dropRate || 1;
+        let realDr = dr / 100;
+        if (def.type === 'weapon') return Math.floor(60 / realDr);
+        if (['amulet','ring','belt','earring'].includes(def.type)) return Math.floor(100 / realDr);
+        return Math.floor(30 / realDr);
+    },
+
+    getBookSellPrice: function(item, def) {
+        if (!item || !def || def.type !== 'book') return 0;
+        return 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
+    },
+
+    getUnequippedCount: function(itemKey) {
+        let item = this.state.inventory[itemKey];
+        if (!item) return 0;
+        let equippedCount = 0;
+        for (let slot in this.state.equipment) if (this.state.equipment[slot] === itemKey) equippedCount++;
+        return Math.max(0, item.count - equippedCount);
+    },
+
+    sellBulkItems: function(label, matcher, priceGetter, preserveNote) {
+        let totalPrice = 0;
+        let totalCount = 0;
+        let targets = [];
+        for (let key in this.state.inventory) {
+            let item = this.state.inventory[key];
+            let def = ITEMS[item.itemId];
+            if (!def || !matcher.call(this, item, def, key)) continue;
+            let price = priceGetter.call(this, item, def, key);
+            if (price <= 0) continue;
+            let sellCount = def.type === 'book' ? item.count : this.getUnequippedCount(key);
+            if (sellCount <= 0) continue;
+            targets.push({ key, count: sellCount, price });
+            totalCount += sellCount;
+            totalPrice += sellCount * price;
+        }
+        if (totalCount <= 0) {
+            this.logSystem('沒有可出售的' + label + '。', 'info');
+            return;
+        }
+        let message = '確定要出售 ' + totalCount + ' 件' + label + '，獲得 ' + totalPrice + ' 金幣嗎？';
+        if (preserveNote) message += '\n' + preserveNote;
+        if (!confirm(message)) return;
+        targets.forEach(t => this.removeInventory(t.key, t.count));
+        this.state.adena += totalPrice;
+        this.logSystem('一鍵出售 ' + totalCount + ' 件' + label + '，獲得 ' + totalPrice + ' 金幣。', 'reward');
+        this.updateUI();
+    },
+
+    sellAllNonAccessoryEquipment: function() {
+        const accessoryTypes = ['belt','amulet','earring','ring'];
+        const equipTypes = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'];
+        this.sellBulkItems(
+            '飾品以外的未強化裝備',
+            function(item, def) { return equipTypes.includes(def.type) && !accessoryTypes.includes(def.type); },
+            this.getEquipmentSellPrice,
+            '已裝備與強化過的裝備會保留。'
+        );
+    },
+
+    sellAllAccessories: function() {
+        const accessoryTypes = ['belt','amulet','earring','ring'];
+        this.sellBulkItems(
+            '未強化飾品',
+            function(item, def) { return accessoryTypes.includes(def.type); },
+            this.getEquipmentSellPrice,
+            '已裝備與強化過的飾品會保留。'
+        );
+    },
+
+    sellAllBooks: function() {
+        this.sellBulkItems(
+            '技能書/精靈水晶/法書',
+            function(item, def) { return def.type === 'book'; },
+            this.getBookSellPrice,
+            ''
+        );
     },
 
     sellItem: function(itemKey, price) {
