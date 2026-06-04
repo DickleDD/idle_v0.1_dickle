@@ -3898,7 +3898,21 @@ game.getSpellRequiredLevel = function(spellId) {
 game.getSpellMaxLevelForClass = function(spellId) {
     let spell = SPELLS[spellId];
     let cls = this.getClassDef();
-    if (!spell) return 0;
+// 【新增】如果玩家裝備了特定的魔法頭盔，直接允許該頭盔對應的魔法階級
+    let helmKey = this.state.equipment && this.state.equipment.helmet;
+    if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
+        let helmId = this.state.inventory[helmKey].itemId;
+        if (helmId === 'helm_str_magic' && ['enchant_weapon', 'str_buff', 'detection'].includes(spellId)) {
+            return Math.max(cls.magicMaxLevel || 1, spell.level); // 允許放行到該技能階級
+        }
+        if (helmId === 'helm_heal_magic' && ['heal', 'mid_heal'].includes(spellId)) {
+            return Math.max(cls.magicMaxLevel || 1, spell.level);
+        }
+        if (helmId === 'helm_dex_magic' && ['dex_buff', 'haste'].includes(spellId)) {
+            return Math.max(cls.magicMaxLevel || 1, spell.level);
+        }
+    }
+
     if (spell.classes && spell.classes.includes('elf')) return 6;
     if (spell.classes && spell.classes.includes('dark_elf')) return 4;
     if (spell.classes && spell.classes.includes('knight')) return 5;
