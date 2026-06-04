@@ -167,6 +167,8 @@
                             <div class="list-item"><span class="c-potion-blue">藍色藥水</span> <div class="flex items-center gap-3"><span class="c-warn">1046 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_blue')">購買</button></div></div>
                             <div class="list-item"><span class="c-potion-purple">慎重藥水</span> <div class="flex items-center gap-3"><span class="c-warn">750 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_wisdom')">購買</button></div></div>
                             <div class="list-item"><span class="c-potion-purple">加速藥水</span> <div class="flex items-center gap-3"><span class="c-warn">300 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_haste')">購買</button></div></div>
+                            <div class="list-item"><span class="c-potion-purple">勇氣藥水</span> <div class="flex items-center gap-3"><span class="c-warn">800 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_courage')">購買</button></div></div>
+                            <div class="list-item"><span class="c-potion-purple">精靈餅乾</span> <div class="flex items-center gap-3"><span class="c-warn">1200 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('elven_wafer')">購買</button></div></div>
                             <div class="list-item mt-2 border-t border-gray-800 pt-4"><span class="c-item">對武器施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">75,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_weapon')">購買</button></div></div>
                             <div class="list-item"><span class="c-item">對盔甲施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_armor')">購買</button></div></div>
                         </div>
@@ -225,6 +227,9 @@
                             </div>
                             <div class="flex items-center gap-2 border-b border-gray-700 pb-4 mt-2">
                                 <input type="checkbox" id="cfg-auto-haste" onchange="game.updateSettings()" class="w-5 h-5 accent-gray-500 cursor-pointer"> <label for="cfg-auto-haste" class="cursor-pointer hover:text-white">自動購買並使用 加速藥水 (每次1瓶)</label>
+                            </div>
+                            <div class="flex items-center gap-2 border-b border-gray-700 pb-4 mt-2">
+                                <input type="checkbox" id="cfg-auto-second-haste" onchange="game.updateSettings()" class="w-5 h-5 accent-gray-500 cursor-pointer"> <label for="cfg-auto-second-haste" class="cursor-pointer hover:text-white">自動購買並使用 二段加速道具 (騎士:勇氣藥水 / 妖精、黑妖:精靈餅乾)</label>
                             </div>
                             <div class="flex items-center flex-wrap gap-3 pt-2">
                                 <span class="c-success">體力低於</span><input type="number" id="cfg-heal-threshold" class="w-20 bg-black border border-gray-600 text-center text-white py-1 rounded" value="50" onchange="game.updateSettings()">
@@ -445,6 +450,7 @@ const ITEMS = {
     potion_blue: { name: '藍色藥水', type: 'potion_mp', duration: 600, price: 1046 },
     potion_wisdom: { name: '慎重藥水', type: 'potion_buff', duration: 300, price: 750 },
     potion_haste: { name: '加速藥水', type: 'potion_buff', buffId: 'potion_haste', duration: 1200, price: 300 },
+    potion_courage: { name: '勇氣藥水', type: 'potion_buff', buffId: 'second_haste', duration: 600, price: 800, classes: ['knight'], desc: '二段加速，可與加速藥水疊加。' },
     gem_diamond: { name: '鑽石', type: 'gem', dropRate: 1 },
     gem_ruby: { name: '紅寶石', type: 'gem', dropRate: 1 },
     gem_sapphire: { name: '藍寶石', type: 'gem', dropRate: 1 },
@@ -986,7 +992,7 @@ Object.assign(ITEMS, {
     sword_damascus_two_handed: { name: '大馬士革雙手劍', type: 'weapon', hands: 2, speed: 1100, safe: 6, dice: '1d24', hit: 2, unbreakable: true, dropRate: 0.12, classes: ['knight'], desc: '不會損壞，反擊屏障與衝擊之暈可用。' },
     amulet_orc_warrior: { name: '妖魔戰士項鍊', type: 'amulet', safe: 0, ac: 0, hp: 30, dropRate: 0.5, desc: 'HP+30' },
     elven_breastplate: { name: '精靈護胸金屬板', type: 'armor', safe: 4, ac: -5, dropRate: 3, classes: ['elf','dark_elf'] },
-    elven_wafer: { name: '精靈餅乾', type: 'potion_buff', buffId: 'potion_haste', duration: 600, price: 500, classes: ['elf'] },
+    elven_wafer: { name: '精靈餅乾', type: 'potion_buff', buffId: 'second_haste', duration: 600, price: 1200, classes: ['elf','dark_elf'], desc: '二段加速，可與加速藥水疊加。' },
     boots_dark: { name: '黑暗長靴', type: 'boots', safe: 4, ac: -2, dropRate: 0.3, classes: ['dark_elf'] },
     sandals_dark_elf: { name: '黑暗妖精涼鞋', type: 'boots', safe: 4, ac: -3, mpRegen: 3, dropRate: 0.1, legendary: true, classes: ['dark_elf'] },
     quiver_normal: { name: '普通箭桶', type: 'quiver', safe: 0, arrowDmg: 0, price: 1000, desc: '無限普通箭。' , classes: ['knight','elf','wizard','dark_elf'] },
@@ -1281,7 +1287,7 @@ const game = {
         baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0,
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
-        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
+        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
         potionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
@@ -1414,6 +1420,7 @@ const game = {
                 if(!this.state.settings.autoHealSpell) this.state.settings.autoHealSpell = 'none';
                 this.state.settings.autoMpSkillThreshold = parseInt(this.state.settings.autoMpSkillThreshold) || 20;
                 if(!this.state.settings.autoMpSkill) this.state.settings.autoMpSkill = 'none';
+                this.state.settings.autoBuySecondHaste = !!this.state.settings.autoBuySecondHaste;
 
                 this.state.buffs = {}; 
                 this.state.targetMonster = null;
@@ -1913,7 +1920,7 @@ const game = {
         let cls = this.getClassDef();
         let spells = new Set(this.state.spells || []);
         let helmKey = this.state.equipment && this.state.equipment.helmet;
-        if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
+        if (this.state.classId === 'knight' && helmKey && this.state.inventory && this.state.inventory[helmKey]) {
             let helmId = this.state.inventory[helmKey].itemId;
             if (helmId === 'helm_heal_magic') { spells.add('heal'); spells.add('mid_heal'); }
             if (helmId === 'helm_str_magic') { spells.add('enchant_weapon'); spells.add('str_buff'); spells.add('detection'); }
@@ -1979,6 +1986,7 @@ const game = {
         if(this.state.buffs.potion_blue) buffHtml += '<span class="c-potion-blue mr-2">[藍色藥水]</span>';
         if(this.state.buffs.potion_wisdom) buffHtml += '<span class="c-potion-purple mr-2">[慎重藥水]</span>';
         if(this.state.buffs.potion_haste) buffHtml += '<span class="c-potion-purple mr-2">[加速藥水]</span>';
+        if(this.state.buffs.second_haste) buffHtml += '<span class="c-potion-purple mr-2">[二段加速]</span>';
         if(this.state.buffs.player_weapon_break) buffHtml += '<span class="c-err mr-2">[武器受損]</span>';
         if(this.state.buffs.poison_storm) buffHtml += '<span class="c-err mr-2">[毒氣風暴]</span>';
         if(this.state.buffs.petrified) buffHtml += '<span class="c-err mr-2">[石化]</span>';
@@ -2001,6 +2009,7 @@ const game = {
         if (item.itemId === 'potion_blue') return 'c-potion-blue';
         if (item.itemId === 'potion_wisdom') return 'c-potion-purple';
         if (item.itemId === 'potion_haste') return 'c-potion-purple';
+        if (item.itemId === 'potion_courage' || item.itemId === 'elven_wafer') return 'c-potion-purple';
         
         let isEquip = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring','quiver'].includes(def.type);
         if (isEquip) {
@@ -2295,6 +2304,9 @@ const game = {
             } else if (item.itemId === 'potion_haste') {
                 this.state.buffs.potion_haste = def.duration;
                 this.logCombat(`使用了 加速藥水。攻擊速度提升。`, 'hit');
+            } else if (item.itemId === 'potion_courage' || item.itemId === 'elven_wafer') {
+                this.state.buffs.second_haste = def.duration;
+                this.logCombat(`使用了 ${def.name}。二段加速啟動。`, 'hit');
             } else if (def.buffId) {
                 this.state.buffs[def.buffId] = def.duration;
                 this.logCombat(`使用了 ${def.name}。`, 'hit');
@@ -2315,7 +2327,8 @@ const game = {
             this.logSystem(`${this.getClassDef().name} 無法學習 ${SPELLS[spellId].name}。`, 'danger');
             return;
         }
-        if(SPELLS[spellId] && SPELLS[spellId].level > this.getSpellMaxLevelForClass(spellId)) {
+        let learnableMaxLevel = this.getLearnableSpellMaxLevelForClass ? this.getLearnableSpellMaxLevelForClass(spellId) : this.getSpellMaxLevelForClass(spellId);
+        if(SPELLS[spellId] && SPELLS[spellId].level > learnableMaxLevel) {
             this.logSystem(`${this.getClassDef().name} 無法學習 ${SPELLS[spellId].name}。`, 'danger');
             return;
         }
@@ -2674,6 +2687,8 @@ const game = {
         document.getElementById('ui-max-spell-lv').innerText = getChineseNumber(Math.max(1, Math.max(...this.getAvailableSpells().map(id => SPELLS[id].level))));
         let hasteChk = document.getElementById('cfg-auto-haste');
         if (hasteChk) hasteChk.checked = !!this.state.settings.autoBuyHaste;
+        let secondHasteChk = document.getElementById('cfg-auto-second-haste');
+        if (secondHasteChk) secondHasteChk.checked = !!this.state.settings.autoBuySecondHaste;
     },
     updateSettings: function() {
         this.state.settings.autoHpThreshold = parseInt(document.getElementById('cfg-hp-threshold').value) || 5;
@@ -2682,6 +2697,7 @@ const game = {
         this.state.settings.autoBuyMp = document.getElementById('cfg-auto-mp').checked;
         this.state.settings.autoBuyWis = document.getElementById('cfg-auto-wis').checked;
         this.state.settings.autoBuyHaste = document.getElementById('cfg-auto-haste').checked;
+        this.state.settings.autoBuySecondHaste = document.getElementById('cfg-auto-second-haste').checked;
         this.state.settings.autoAttack = document.getElementById('cfg-auto-attack').value;
         this.state.settings.autoHealThreshold = parseInt(document.getElementById('cfg-heal-threshold').value) || 50;
         this.state.settings.autoHealSpell = document.getElementById('cfg-heal-spell').value;
@@ -3493,6 +3509,7 @@ if(Math.random()*100 <= this.getER()) {
                         if (key === 'potion_blue') bName = '魔力藥水';
                         if (key === 'potion_wisdom') bName = '慎重藥水';
                         if (key === 'potion_haste') bName = '加速藥水';
+                        if (key === 'second_haste') bName = '二段加速';
                         if (key === 'player_weapon_break') bName = '武器受損';
                         if (key === 'poison_storm') bName = '毒氣風暴';
                         if (key === 'petrified') bName = '石化';
@@ -3810,6 +3827,24 @@ if(Math.random()*100 <= this.getER()) {
                         this.usePotion(hastePotKey);
                     }
                 }
+                if (this.state.settings.autoBuySecondHaste && (!this.state.buffs.second_haste || this.state.buffs.second_haste <= 0)) {
+                    let secondHasteId = this.state.classId === 'knight' ? 'potion_courage' : (['elf','dark_elf'].includes(this.state.classId) ? 'elven_wafer' : null);
+                    if (secondHasteId) {
+                        let secondHasteKey = Object.keys(this.state.inventory).find(k => this.state.inventory[k].itemId === secondHasteId);
+                        if (!secondHasteKey || this.state.inventory[secondHasteKey].count <= 0) {
+                            if (this.state.adena >= ITEMS[secondHasteId].price) {
+                                this.state.adena -= ITEMS[secondHasteId].price;
+                                this.addInventory(secondHasteId, 1, 0, false);
+                                secondHasteKey = Object.keys(this.state.inventory).find(k => this.state.inventory[k].itemId === secondHasteId);
+                                this.logSystem(`自動購買了 1 個 ${ITEMS[secondHasteId].name}。`);
+                            }
+                        }
+                        if (secondHasteKey && this.state.inventory[secondHasteKey].count > 0) {
+                            this.usePotion(secondHasteKey);
+                        }
+                    }
+                }
+
             }
 
             if(needUpdate) this.updateUI();
@@ -3832,6 +3867,7 @@ if(Math.random()*100 <= this.getER()) {
             
             let reduction = 0;
             if (this.state.buffs.haste || this.state.buffs.potion_haste || this.state.currentMap === 'hidden_valley') reduction += 0.2;
+            if (this.state.buffs.second_haste) reduction += 0.15;
             if (this.state.buffs.greater_haste) reduction += 0.3;
             speed = speed * (1 - reduction);
             
@@ -3876,6 +3912,17 @@ if(Math.random()*100 <= this.getER()) {
 Object.assign(CLASSES.knight, { spellMaxLevel: 1, magicMaxLevel: 1, magicLevelStep: 40, classMagicLevelStep: 30 });
 Object.assign(CLASSES.dark_elf, { magicMaxLevel: 2, magicLevelStep: 12, classMagicLevelStep: 10 });
 
+game.isKnightMagicHelmetSpell = function(spellId) {
+    if (this.state.classId !== 'knight') return false;
+    let helmKey = this.state.equipment && this.state.equipment.helmet;
+    if (!helmKey || !this.state.inventory || !this.state.inventory[helmKey]) return false;
+    let helmId = this.state.inventory[helmKey].itemId;
+    if (helmId === 'helm_str_magic') return ['enchant_weapon', 'str_buff', 'detection'].includes(spellId);
+    if (helmId === 'helm_heal_magic') return ['heal', 'mid_heal'].includes(spellId);
+    if (helmId === 'helm_dex_magic') return ['dex_buff', 'haste'].includes(spellId);
+    return false;
+};
+
 game.getSpellRequiredLevel = function(spellId) {
     let spell = SPELLS[spellId];
     if (!spell) return 999;
@@ -3887,20 +3934,21 @@ game.getSpellRequiredLevel = function(spellId) {
 
     // 騎士專屬魔法頭盔：裝備後對應魔法無視等級限制（視為1級可用）
     if (this.state.classId === 'knight') {
-        let helmKey = this.state.equipment && this.state.equipment.helmet;
-        if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
-            let helmId = this.state.inventory[helmKey].itemId;
-            // 1. 力量魔法頭盔：放行 擬似魔法武器(2階)、體魄強健術(6階)、無所遁形術(2階)
-            if (helmId === 'helm_str_magic' && ['enchant_weapon', 'str_buff', 'detection'].includes(spellId)) return 1;
-            // 2. 治癒魔法頭盔：放行 初級治癒術(1階)、中級治癒術(3階)
-            if (helmId === 'helm_heal_magic' && ['heal', 'mid_heal'].includes(spellId)) return 1;
-            // 3. 敏捷魔法頭盔：放行 通暢氣脈術(4階)、加速術(6階)
-            if (helmId === 'helm_dex_magic' && ['dex_buff', 'haste'].includes(spellId)) return 1;
-        }
+        if (this.isKnightMagicHelmetSpell(spellId)) return 1;
         return spell.level * 40;
     }
 
     return spell.level * (cls.magicLevelStep || 4);
+};
+
+game.getLearnableSpellMaxLevelForClass = function(spellId) {
+    let spell = SPELLS[spellId];
+    let cls = this.getClassDef();
+    if (!spell) return 0;
+    if (spell.classes && spell.classes.includes('elf')) return 6;
+    if (spell.classes && spell.classes.includes('dark_elf')) return 4;
+    if (spell.classes && spell.classes.includes('knight')) return 5;
+    return cls.magicMaxLevel || cls.spellMaxLevel || 1;
 };
 
 game.getSpellMaxLevelForClass = function(spellId) {
@@ -3908,25 +3956,8 @@ game.getSpellMaxLevelForClass = function(spellId) {
     let cls = this.getClassDef();
     if (!spell) return 0;
     
-    // 檢查玩家目前裝備的頭盔
-    let helmKey = this.state.equipment && this.state.equipment.helmet;
-    if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
-        let helmId = this.state.inventory[helmKey].itemId;
-        
-        // 1. 力量魔法頭盔：放行 擬似魔法武器(2階)、體魄強健術(6階)、無所遁形術(2階)
-        if (helmId === 'helm_str_magic' && ['enchant_weapon', 'str_buff', 'detection'].includes(spellId)) {
-            return Math.max(cls.magicMaxLevel || 1, spell.level);
-        }
-        
-        // 2. 治癒魔法頭盔：放行 初級治癒術(1階)、中級治癒術(3階)
-        if (helmId === 'helm_heal_magic' && ['heal', 'mid_heal'].includes(spellId)) {
-            return Math.max(cls.magicMaxLevel || 1, spell.level);
-        }
-        
-        // 3. 敏捷魔法頭盔：放行 通暢氣脈術(4階)、加速術(6階)
-        if (helmId === 'helm_dex_magic' && ['dex_buff', 'haste'].includes(spellId)) {
-            return Math.max(cls.magicMaxLevel || 1, spell.level);
-        }
+    if (this.isKnightMagicHelmetSpell(spellId)) {
+        return Math.max(cls.magicMaxLevel || 1, spell.level);
     }
 
     if (spell.classes && spell.classes.includes('elf')) return 6;
@@ -4015,6 +4046,7 @@ window.onload = () => { game.init(); };
 </script>
 </body>
 </html>
+
 
 
 
