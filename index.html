@@ -149,7 +149,7 @@
                 </div>
                 <div id="tab-magic" class="flex-1 flex flex-col h-full overflow-hidden hidden">
                     <div class="c-title mb-3 text-xl border-b border-gray-800 pb-2 flex justify-between">
-                        <span>已學習魔法</span><span class="text-base c-sys font-normal">最高可使用至 <span id="ui-max-spell-lv">一</span> 階魔法</span>
+                        <span>已學習魔法</span><span id="ui-max-spell-lv" class="text-base c-sys font-normal">普通魔法上限：一階</span>
                     </div>
                     <div id="skill-list" class="flex-1 overflow-y-auto custom-scroll pr-2 space-y-4"></div>
                 </div>
@@ -166,7 +166,11 @@
                             <div class="list-item mt-2 border-t border-gray-800 pt-4"><span class="c-item">對武器施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">75,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_weapon')">購買</button></div></div>
                             <div class="list-item"><span class="c-item">對盔甲施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_armor')">購買</button></div></div>
                         </div>
-                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">象牙塔職業書商人</div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">弓箭補給</div>
+                        <div class="grid grid-cols-1 gap-3 mb-8">
+
+                        </div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">象牙塔的魔法商人琳達</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
                             <div class="list-item"><span class="c-info">精靈水晶(魔法防禦)</span> <div class="flex items-center gap-3"><span class="c-warn">15,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_resist_magic')">購買</button></div></div>
                             <div class="list-item"><span class="c-info">精靈水晶(心靈轉換)</span> <div class="flex items-center gap-3"><span class="c-warn">20,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('crystal_elf_body_to_mind')">購買</button></div></div>
@@ -179,10 +183,9 @@
                         </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普寶石交換</div>
                         <div id="gem-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
-                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">弓箭補給與古代裝備製作</div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">古代裝備製作</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
-                            <div class="list-item"><span class="c-item">普通箭桶</span> <div class="flex items-center gap-3"><span class="c-warn">1,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('quiver_normal')">購買</button></div></div>
-                            <div class="list-item"><span class="c-item">銀箭桶</span> <div class="flex items-center gap-3"><span class="c-warn">8,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('quiver_silver')">購買</button></div></div>
+
                             <div class="list-item border-t border-gray-800 pt-4"><span class="c-legendary">古老的劍</span> <button class="btn-ui !px-3 !py-1" onclick="game.craftAncientItem('sealed_forgotten_sword','ancient_sword')">製作</button></div>
                             <div class="list-item"><span class="c-legendary">古老的巨劍</span> <button class="btn-ui !px-3 !py-1" onclick="game.craftAncientItem('sealed_forgotten_great_sword','ancient_great_sword')">製作</button></div>
                             <div class="list-item"><span class="c-legendary">古老的弩槍</span> <button class="btn-ui !px-3 !py-1" onclick="game.craftAncientItem('sealed_forgotten_crossbow','ancient_crossbow')">製作</button></div>
@@ -3823,10 +3826,115 @@ if(Math.random()*100 <= this.getER()) {
     }
 };
 
+
+// DICKLE_MAGIC_CLASS_PATCH_040: split spell schools and class-use rules without changing ids.
+Object.assign(CLASSES.knight, { spellMaxLevel: 1, magicMaxLevel: 1, magicLevelStep: 40, classMagicLevelStep: 30 });
+Object.assign(CLASSES.dark_elf, { magicMaxLevel: 2, magicLevelStep: 12, classMagicLevelStep: 10 });
+
+game.getSpellRequiredLevel = function(spellId) {
+    let spell = SPELLS[spellId];
+    if (!spell) return 999;
+    let cls = this.getClassDef();
+    if (this.state.classId === 'wizard' && spellId === 'light_arrow') return 1;
+    if (spell.classes && spell.classes.includes('elf')) return spell.level * 10;
+    if (spell.classes && spell.classes.includes('dark_elf')) return spell.level * 10;
+    if (spell.classes && spell.classes.includes('knight')) return 30;
+    if (this.state.classId === 'knight') return spell.level * 40;
+    return spell.level * (cls.magicLevelStep || 4);
+};
+
+game.getSpellMaxLevelForClass = function(spellId) {
+    let spell = SPELLS[spellId];
+    let cls = this.getClassDef();
+    if (!spell) return 0;
+    if (spell.classes && spell.classes.includes('elf')) return 6;
+    if (spell.classes && spell.classes.includes('dark_elf')) return 4;
+    if (spell.classes && spell.classes.includes('knight')) return 5;
+    return cls.magicMaxLevel || cls.spellMaxLevel || 1;
+};
+
+game.getSpellSchool = function(spell) {
+    if (!spell) return 'normal';
+    if (spell.classes && spell.classes.includes('elf')) return 'elf';
+    if (spell.classes && spell.classes.includes('dark_elf')) return 'dark_elf';
+    if (spell.classes && spell.classes.includes('knight')) return 'knight';
+    return 'normal';
+};
+
+game.getSpellLimitSummary = function() {
+    if (this.state.classId === 'wizard') return '普通魔法上限：十階';
+    if (this.state.classId === 'knight') return '普通魔法上限：一階 / 技術書：30級可用';
+    if (this.state.classId === 'elf') return '普通魔法上限：六階 / 妖精魔法：每10級一階';
+    if (this.state.classId === 'dark_elf') return '普通魔法上限：二階 / 黑暗妖精魔法：每10級一階';
+    return '普通魔法上限：一階';
+};
+
+game.renderSkills = function() {
+    const list = document.getElementById('skill-list');
+    list.innerHTML = '';
+    let availSpells = this.getAvailableSpells();
+    if(availSpells.length === 0) { list.innerHTML = '<div class="c-sys italic p-2 text-sm">尚未學習任何魔法。</div>'; this.updateSettingsUI(); return; }
+    const schools = [
+        { id: 'normal', title: '普通魔法', maxLevel: 10 },
+        { id: 'elf', title: '妖精魔法', maxLevel: 6 },
+        { id: 'dark_elf', title: '黑暗妖精魔法', maxLevel: 4 },
+        { id: 'knight', title: '技術書', maxLevel: 5 }
+    ];
+    let spellsBySchool = {};
+    schools.forEach(school => {
+        spellsBySchool[school.id] = {};
+        for (let i = 1; i <= school.maxLevel; i++) spellsBySchool[school.id][i] = [];
+    });
+    availSpells.forEach(id => {
+        let spell = SPELLS[id];
+        if(!spell) return;
+        let school = this.getSpellSchool(spell);
+        if(!spellsBySchool[school]) return;
+        if(!spellsBySchool[school][spell.level]) spellsBySchool[school][spell.level] = [];
+        spellsBySchool[school][spell.level].push(spell);
+    });
+    schools.forEach(school => {
+        let hasSchoolSpells = Object.values(spellsBySchool[school.id]).some(group => group.length > 0);
+        if (!hasSchoolSpells) return;
+        list.insertAdjacentHTML('beforeend', `<div class="text-base c-title border-b border-gray-800 pb-1">${school.title}</div>`);
+        for (let lvl = 1; lvl <= school.maxLevel; lvl++) {
+            let group = spellsBySchool[school.id][lvl] || [];
+            if (group.length === 0) continue;
+            let groupHtml = `<div class="mb-4"><div class="text-sm c-sys border-b border-gray-800 pb-1 mb-2">${getChineseNumber(lvl)}階${school.title}</div><div class="grid grid-cols-5 gap-2">`;
+            group.forEach(spell => {
+                let canUse = this.state.level >= this.getSpellRequiredLevel(spell.id);
+                let isBuff = spell.type === 'buff', isPassive = spell.type === 'passive', isHeal = spell.type === 'heal', isMpConvert = spell.type === 'mp_convert';
+                let checked = this.state.settings.autoBuffs.includes(spell.id) ? 'checked' : '';
+                let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
+                let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
+                let reqLevel = this.getSpellRequiredLevel(spell.id);
+                let reqText = canUse ? '' : `<span class="text-xs c-warn block">${reqLevel}級可用</span>`;
+                let autoHtml = '';
+                if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
+                else if (isMpConvert) autoHtml = `<span class="c-sys text-xs mt-1 block">回魔技能</span>`;
+                else if (isBuff && canUse && !isHeal) autoHtml = `<label class="cursor-pointer c-sys hover:text-white mt-1 text-xs"><input type="checkbox" class="w-3 h-3 align-middle" ${checked} onchange="game.toggleAutoBuff('${spell.id}', this.checked)"> 自動</label>`;
+                else if (!canUse) this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== spell.id);
+                groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive||isMpConvert?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${costText}</span>${reqText}${autoHtml}</div>`;
+            });
+            groupHtml += `</div></div>`;
+            list.insertAdjacentHTML('beforeend', groupHtml);
+        }
+    });
+    this.updateSettingsUI();
+};
+
+const DICKLE_PREV_UPDATE_SETTINGS_UI_040 = game.updateSettingsUI;
+game.updateSettingsUI = function() {
+    DICKLE_PREV_UPDATE_SETTINGS_UI_040.call(this);
+    const summary = document.getElementById('ui-max-spell-lv');
+    if (summary) summary.innerText = this.getSpellLimitSummary();
+};
 window.onload = () => { game.init(); };
 </script>
 </body>
 </html>
+
+
 
 
 
