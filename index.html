@@ -399,7 +399,7 @@ const ITEMS = {
     antic_chain_mail: { name: '抗魔法鏈甲', type: 'armor', safe: 4, ac: -5, mr: 4, dropRate: 1 },
     arkai_shield: { name: '阿克海盾牌', type: 'shield', safe: 4, ac: -1, dropRate: 10 },
     steel_helmet: { name: '鋼盔', type: 'helmet', safe: 4, ac: -1, dropRate: 1 },
-    helm_heal_magic: { name: '治癒魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.5, desc: '賦予治癒法術。' },
+    helm_heal_magic: { name: '治癒魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.5, classes: ['knight'], desc: '賦予治癒法術。' },
     cloak_protector: { name: '保護者斗篷', type: 'cloak', safe: 4, ac: -3, dropRate: 5 },
     armor_rattan: { name: '藤甲', type: 'armor', safe: 4, ac: -6, dropRate: 3 },
     helm_str_magic: { name: '力量魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.2, classes: ['knight'], desc: '賦予體魄強健等法術。' },
@@ -411,7 +411,7 @@ const ITEMS = {
     helm_antic_magic: { name: '抗魔法頭盔', type: 'helmet', safe: 4, ac: -2, mr: 4, mrPerEnchant: 1, dropRate: 0.1 },
     robe_black_elder: { name: '黑長者長袍', type: 'armor', safe: 4, ac: -7, mDmg: 1, dropRate: 0.05, legendary: true, desc: 'MP+50, 魔力恢復+12' },
     sandals_black_elder: { name: '黑長者涼鞋', type: 'boots', safe: 4, ac: -3, dropRate: 0.05, legendary: true, desc: '魔力恢復+5' },
-    helm_dex_magic: { name: '敏捷魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.5, desc: '賦予加速術等法術。' },
+    helm_dex_magic: { name: '敏捷魔法頭盔', type: 'helmet', safe: 4, ac: -1, dropRate: 0.5, classes: ['knight'], desc: '賦予加速術等法術。' },
     shield_skeleton: { name: '骷髏盾牌', type: 'shield', safe: 0, ac: -3, dropRate: 1 },
     armor_skeleton: { name: '骷髏盔甲', type: 'armor', safe: 0, ac: -5, dropRate: 1 },
     helm_skeleton: { name: '骷髏頭盔', type: 'helmet', safe: 0, ac: -3, dropRate: 1 },
@@ -1660,7 +1660,7 @@ const game = {
         
         let effWis = this.getEffStat('wis');
         let wisBonus = -1;
-        if(effWis >= 11 && effWis <= 13) wisBonus = 0;
+        if(effWis === 11) wisBonus = 0;
         if(effWis >= 12 && effWis <= 13) wisBonus = 1;
         if(effWis >= 14 && effWis <= 15) wisBonus = 2;
         if(effWis >= 16 && effWis <= 17) wisBonus = 3;
@@ -1686,13 +1686,6 @@ const game = {
             }
         }
         calcMaxMp += sets.mp || 0;
-        for(let slot in this.state.equipment) {
-            let itemKey = this.state.equipment[slot];
-            if(itemKey && this.state.inventory[itemKey]) {
-                let def = ITEMS[this.state.inventory[itemKey].itemId];
-                if(def && def.mp) calcMaxMp += def.mp;
-            }
-        }
         this.state.maxMp = calcMaxMp;
         if(this.state.hp > this.state.maxHp) this.state.hp = this.state.maxHp;
         if(this.state.mp > this.state.maxMp) this.state.mp = this.state.maxMp;
@@ -3891,7 +3884,22 @@ game.getSpellRequiredLevel = function(spellId) {
     if (spell.classes && spell.classes.includes('elf')) return spell.level * 10;
     if (spell.classes && spell.classes.includes('dark_elf')) return spell.level * 10;
     if (spell.classes && spell.classes.includes('knight')) return 30;
-    if (this.state.classId === 'knight') return spell.level * 40;
+
+    // 騎士專屬魔法頭盔：裝備後對應魔法無視等級限制（視為1級可用）
+    if (this.state.classId === 'knight') {
+        let helmKey = this.state.equipment && this.state.equipment.helmet;
+        if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
+            let helmId = this.state.inventory[helmKey].itemId;
+            // 1. 力量魔法頭盔：放行 擬似魔法武器(2階)、體魄強健術(6階)、無所遁形術(2階)
+            if (helmId === 'helm_str_magic' && ['enchant_weapon', 'str_buff', 'detection'].includes(spellId)) return 1;
+            // 2. 治癒魔法頭盔：放行 初級治癒術(1階)、中級治癒術(3階)
+            if (helmId === 'helm_heal_magic' && ['heal', 'mid_heal'].includes(spellId)) return 1;
+            // 3. 敏捷魔法頭盔：放行 通暢氣脈術(4階)、加速術(6階)
+            if (helmId === 'helm_dex_magic' && ['dex_buff', 'haste'].includes(spellId)) return 1;
+        }
+        return spell.level * 40;
+    }
+
     return spell.level * (cls.magicLevelStep || 4);
 };
 
