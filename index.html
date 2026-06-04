@@ -3307,14 +3307,84 @@ if(Math.random()*100 <= this.getER()) {
         for (let i = 6; i < bonus; i++) table.push(9);
         return table[Math.floor(Math.random() * table.length)] || 1;
     },
+    getBossAdenaMultiplier: function(m) {
+        if (!m || !m.isBoss) return 1;
+        if (m.level >= 85 || ['antaras','valakas','fafurion','lindvior','ancient_guardian'].includes(m.id)) return 5;
+        if (m.level >= 70) return 4;
+        return 3;
+    },
+    getBossDropConfig: function(m) {
+        if (!m || !m.isBoss) return { minimum: 0, bonusRolls: 0 };
+        if (m.level >= 80 || ['antaras','valakas','fafurion','lindvior','ancient_guardian'].includes(m.id)) return { minimum: 4, bonusRolls: 6 };
+        if (m.level >= 60) return { minimum: 3, bonusRolls: 5 };
+        return { minimum: 2, bonusRolls: 3 };
+    },
+    isBossTrashDrop: function(itemId) {
+        const trashIds = [
+            'dagger_orc','short_sword_orc','broadsword','club','long_sword','short_sword_gnome','fauchard','battle_axe','giant_axe','berserk_axe','broad_spear',
+            'helm_orc','ring_mail_orc','chain_mail_orc','boots_short','boots_long','shield_small','studded_leather','scale_mail','orc_cloak','cloak_gnome','shield_gnome',
+            'shield_large','arkai_shield','steel_helmet','armor_rattan','armor_bronze','gloves_normal','armor_metal','armor_crystal','shield_skeleton','armor_skeleton','helm_skeleton',
+            'bow_short','bow_normal','bow_orc','leather_jacket'
+        ];
+        return trashIds.includes(itemId);
+    },
+    getBossFallbackDropPool: function(m) {
+        if (!m || m.level < 50) return ['gem_quality_diamond','gem_quality_ruby','gem_quality_sapphire','gem_quality_emerald','scroll_armor'];
+        if (m.level < 70) return ['gem_high_diamond','gem_high_ruby','gem_high_sapphire','gem_high_emerald','scroll_armor','scroll_weapon'];
+        return ['gem_high_diamond','gem_high_ruby','gem_high_sapphire','gem_high_emerald','scroll_armor_blessed','scroll_weapon_blessed','ancient_scroll'];
+    },
+    awardMonsterDrop: function(m, drop, forceDrop = false) {
+        if (!drop || this.isRemovedSystemItem(drop.id) || !ITEMS[drop.id]) return false;
+        if (m && m.isBoss && this.isBossTrashDrop(drop.id)) return false;
+        if (!forceDrop && Math.random() * 100 >= drop.rate) return false;
+
+        let def = ITEMS[drop.id];
+        if (def.type === 'book' && this.state.spells.includes(def.spellId)) {
+            let sell = def.sellPrice || BOOK_SELL_PRICE_OVERRIDES[drop.id] || 100 * Math.pow(SPELLS[def.spellId].level, 2);
+            this.state.adena += sell;
+            this.logSystem(`賣出重複的 ${def.name} 獲得 ${sell} 金幣。`);
+            return true;
+        }
+
+        let isEquip = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring','quiver'].includes(def.type);
+        let isBlessed = isEquip && Math.random() < (m && m.isBoss ? 0.03 : 0.01);
+        let canAdd = true;
+        if (def.unique) {
+            for (let k in this.state.inventory) {
+                if (this.state.inventory[k].itemId === drop.id) canAdd = false;
+            }
+        }
+        if (!canAdd) return false;
+
+        this.addInventory(drop.id, drop.count || 1, 0, isBlessed);
+        let name = def.name;
+        if (def.isUndeadSlayer) name += ' (弱點加成)';
+        if (isBlessed) name = '受祝福的 ' + name;
+        this.logSystem(`${m.name} 給你 ${name}${drop.count > 1 ? ' x' + drop.count : ''}。`, isBlessed ? 'blessed' : 'reward');
+        return true;
+    },
+    pickWeightedDrop: function(drops) {
+        let total = drops.reduce((sum, d) => sum + Math.max(0, d.rate || 0), 0);
+        if (total <= 0) return null;
+        let r = Math.random() * total;
+        for (let d of drops) {
+            r -= Math.max(0, d.rate || 0);
+            if (r <= 0) return d;
+        }
+        return drops[drops.length - 1] || null;
+    },
     monsterDied: function() {
         let m = this.state.targetMonster;
         this.state.exp += m.exp;
         
         let multi = m.isBoss ? 10 : 1;
         let goldMsg = '';
-        if (m.adenaAlways || Math.random() < 0.70) {
+        if (m.isBoss || m.adenaAlways || Math.random() < 0.70) {
             let adena = m.adena[0] + Math.floor(Math.random()*(m.adena[1]-m.adena[0]+1));
+            if (m.isBoss) {
+                if (adena <= 0) adena = Math.max(300, m.level * 80);
+                adena = Math.floor(adena * this.getBossAdenaMultiplier(m));
+            }
             this.state.adena += adena;
             if (adena > 0) goldMsg = `獲得 ${adena} 金幣。`;
         }
@@ -3343,39 +3413,26 @@ if(Math.random()*100 <= this.getER()) {
             if(Math.random()*100 < 1) { this.addInventory('scroll_weapon_blessed',1,0,false); this.logSystem(`歐林額外留下了 受祝福的對武器施法的卷軸！`, 'blessed'); }
             if(Math.random()*100 < 1) { this.addInventory('scroll_armor_blessed',1,0,false); this.logSystem(`歐林額外留下了 受祝福的對盔甲施法的卷軸！`, 'blessed'); }
         }
+        let bossDropCount = 0;
         if(m.drops) {
-            m.drops.forEach(d => { 
-                if(this.isRemovedSystemItem(d.id)) return;
-                if(Math.random()*100 < d.rate*multi) {
-                    if(ITEMS[d.id] && ITEMS[d.id].type === 'book' && this.state.spells.includes(ITEMS[d.id].spellId)) {
-                        let sell = ITEMS[d.id].sellPrice || BOOK_SELL_PRICE_OVERRIDES[d.id] || 100 * Math.pow(SPELLS[ITEMS[d.id].spellId].level, 2);
-                        this.state.adena += sell;
-                        this.logSystem(`賣出重複的 ${ITEMS[d.id].name} 獲得 ${sell} 金幣。`);
-                    } else if (ITEMS[d.id]) {
-                        let isEquip = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring','quiver'].includes(ITEMS[d.id].type);
-                        let isBlessed = false;
-                        if (isEquip && Math.random() < 0.01) isBlessed = true;
-
-                        let canAdd = true;
-                        if (ITEMS[d.id].unique) {
-                            for (let k in this.state.inventory) {
-                                if (this.state.inventory[k].itemId === d.id) canAdd = false;
-                            }
-                        }
-
-                        if (canAdd) {
-                            this.addInventory(d.id, 1, 0, isBlessed);
-                            let def = ITEMS[d.id];
-                            let name = def.name;
-                            if (def.isUndeadSlayer) name += ' (弱點加成)';
-                            if (isBlessed) name = '受祝福的 ' + name;
-                            
-                            let logType = isBlessed ? 'blessed' : 'reward';
-                            this.logSystem(`${m.name} 給你 ${name}。`, logType);
-                        }
-                    }
-                }
+            m.drops.forEach(d => {
+                let boostedDrop = { ...d, rate: d.rate * multi };
+                if (this.awardMonsterDrop(m, boostedDrop)) bossDropCount++;
             });
+        }
+        if (m.isBoss) {
+            let bossConfig = this.getBossDropConfig(m);
+            let bossDrops = (m.drops || []).filter(d => ITEMS[d.id] && !this.isRemovedSystemItem(d.id) && !this.isBossTrashDrop(d.id));
+            for (let i = 0; i < bossConfig.bonusRolls; i++) {
+                let picked = this.pickWeightedDrop(bossDrops);
+                if (picked && this.awardMonsterDrop(m, picked, true)) bossDropCount++;
+            }
+            let fallbackPool = this.getBossFallbackDropPool(m);
+            while (bossDropCount < bossConfig.minimum && fallbackPool.length > 0) {
+                let id = fallbackPool[Math.floor(Math.random() * fallbackPool.length)];
+                if (this.awardMonsterDrop(m, { id: id, rate: 100 }, true)) bossDropCount++;
+                else fallbackPool = fallbackPool.filter(v => v !== id);
+            }
         }
         
         if (m.id === 'antaras') this.state.antarasDeadUntil = Date.now() + 600000;
