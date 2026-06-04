@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -302,7 +302,7 @@ const compareItems = (keyA, keyB, inventory) => {
     let bA = itemA.isBlessed || defA.isBlessed ? 1 : 0, bB = itemB.isBlessed || defB.isBlessed ? 1 : 0;
     if (bA !== bB) return bB - bA; 
     const getSellPrice = (it, d) => {
-        if (d.type === 'book') return 100 * Math.pow((SPELLS[d.spellId] && SPELLS[d.spellId].level) || 1, 2);
+        if (d.type === 'book') return d.sellPrice || BOOK_SELL_PRICE_OVERRIDES[it.itemId] || 100 * Math.pow((SPELLS[d.spellId] && SPELLS[d.spellId].level) || 1, 2);
         let isEquipType = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring'].includes(d.type);
         if (isEquipType && Number(it.enchant) === 0 && !d.unique) {
             if (it.isBlessed || d.isBlessed) return 100000;
@@ -1048,7 +1048,7 @@ Object.assign(ITEMS, {
 });
 
 Object.assign(MAPS, {
-    burning_forest: { name: '燃柳周遭', monsters: [
+    burning_forest: { name: '燃柳周邊', monsters: [
         { id: 'high_orc', name: '高等妖魔', level: 18, hp: 130, ac: -4, exp: 260, atkSpeed: 1000, dice: '2d8+4', hitBonus: 4, weight: 80, adena: [80,150], drops: [{id:'sword_damascus', rate: 0.3}, {id:'amulet_orc_warrior', rate: 0.5}, {id:'potion_orange', rate: 8}, {id:'scroll_armor', rate: 0.5}] },
         { id: 'casto', name: '卡司特', level: 21, hp: 200, ac: -10, exp: 442, atkSpeed: 2000, dice: '4d8+3', hitBonus: 5, weight: 79, adena: [120,220], drops: [{id:'book_weapon_break', rate: 0.2}, {id:'battle_axe', rate: 2}, {id:'giant_axe', rate: 2}, {id:'book_slow', rate: 0.5}, {id:'book_summon', rate: 0.02}] },
         { id: 'dark_elf_monster', name: '黑暗精靈', level: 27, hp: 260, ac: -14, exp: 760, atkSpeed: 800, dice: '2d8+4', hitBonus: 12, weight: 73, adena: [100,240], drops: [{id:'elven_breastplate', rate: 3}, {id:'potion_blue', rate: 2}, {id:'bow_elven', rate: 1}, {id:'cloak_elven', rate: 1}, {id:'elven_wafer', rate: 1}, {id:'crystal_elf_wind_shot', rate: 0.5}, {id:'boots_dark', rate: 0.3}, {id:'sandals_dark_elf', rate: 0.1}, {id:'crystal_elf_release_elemental', rate: 0.02}, {id:'book_tornado', rate: 0.1}, {id:'dual_steel', rate: 1}, {id:'claw_steel', rate: 1}] },
@@ -1093,6 +1093,176 @@ Object.keys(MAPS).forEach(mapId => {
     });
 });
 
+const BOOK_SELL_PRICE_OVERRIDES = {
+    book_enchant_weapon: 1800,
+    book_haste: 2600,
+    book_high_heal: 3200,
+    book_str_buff: 4200,
+    book_slow: 5200,
+    book_berserker: 6800,
+    book_vampire: 7200,
+    book_sleep_mist: 9000,
+    book_blizzard: 11000,
+    book_cancel: 12000,
+    book_fire_storm: 15000,
+    book_lightning_storm: 15000,
+    book_summon: 18000,
+    book_immune: 30000,
+    book_invisibility: 16000,
+    book_call_lightning: 9000,
+    crystal_elf_fire_weapon: 3000,
+    crystal_elf_wind_shot: 3000,
+    crystal_elf_earth_skin: 3000,
+    crystal_elf_release_elemental: 5500,
+    crystal_elf_triple_arrow: 18000,
+    crystal_elf_storm_shot: 12000,
+    crystal_elf_iron_skin: 10000,
+    crystal_elf_elemental_fire: 16000,
+    crystal_dark_enchant_venom: 2500,
+    crystal_dark_shadow_armor: 3500,
+    crystal_dark_burning_spirit: 5500,
+    crystal_dark_shadow_fang: 7500,
+    crystal_dark_uncanny_dodge: 11000,
+    crystal_dark_double_break: 15000,
+    crystal_dark_armor_break: 28000,
+    crystal_dark_dress_mighty: 8000,
+    book_knight_shock_stun: 15000,
+    book_knight_reduction_armor: 9000,
+    book_knight_solid_carriage: 9000,
+    book_knight_counter_barrier: 24000
+};
+
+const DICKLE_BALANCE_040 = (() => {
+    const equipTypes = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'];
+    const addDrop = (m, id, rate) => {
+        if (!m || !ITEMS[id]) return;
+        m.drops = m.drops || [];
+        let old = m.drops.find(d => d.id === id);
+        if (old) old.rate = Math.max(old.rate, rate);
+        else m.drops.push({ id, rate });
+    };
+    const each = (mapId, fn) => MAPS[mapId]?.monsters?.forEach(fn);
+    const getM = (mapId, id) => MAPS[mapId]?.monsters?.find(m => m.id === id);
+    const tune = (mapId, id, props) => { let m = getM(mapId, id); if (m) Object.assign(m, props); return m; };
+    const move = (fromId, toId, monsterId, mapName) => {
+        let source = MAPS[fromId];
+        if (!source) return null;
+        let idx = source.monsters.findIndex(m => m.id === monsterId);
+        if (idx < 0) return null;
+        let monster = source.monsters.splice(idx, 1)[0];
+        MAPS[toId] = { name: mapName, monsters: [monster] };
+        return monster;
+    };
+    const lowerMap = (mapId, delta, hpFactor = 0.88, expFactor = 0.9) => each(mapId, m => {
+        m.level = Math.max(1, m.level - delta);
+        m.hp = Math.max(1, Math.floor(m.hp * hpFactor));
+        m.exp = Math.max(1, Math.floor(m.exp * expFactor));
+        m.hitBonus = Math.max(0, (m.hitBonus || 0) - Math.ceil(delta / 2));
+        m.ac = Math.min(10, m.ac + delta);
+    });
+
+    // Item class restrictions and belt progression.
+    Object.assign(ITEMS.robe_mage, { classes: ['wizard'] });
+    Object.assign(ITEMS.robe_black_elder, { classes: ['wizard'] });
+    Object.assign(ITEMS.sandals_black_elder, { classes: ['wizard'] });
+    Object.assign(ITEMS.armor_shadow, { classes: ['dark_elf'] });
+    Object.assign(ITEMS.cloak_shadow, { classes: ['dark_elf'] });
+    Object.assign(ITEMS.armor_bronze, { classes: ['knight'] });
+    Object.assign(ITEMS.armor_metal, { classes: ['knight'] });
+    Object.assign(ITEMS.armor_crystal, { classes: ['knight'] });
+    Object.assign(ITEMS.belt_doro, { hp: 20, mp: 20, hit: 2, desc: 'HP+20 / MP+20 / 近戰與遠程命中+2' });
+    Object.assign(ITEMS.belt_ogre, { hp: 40, mp: 40, dmg: 2, desc: 'HP+40 / MP+40 / 近戰傷害+2' });
+
+    // Heine and Eva progression.
+    lowerMap('heine_lake', 4, 0.84, 0.88);
+    lowerMap('eva_kingdom', 4, 0.86, 0.9);
+    addDrop(getM('eva_kingdom', 'crabman'), 'book_str_buff', 0.5);
+    tune('eva_kingdom', 'water_spirit_lord', { name: '古老的女王近衛隊長', level: 60, hp: 2400, exp: 3500, magicProfile: { text: '以女王近衛的古老水刃撕裂護甲', dice: '4d10+12', chance: 0.35 } });
+    let eva = MAPS.eva_kingdom.monsters;
+    eva.push(
+        { id: 'eva_hildes', name: '希爾黛斯', level: 50, hp: 1100, ac: -36, mr: 70, exp: 2600, atkSpeed: 1800, dice: '4d10+10', hitBonus: 13, weight: 58, adena: [280,470], magicProfile: { text: '凝出魔法冰錐刺向你', dice: '5d10+16', chance: 0.45 }, drops: [{id:'gem_sapphire', rate:3}, {id:'gem_quality_sapphire', rate:0.8}, {id:'gem_high_sapphire', rate:0.2}, {id:'potion_blue', rate:3}, {id:'book_slow', rate:0.4}, {id:'book_berserker', rate:0.08}, {id:'book_invisibility', rate:0.03}, {id:'book_call_lightning', rate:0.08}, {id:'crystal_elf_storm_shot', rate:0.06}, {id:'crystal_dark_double_break', rate:0.04}] },
+        { id: 'eva_electon', name: '伊萊克頓', level: 51, hp: 1250, ac: -38, mr: 60, exp: 2800, atkSpeed: 1700, dice: '5d10+12', hitBonus: 14, weight: 56, adena: [300,500], drops: [{id:'scroll_armor', rate:0.7}, {id:'gem_diamond', rate:2.5}, {id:'gem_quality_diamond', rate:0.8}, {id:'gem_high_diamond', rate:0.18}, {id:'book_call_lightning', rate:0.08}, {id:'book_summon', rate:0.03}] },
+        { id: 'eva_quistanche', name: '奎斯坦修', level: 53, hp: 1450, ac: -40, mr: 65, exp: 3050, atkSpeed: 1700, dice: '5d12+14', hitBonus: 16, weight: 50, adena: [330,560], breaksWeapon: true, drops: [{id:'scroll_weapon', rate:0.7}, {id:'scroll_armor', rate:0.5}, {id:'gem_diamond', rate:2.5}, {id:'gem_quality_diamond', rate:0.8}, {id:'gem_high_diamond', rate:0.18}, {id:'book_slow', rate:0.3}, {id:'crystal_elf_iron_skin', rate:0.05}, {id:'crystal_dark_uncanny_dodge', rate:0.04}] }
+    );
+    let fafurion = move('eva_kingdom', 'fafurion_lair', 'fafurion', '法利昂棲息地');
+    if (fafurion) Object.assign(fafurion, { weight: 1, adena: [2600,4200] });
+
+    // Fire dragon cave and Valakas split.
+    lowerMap('fire_dragon_cave', 5, 0.86, 0.9);
+    tune('fire_dragon_cave', 'lava_golem', { breaksWeapon: true });
+    ['fire_warrior','fire_salamander'].forEach(id => tune('fire_dragon_cave', id, { breaksWeapon: false }));
+    let dragonFly = getM('fire_dragon_cave', 'dragon_fly');
+    ['book_sleep_mist','book_vampire','scroll_weapon_blessed','scroll_armor_blessed','crystal_elf_elemental_fire','crystal_elf_fire_weapon'].forEach((id, i) => addDrop(dragonFly, id, [0.08,0.12,0.03,0.03,0.05,0.25][i]));
+    let fireWarrior = getM('fire_dragon_cave', 'fire_warrior');
+    [['sword_damascus',2],['katana',0.1],['sword_tsurugi',0.005],['sword_damascus_two_handed',1],['claw_silver',1],['claw_dark',0.1],['dual_silver',1],['dual_blade_dark',0.1],['dual_short',0.01],['dual_damascus',0.01],['book_knight_shock_stun',0.01],['book_knight_reduction_armor',0.1],['book_knight_solid_carriage',0.1]].forEach(d => addDrop(fireWarrior, d[0], d[1]));
+    let fireArcher = getM('fire_dragon_cave', 'fire_archer');
+    [['crossbow_shadow',0.1],['crossbow_dark',0.1],['crossbow_lastabad',0.01],['crossbow_diad',0.005],['quiver_mithril',0.1],['quiver_black_mithril',0.005],['crystal_elf_triple_arrow',0.005],['crystal_elf_storm_shot',0.05]].forEach(d => addDrop(fireArcher, d[0], d[1]));
+    let valakas = move('fire_dragon_cave', 'valakas_lair', 'valakas', '巴拉卡斯棲息地');
+    if (valakas) Object.assign(valakas, { level: 93, hp: 90000, ac: -99, mr: 100, weight: 1, magicProfile: { text: '噴吐足以熔穿岩壁的龍炎', dice: '8d12+36', chance: 0.45 } });
+
+    // Oren, Ivory Tower and Crystal Palace.
+    let iceMan = getM('oren_ivory', 'ice_man');
+    let snowTiger = getM('oren_ivory', 'snow_tiger');
+    MAPS.oren_field = { name: '歐瑞周邊', monsters: [iceMan, snowTiger].filter(Boolean) };
+    MAPS.oren_ivory.monsters = MAPS.oren_ivory.monsters.filter(m => !['ice_man','snow_tiger','ice_queen'].includes(m.id));
+    MAPS.oren_ivory.name = '象牙塔';
+    lowerMap('oren_ivory', 5, 0.9, 0.92);
+    let iceQueen = getM('oren_ivory', 'ice_queen') || null;
+    if (!iceQueen) iceQueen = { id: 'ice_queen', name: '冰之女王', level: 78, hp: 23000, ac: -82, mr: 98, exp: 7900, atkSpeed: 1500, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 4, adena: [1600,3200], magicProfile: { text: '召出冰矛圍籬，寒光從四面刺來', dice: '7d12+28', chance: 0.55 }, drops: [{id:'book_blizzard', rate:0.8}, {id:'ice_queen_staff', rate:0.25}, {id:'ice_queen_earring', rate:0.25}, {id:'scroll_armor_blessed', rate:0.35}, {id:'gem_high_sapphire', rate:1.5}, {id:'gem_high_diamond', rate:0.6}] };
+    Object.assign(iceQueen, { level: 78, hp: 23000, ac: -82, mr: 98, magicProfile: { text: '召出冰矛圍籬，寒光從四面刺來', dice: '7d12+28', chance: 0.55 } });
+    MAPS.crystal_palace = { name: '水晶宮殿', monsters: [iceQueen] };
+    MAPS.oren_field.monsters.push(
+        { id: 'oren_elmor_soldier', name: '艾爾摩士兵', level: 49, hp: 1450, ac: -43, exp: 3100, atkSpeed: 1700, dice: '6d10+16', hitBonus: 18, weight: 62, adena: [360,640], drops: [{id:'gloves_normal', rate:1}, {id:'scroll_armor', rate:0.6}, {id:'fauchard', rate:1.2}, {id:'sword_silver_long', rate:0.7}, {id:'sword_damascus', rate:0.4}, {id:'sword_damascus_two_handed', rate:0.15}] },
+        { id: 'oren_elmor_mage', name: '艾爾摩法師', level: 50, hp: 1250, ac: -40, mr: 80, exp: 3200, atkSpeed: 1900, dice: '5d10+14', hitBonus: 17, weight: 54, adena: [380,680], magicProfile: { text: '吟唱寒冷的艾爾摩咒語', dice: '5d10+18', chance: 0.45 }, drops: [{id:'scroll_weapon', rate:0.5}, {id:'potion_blue', rate:3}, {id:'book_high_heal', rate:0.5}, {id:'book_full_heal', rate:0.5}, {id:'book_str_buff', rate:0.8}, {id:'book_enchant_weapon', rate:5}, {id:'book_haste', rate:1}, {id:'book_blizzard', rate:0.01}, {id:'book_cancel', rate:0.1}] },
+        { id: 'oren_elmor_general', name: '艾爾摩將軍', level: 54, hp: 2300, ac: -50, exp: 3900, atkSpeed: 1500, dice: '7d10+20', hitBonus: 23, weight: 42, adena: [520,920], drops: [{id:'armor_bronze', rate:0.1}, {id:'armor_metal', rate:0.01}, {id:'armor_crystal', rate:0.005}, {id:'book_knight_shock_stun', rate:0.01}, {id:'book_knight_reduction_armor', rate:0.1}, {id:'book_knight_solid_carriage', rate:0.1}, {id:'book_knight_counter_barrier', rate:0.1}] },
+        { id: 'oren_nc48_husky', name: 'NC48等的哈士奇', level: 48, hp: 2300, ac: -50, exp: 3900, atkSpeed: 1500, dice: '7d10+20', hitBonus: 23, weight: 20, adenaAlways: true, adena: [2200,4200], drops: [{id:'scroll_weapon_blessed', rate:0.1}, {id:'scroll_armor_blessed', rate:0.1}] }
+    );
+    ['crystal_dark_enchant_venom','crystal_dark_shadow_armor','crystal_dark_burning_spirit','crystal_dark_shadow_fang','crystal_dark_uncanny_dodge','crystal_dark_double_break','crystal_dark_armor_break','crystal_dark_dress_mighty'].forEach(id => addDrop(getM('oren_field', 'oren_nc48_husky'), id, 0.1));
+    MAPS.oren_ivory.monsters.push(
+        { id: 'ivory_death', name: '死神', level: 62, hp: 2600, ac: -56, mr: 85, exp: 4600, atkSpeed: 1600, dice: '7d12+20', hitBonus: 23, weight: 32, adena: [520,900], drops: [{id:'crystal_elf_storm_shot', rate:0.1}, {id:'bow_flame', rate:0.01}, {id:'bow_yumi', rate:0.1}, {id:'crossbow_lastabad_heavy', rate:0.1}, {id:'crystal_elf_triple_arrow', rate:0.01}] },
+        { id: 'ivory_ghost', name: '鬼魂', level: 60, hp: 2200, ac: -52, mr: 90, exp: 4300, atkSpeed: 1700, dice: '6d12+18', hitBonus: 21, isUndead: true, weight: 36, adena: [480,840], drops: [{id:'crystal_elf_elemental_fire', rate:0.1}, {id:'crystal_elf_fire_weapon', rate:1}, {id:'crystal_elf_release_elemental', rate:0.1}, {id:'crystal_dark_armor_break', rate:0.001}, {id:'crystal_dark_double_break', rate:0.1}, {id:'crystal_dark_uncanny_dodge', rate:0.1}] }
+    );
+
+    // Forgotten Island remains hardest, but less spiky.
+    each('forgotten_island', m => { if (m.id !== 'ancient_guardian') { m.level -= m.isBoss ? 3 : 2; m.hp = Math.floor(m.hp * 0.92); m.exp = Math.floor(m.exp * 0.95); m.ac += 3; } });
+    tune('forgotten_island', 'harpy_queen', { name: '古代阿魯巴' });
+    tune('forgotten_island', 'arian_king', { name: '古代亞力安' });
+    tune('forgotten_island', 'ogre_king_fi', { name: '古代歐吉' });
+    tune('forgotten_island', 'great_minotaur', { name: '古代鏈鎚牛人' });
+    tune('forgotten_island', 'wyrm_king', { name: '吞噬黑暗的米狄爾' });
+
+    // Pirate island.
+    tune('pirate_island', 'kiwi_parrot', { name: '狂暴且華麗的蜥蜴人' });
+    ['gem_diamond','gem_ruby','gem_sapphire','gem_emerald','gem_quality_diamond','gem_quality_ruby','gem_quality_sapphire','gem_quality_emerald'].forEach(id => addDrop(getM('pirate_island','kiwi_parrot'), id, id.includes('quality') ? 0.1 : 1));
+    ['gem_high_diamond','gem_high_ruby','gem_high_sapphire','gem_high_emerald'].forEach(id => addDrop(getM('pirate_island','kiwi_parrot'), id, 0.1));
+    tune('pirate_island', 'lizardman_warrior', { name: '高等蜥蜴人', magicProfile: { text: '揮灑古代蜥蜴人的咒火', dice: '5d10+16', chance: 0.35 } });
+    [['book_fire_storm',0.01],['book_lightning_storm',0.01],['book_summon',0.001],['book_immune',0.001]].forEach(d => addDrop(getM('pirate_island','lizardman_warrior'), d[0], d[1]));
+    MAPS.pirate_island.monsters.push({ id: 'pirate_skeleton_soldier', name: '海賊骷髏士兵', level: 50, hp: 1100, ac: -38, exp: 2400, atkSpeed: 1500, dice: '5d10+14', hitBonus: 20, isUndead: true, weight: 54, adena: [280,470], ranged: true, drops: [{id:'crystal_elf_triple_arrow', rate:0.01}, {id:'crossbow_shadow', rate:0.005}, {id:'crossbow_dark', rate:0.01}] });
+
+    // Elven grave crystal commons.
+    const elfCrystalRates = { crystal_elf_resist_magic:1.2, crystal_elf_body_to_mind:0.8, crystal_elf_soul_to_mind:0.3, crystal_elf_clear_mind:0.5, crystal_elf_fire_weapon:0.5, crystal_elf_wind_shot:0.5, crystal_elf_earth_skin:0.5, crystal_elf_release_elemental:0.2, crystal_elf_triple_arrow:0.01, crystal_elf_storm_shot:0.08, crystal_elf_iron_skin:0.08, crystal_elf_elemental_fire:0.05 };
+    each('elven_grave', m => Object.entries(elfCrystalRates).forEach(([id, rate]) => addDrop(m, id, m.isBoss ? rate * 3 : rate)));
+
+    // Shadow, Lastavard, Demon Temple.
+    tune('shadow_temple', 'shadow_beast', { name: '混沌的司祭' });
+    tune('shadow_temple', 'cursed_dark_elf_fighter', { name: '死亡的司祭' });
+    tune('shadow_temple', 'succubus_queen', { name: '死亡與火焰之影' });
+    lowerMap('lastavard', 7, 0.86, 0.9);
+    tune('lastavard', 'dark_black_knight', { name: '黑暗妖精殘兵' });
+    tune('lastavard', 'elite_black_knight', { name: '拉斯塔巴德馴獸師', companionProfile: { text: '馴獸師的黑暗寵物撲咬了你', dice: '4d10+12', chance: 0.55 } });
+    const lastaPool = [['dual_bronze',1],['dual_spike',0.8],['dual_steel',0.7],['dual_shadow',0.4],['dual_silver',0.25],['dual_blade_dark',0.18],['dual_short',0.12],['dual_abyss',0.08],['dual_damascus',0.08],['dual_lastabad',0.06],['dual_shadow_high',0.03],['dual_diad',0.02],['dual_dark_high',0.008],['dual_blade_bloody',0.006],['blade_ronde',0.01],['claw_bronze',1],['claw_steel',0.7],['claw_shadow',0.4],['claw_short',0.2],['claw_silver',0.2],['claw_dark',0.15],['claw_damascus',0.08],['claw_shadow_high',0.04],['claw_dark_high',0.01],['claw_bloody',0.001],['bow_lastabad',0.1],['crossbow_lastabad',0.08],['crossbow_lastabad_heavy',0.03],['crystal_dark_enchant_venom',1],['crystal_dark_shadow_armor',0.8],['crystal_dark_burning_spirit',0.5],['crystal_dark_shadow_fang',0.3],['crystal_dark_uncanny_dodge',0.15],['crystal_dark_double_break',0.1],['crystal_dark_dress_mighty',0.1],['crystal_dark_armor_break',0.01]];
+    each('lastavard', m => lastaPool.forEach(d => addDrop(m, d[0], m.isBoss ? d[1] * 2 : d[1])));
+    tune('demon_temple', 'chaos_guardian', { name: '墮落的司祭' });
+    tune('demon_temple', 'mammoth', { name: '墮落', magicProfile: { text: '以墮落神力壓碎你的靈魂', dice: '7d12+24', chance: 0.45 } });
+
+    // Lindvior lair.
+    MAPS.lindvior_lair = { name: '林德拜爾棲息地', monsters: [{ id: 'lindvior', name: '林德拜爾', level: 91, hp: 82000, ac: -96, mr: 100, exp: 8101, atkSpeed: 1800, dice: '8d10+22', hitBonus: 35, isBoss: true, isUndead: true, weight: 1, adena: [2600,4200], magicProfile: { text: '捲起暴風與亡者寒氣貫穿你', dice: '8d12+30', chance: 0.55 }, drops: [{id:'crystal_elf_storm_shot', rate:0.7}, {id:'crystal_elf_wind_shot', rate:1.5}, {id:'book_tornado', rate:0.8}, {id:'book_lightning_storm', rate:0.6}, {id:'scroll_weapon_blessed', rate:0.5}, {id:'scroll_armor_blessed', rate:0.5}, {id:'gem_high_diamond', rate:1.5}, {id:'gem_high_sapphire', rate:1.5}, {id:'ancient_scroll', rate:0.5}] }] };
+
+    Object.values(ITEMS).forEach(def => {
+        if (def.type === 'book' && def.spellId && SPELLS[def.spellId]) def.sellPrice = BOOK_SELL_PRICE_OVERRIDES[Object.keys(ITEMS).find(k => ITEMS[k] === def)] || Math.max(500, 250 * SPELLS[def.spellId].level * SPELLS[def.spellId].level);
+    });
+})();
+
 const game = {
     state: {
         isPlaying: false, classId: 'knight', level: 1, exp: 0, adena: 0, hp: 0, maxHp: 0, mp: 0, maxMp: 0,
@@ -1112,11 +1282,22 @@ const game = {
 
     renderMapSelect: function() {
         const select = document.getElementById('map-select');
-        let keys = Object.keys(MAPS).filter(k => k !== 'antaras_lair');
+        const dragonMaps = [
+            { id: 'fafurion_lair', color: '#38bdf8' },
+            { id: 'lindvior_lair', color: '#34d399' },
+            { id: 'valakas_lair', color: '#f87171' },
+            { id: 'antaras_lair', color: '#facc15' }
+        ];
+        const specialBottom = new Set(['crystal_palace', ...dragonMaps.map(m => m.id), 'forgotten_island']);
+        let keys = Object.keys(MAPS).filter(k => !specialBottom.has(k));
         keys.sort((a, b) => MAPS[a].name.localeCompare(MAPS[b].name, 'zh-TW'));
         select.innerHTML = '';
         keys.forEach(k => { select.innerHTML += `<option value="${k}">${MAPS[k].name}</option>`; });
-        select.innerHTML += `<option value="antaras_lair" class="text-yellow-500 font-bold">${MAPS['antaras_lair'].name}</option>`;
+        if (MAPS.crystal_palace) select.innerHTML += `<option value="crystal_palace" style="color:#7dd3fc;font-weight:700;">${MAPS.crystal_palace.name}</option>`;
+        dragonMaps.forEach(({ id, color }) => {
+            if (MAPS[id]) select.innerHTML += `<option value="${id}" style="color:${color};font-weight:700;">${MAPS[id].name}</option>`;
+        });
+        if (MAPS.forgotten_island) select.innerHTML += `<option value="forgotten_island" style="color:#c084fc;font-weight:700;">${MAPS.forgotten_island.name}</option>`;
         select.value = this.state.currentMap;
     },
 
@@ -1421,7 +1602,7 @@ const game = {
             let k = this.state.equipment[slot];
             if(k && this.state.inventory[k]) eq[slot] = this.state.inventory[k].itemId;
         }
-        let sets = { active: [], ac: 0, hp: 0, dmg: 0, hit: 0, dr: 0 };
+        let sets = { active: [], ac: 0, hp: 0, mp: 0, dmg: 0, hit: 0, dr: 0, mr: 0, mDmg: 0, mpRegen: 0, critDmg: 0 };
         if(eq.helmet === 'helm_dk' && eq.armor === 'armor_dk' && eq.gloves === 'gloves_dk' && eq.boots === 'boots_dk') {
             sets.active.push('死亡騎士套裝'); sets.ac += 6; sets.dr += 3; sets.dmg += 3; sets.hit += 3;
         }
@@ -1433,6 +1614,12 @@ const game = {
         }
         if(eq.helmet === 'helm_skeleton' && eq.armor === 'armor_skeleton' && eq.shield === 'shield_skeleton') {
             sets.active.push('骷髏套裝'); sets.ac += 2; sets.hp += 10;
+        }
+        if((eq.earring1 === 'ice_queen_earring' || eq.earring2 === 'ice_queen_earring') && eq.weapon === 'ice_queen_staff') {
+            sets.active.push('冰之女王套裝'); sets.ac += 2; sets.mr += 10; sets.mDmg += 2; sets.mpRegen += 3;
+        }
+        if(eq.cloak === 'cloak_shadow' && eq.armor === 'armor_shadow') {
+            sets.active.push('影子套裝'); sets.ac += 4; sets.mr += 5; sets.dmg += 2; sets.hit += 2; sets.critDmg += 0.25;
         }
         return sets;
     },
@@ -1479,6 +1666,14 @@ const game = {
             let robeName = ITEMS[this.state.inventory[robeKey].itemId].name;
             if (robeName === '黑長者長袍') calcMaxMp += 50;
         }
+        for(let slot in this.state.equipment) {
+            let itemKey = this.state.equipment[slot];
+            if(itemKey && this.state.inventory[itemKey]) {
+                let def = ITEMS[this.state.inventory[itemKey].itemId];
+                if(def && def.mp) calcMaxMp += def.mp;
+            }
+        }
+        calcMaxMp += sets.mp || 0;
         for(let slot in this.state.equipment) {
             let itemKey = this.state.equipment[slot];
             if(itemKey && this.state.inventory[itemKey]) {
@@ -1595,7 +1790,14 @@ const game = {
                 if (item.isBlessed) wpnHit += 1;
             }
         }
+        let gearHit = 0;
+        for(let slot in this.state.equipment) {
+            if (slot === 'weapon') continue;
+            let itemKey = this.state.equipment[slot];
+            if(itemKey && this.state.inventory[itemKey]) gearHit += ITEMS[this.state.inventory[itemKey].itemId]?.hit || 0;
+        }
         let sets = this.getSetBonuses();
+        wpnHit += gearHit;
         if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += 5;
         if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += 8;
         if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) wpnHit += 30;
@@ -1632,6 +1834,13 @@ const game = {
         if (this.state.buffs.berserkers) wpnDmg += 5;
         let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
         if (this.state.buffs.player_weapon_break > 0 && !(wDef && wDef.unbreakable) && !['bow','claw','dual_blade'].includes(weaponClass)) wpnDmg -= 10;
+        let gearDmg = 0;
+        for(let slot in this.state.equipment) {
+            if (slot === 'weapon') continue;
+            let itemKey = this.state.equipment[slot];
+            if(itemKey && this.state.inventory[itemKey]) gearDmg += ITEMS[this.state.inventory[itemKey].itemId]?.dmg || 0;
+        }
+        wpnDmg += gearDmg;
         let sets = this.getSetBonuses();
         let cls = this.getClassDef();
         let classDmg = cls.meleeDmgBonusEvery && weaponClass === 'melee' ? Math.floor(this.state.level / cls.meleeDmgBonusEvery) : 0;
@@ -1661,6 +1870,7 @@ const game = {
             if(ITEMS[item.itemId] && ITEMS[item.itemId].mDmg) m += ITEMS[item.itemId].mDmg;
         }
         if (this.state.buffs.potion_wisdom) m += 2;
+        m += this.getSetBonuses().mDmg || 0;
         return m + Math.floor(this.state.level / 4);
     },
     getMR: function() {
@@ -1683,6 +1893,7 @@ const game = {
             }
         }
         if (this.state.buffs.elf_resist_magic) mr += 10;
+        mr += this.getSetBonuses().mr || 0;
         return Math.min(100, mr);
     },
     getER: function() {
@@ -1970,7 +2181,7 @@ const game = {
                 canSell = sellPrice > 0;
             } else if (def.type === 'book') {
                 canSell = true;
-                sellPrice = 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
+                sellPrice = this.getBookSellPrice(item, def);
             }
 
             if (canSell) actions += `<button class="btn-ui c-sys border-gray-700" onclick="game.sellItem('${key}', ${sellPrice})" title="售價: ${sellPrice} 金幣">販賣</button>`;
@@ -2113,14 +2324,15 @@ const game = {
         if (item.isBlessed || def.isBlessed) return 100000;
         let dr = def.dropRate || 1;
         let realDr = dr / 100;
-        if (def.type === 'weapon') return Math.floor(60 / realDr);
-        if (['amulet','ring','belt','earring'].includes(def.type)) return Math.floor(100 / realDr);
-        return Math.floor(30 / realDr);
+        let rarity = Math.max(1, Math.floor(1 / realDr));
+        if (def.type === 'weapon') return Math.floor(250 + rarity * 0.8 + getDiceMax(def.dice || '1d1') * 180 + (def.hit || 0) * 350 + (def.dmg || 0) * 500 + (def.mDmg || 0) * 800);
+        if (['amulet','ring','belt','earring'].includes(def.type)) return Math.floor(500 + rarity * 1.2 + Math.abs(def.ac || 0) * 500 + (def.mr || 0) * 180 + (def.hp || 0) * 25 + (def.mp || 0) * 25 + (def.hit || 0) * 500 + (def.dmg || 0) * 800);
+        return Math.floor(200 + rarity * 0.6 + Math.abs(def.ac || 0) * 450 + (def.mr || 0) * 150 + (def.dr || 0) * 1000 + (def.mDmg || 0) * 900);
     },
 
     getBookSellPrice: function(item, def) {
         if (!item || !def || def.type !== 'book') return 0;
-        return 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
+        return def.sellPrice || BOOK_SELL_PRICE_OVERRIDES[item.itemId] || 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
     },
 
     getUnequippedCount: function(itemKey) {
@@ -2552,6 +2764,13 @@ const game = {
         return d;
     },
 
+    getBossMagicDamageFloor: function(monster) {
+        if (!monster || !monster.isBoss) return 0;
+        if (['antaras','fafurion','valakas','lindvior','ancient_guardian'].includes(monster.id)) return 60;
+        if (['ice_queen','demon','mammoth','lord_of_lastavard','elite_black_knight','death_knight','black_elder','phoenix','ifrit'].includes(monster.id)) return 35;
+        return 20;
+    },
+
     takeMagicDmg: function(base) {
         if (this.state.buffs.de_uncanny_dodge && Math.random() < 0.25) {
             this.logCombat(`暗影閃避避開了魔法傷害。`, 'success');
@@ -2562,6 +2781,7 @@ const game = {
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
         if (this.state.buffs.immune_to_harm) d = Math.max(1, Math.floor(d * 0.7));
         if (this.state.buffs.elf_release_elemental) d = Math.max(1, Math.floor(d * 0.9));
+        d = Math.max(d, this.getBossMagicDamageFloor(this.state.targetMonster));
         this.state.hp -= d;
         return d;
     },
@@ -2715,6 +2935,7 @@ const game = {
                 isCrit = true;
             }
             if (isCrit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) dDmg = Math.floor(dDmg * (this.state.buffs.de_double_break && isDarkElfBossMelee && weaponClass === 'claw' ? 1.8 : 1.5));
+            if (isCrit) dDmg = Math.floor(dDmg * (1 + (this.getSetBonuses().critDmg || 0)));
             let bonusUndead = 0;
             if (wDef && wDef.isUndeadSlayer && (this.state.targetMonster.isUndead || this.state.targetMonster.isWerewolf)) {
                 bonusUndead = Math.floor(Math.random() * 4) + 3; 
@@ -2922,7 +3143,27 @@ const game = {
             }
         }
         
-        if(Math.random()*100 <= this.getER()) {
+                let specialMagic = this.state.targetMonster.magicProfile;
+        if (specialMagic && Math.random() < (specialMagic.chance || 0.35)) {
+            let magicDmg = this.takeMagicDmg(rollDice(specialMagic.dice || '4d10+10'));
+            this.logCombat(`${this.state.targetMonster.name} ${specialMagic.text}，造成 ${magicDmg} 點魔法傷害！`, 'danger');
+            this.updateUI();
+            if(this.state.hp <= 0) this.checkPlayerDeath();
+            return;
+        }
+
+        if (this.state.targetMonster.breaksWeapon && Math.random() < 0.08) {
+            this.state.buffs.player_weapon_break = 10;
+            this.logCombat(`${this.state.targetMonster.name} 的堅硬外殼震裂了你的武器，短時間內攻擊力下降！`, 'danger');
+        }
+
+        if (this.state.targetMonster.companionProfile && Math.random() < (this.state.targetMonster.companionProfile.chance || 0.45)) {
+            let petDmg = this.takeMagicDmg(rollDice(this.state.targetMonster.companionProfile.dice || '3d10+10'));
+            this.logCombat(`${this.state.targetMonster.companionProfile.text}，造成 ${petDmg} 點傷害。`, 'danger');
+            this.updateUI();
+            if(this.state.hp <= 0) this.checkPlayerDeath();
+        }
+if(Math.random()*100 <= this.getER()) {
             this.logCombat(`你閃避了 ${this.state.targetMonster.name} 的攻擊！`, 'success');
             if (this.state.buffs.de_armor_break && this.state.classId === 'dark_elf' && this.state.targetMonster && this.state.targetMonster.isBoss) this.darkElfArmorBreakCounter();
             return;
@@ -3020,7 +3261,7 @@ const game = {
                 if(this.isRemovedSystemItem(d.id)) return;
                 if(Math.random()*100 < d.rate*multi) {
                     if(ITEMS[d.id] && ITEMS[d.id].type === 'book' && this.state.spells.includes(ITEMS[d.id].spellId)) {
-                        let sell = 100 * Math.pow(SPELLS[ITEMS[d.id].spellId].level, 2);
+                        let sell = ITEMS[d.id].sellPrice || BOOK_SELL_PRICE_OVERRIDES[d.id] || 100 * Math.pow(SPELLS[ITEMS[d.id].spellId].level, 2);
                         this.state.adena += sell;
                         this.logSystem(`賣出重複的 ${ITEMS[d.id].name} 獲得 ${sell} 金幣。`);
                     } else if (ITEMS[d.id]) {
@@ -3156,6 +3397,7 @@ const game = {
                         if(def && def.mpRegen) r += def.mpRegen;
                     }
                 }
+                r += this.getSetBonuses().mpRegen || 0;
                 
                 let robeKey = this.state.equipment.armor;
                 if(robeKey && this.state.inventory[robeKey]) {
@@ -3230,7 +3472,21 @@ const game = {
                 this.state.monsterSpecialTick++;
                 let st = this.state.monsterSpecialTick;
                 let tm = this.state.targetMonster;
-                let tmId = tm.id;
+                let tmId = tm.id;                if (tmId === 'ice_queen' && st % 8 === 0) {
+                    this.logCombat(`冰之女王在你腳下立起冰錐圍籬，寒氣封住退路！`, 'danger');
+                    this.takeMagicDmg(rollDice('6d10') + 24); needUpdate = true; this.checkPlayerDeath();
+                }
+                if (tmId === 'lindvior' && st % 7 === 0) {
+                    let spellText = ['暴風龍捲', '亡者雷鳴', '撕裂靈魂的風刃'][Math.floor(Math.random() * 3)];
+                    this.logCombat(`林德拜爾施展${spellText}，整個棲息地被風壓扭曲！`, 'danger');
+                    this.takeMagicDmg(rollDice('7d12') + 30); needUpdate = true; this.checkPlayerDeath();
+                }
+                if (tmId === 'elite_black_knight' && st % 6 === 0) {
+                    let petDmg = this.takeMagicDmg(rollDice('4d10') + 12);
+                    this.logCombat(`馴獸師的黑暗寵物對你發動攻擊，造成 ${petDmg} 點傷害。`, 'danger');
+                    needUpdate = true; this.checkPlayerDeath();
+                }
+
                 
                 if (st % 5 === 0 && !(tm.debuffs?.sleep > 0) && tmId === 'hellhound') {
                     this.logCombat(`地獄犬發動噴火，造成 ${this.takeMagicDmg(rollDice('3d8'))} 點魔法傷害！`, 'danger');
@@ -3286,7 +3542,7 @@ const game = {
                     }
                 }
 
-                if (['ifrit','valakas','phoenix','fire_warrior','fire_salamander'].includes(tmId) && st % 16 === 0) {
+                if (['ifrit','valakas','phoenix'].includes(tmId) && st % 16 === 0) {
                     this.state.buffs.player_weapon_break = 18;
                     this.logCombat(`${tm.name} 施展了壞物術，你的武器傷害降低了！`, 'danger');
                     needUpdate = true;
@@ -3568,3 +3824,11 @@ window.onload = () => { game.init(); };
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
