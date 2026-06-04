@@ -3898,16 +3898,24 @@ game.getSpellRequiredLevel = function(spellId) {
 game.getSpellMaxLevelForClass = function(spellId) {
     let spell = SPELLS[spellId];
     let cls = this.getClassDef();
-// 【新增】如果玩家裝備了特定的魔法頭盔，直接允許該頭盔對應的魔法階級
+    if (!spell) return 0;
+    
+    // 檢查玩家目前裝備的頭盔
     let helmKey = this.state.equipment && this.state.equipment.helmet;
     if (helmKey && this.state.inventory && this.state.inventory[helmKey]) {
         let helmId = this.state.inventory[helmKey].itemId;
+        
+        // 1. 力量魔法頭盔：放行 擬似魔法武器(2階)、體魄強健術(6階)、無所遁形術(2階)
         if (helmId === 'helm_str_magic' && ['enchant_weapon', 'str_buff', 'detection'].includes(spellId)) {
-            return Math.max(cls.magicMaxLevel || 1, spell.level); // 允許放行到該技能階級
+            return Math.max(cls.magicMaxLevel || 1, spell.level);
         }
+        
+        // 2. 治癒魔法頭盔：放行 初級治癒術(1階)、中級治癒術(3階)
         if (helmId === 'helm_heal_magic' && ['heal', 'mid_heal'].includes(spellId)) {
             return Math.max(cls.magicMaxLevel || 1, spell.level);
         }
+        
+        // 3. 敏捷魔法頭盔：放行 通暢氣脈術(4階)、加速術(6階)
         if (helmId === 'helm_dex_magic' && ['dex_buff', 'haste'].includes(spellId)) {
             return Math.max(cls.magicMaxLevel || 1, spell.level);
         }
