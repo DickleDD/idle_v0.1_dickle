@@ -1173,6 +1173,9 @@ const DICKLE_BALANCE_040 = (() => {
     Object.assign(ITEMS.belt_doro, { hp: 20, mp: 20, hit: 2, desc: 'HP+20 / MP+20 / 近戰與遠程命中+2' });
     Object.assign(ITEMS.belt_ogre, { hp: 40, mp: 40, dmg: 2, desc: 'HP+40 / MP+40 / 近戰傷害+2' });
 
+    Object.values(ITEMS).forEach(def => {
+        if (def.type === 'weapon' && ['dual_blade','claw'].includes(def.weaponClass)) def.hands = 2;
+    });
     // Heine and Eva progression.
     lowerMap('heine_lake', 4, 0.84, 0.88);
     lowerMap('eva_kingdom', 4, 0.86, 0.9);
@@ -3824,6 +3827,7 @@ window.onload = () => { game.init(); };
 </script>
 </body>
 </html>
+
 
 
 
