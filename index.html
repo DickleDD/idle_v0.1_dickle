@@ -27,6 +27,10 @@
         .set-active-row { background: linear-gradient(90deg, rgba(88,28,135,0.4) 0%, rgba(24,24,27,0) 100%); border-left: 3px solid #c084fc; }
         .modal-overlay { background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(2px); }
         .spell-grid-item { background-color: #1f2937; border: 1px solid #3f3f46; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; min-height: 80px; }
+        .c-skill-elf { color: #7dd3fc; text-shadow: 0 0 8px rgba(56,189,248,.95), 0 0 16px rgba(34,211,238,.45); font-weight: 700; }
+        .c-skill-dark { color: #f0abfc; text-shadow: 0 0 8px rgba(217,70,239,.95), 0 0 18px rgba(239,68,68,.45); font-weight: 700; }
+        .c-skill-knight { color: #fde68a; text-shadow: 0 0 8px rgba(245,158,11,.9), 0 0 16px rgba(251,191,36,.35); font-weight: 700; }
+        .c-skill-wizard { color: #c4b5fd; text-shadow: 0 0 8px rgba(139,92,246,.95), 0 0 16px rgba(96,165,250,.35); font-weight: 700; }
     </style>
 </head>
 <body class="h-screen w-screen overflow-hidden flex flex-col p-2">
@@ -1457,7 +1461,7 @@ const game = {
     logCombat: function(msg, type='normal') {
         const el = document.getElementById('combat-log');
         let color = 'c-sys';
-        if (type === 'danger') color = 'c-err'; else if (type === 'hit') color = 'c-info'; else if (type === 'success') color = 'c-success'; else if (type === 'magic') color = 'c-magic'; 
+        if (type === 'danger') color = 'c-err'; else if (type === 'hit') color = 'c-info'; else if (type === 'success') color = 'c-success'; else if (type === 'magic') color = 'c-magic'; else if (type === 'skill-elf') color = 'c-skill-elf'; else if (type === 'skill-dark') color = 'c-skill-dark'; else if (type === 'skill-knight') color = 'c-skill-knight'; else if (type === 'skill-wizard') color = 'c-skill-wizard'; 
         el.insertAdjacentHTML('beforeend', `<div class="${color}">> ${msg}</div>`);
         el.scrollTop = el.scrollHeight;
         if(el.children.length > 50) el.firstChild.remove();
@@ -1734,6 +1738,7 @@ const game = {
         if (cls.drBase || cls.drEvery) dr += (cls.drBase || 0) + Math.floor(this.state.level / (cls.drEvery || 999));
         if (this.state.buffs.knight_reduction_armor) dr += 2 + Math.floor(this.state.level / 20);
         if (this.state.buffs.elf_iron_skin) dr += 2;
+        if (this.state.buffs.de_shadow_armor) dr += 1;
         for(let slot in this.state.equipment) {
             let itemKey = this.state.equipment[slot];
             if(itemKey && this.state.inventory[itemKey]) {
@@ -1970,6 +1975,14 @@ const game = {
         if(this.state.buffs.elf_fire_weapon) buffHtml += '<span class="c-success mr-2">[火焰武器]</span>';
         if(this.state.buffs.elf_wind_shot) buffHtml += '<span class="c-success mr-2">[風之神射]</span>';
         if(this.state.buffs.elf_triple_arrow) buffHtml += '<span class="c-success mr-2">[三重矢]</span>';
+        if(this.state.buffs.de_enchant_venom) buffHtml += '<span class="c-skill-dark mr-2">[附加劇毒]</span>';
+        if(this.state.buffs.de_shadow_armor) buffHtml += '<span class="c-skill-dark mr-2">[暗影防護]</span>';
+        if(this.state.buffs.de_burning_spirit) buffHtml += '<span class="c-skill-dark mr-2">[燃燒鬥志]</span>';
+        if(this.state.buffs.de_shadow_fang) buffHtml += '<span class="c-skill-dark mr-2">[暗影之牙]</span>';
+        if(this.state.buffs.de_uncanny_dodge) buffHtml += '<span class="c-skill-dark mr-2">[暗影閃避]</span>';
+        if(this.state.buffs.de_double_break) buffHtml += '<span class="c-skill-dark mr-2">[雙重破壞]</span>';
+        if(this.state.buffs.de_armor_break) buffHtml += '<span class="c-skill-dark mr-2">[破壞盔甲]</span>';
+        if(this.state.buffs.de_dress_mighty) buffHtml += '<span class="c-skill-dark mr-2">[力量提升]</span>';
         if(this.state.buffs.potion_blue) buffHtml += '<span class="c-potion-blue mr-2">[藍色藥水]</span>';
         if(this.state.buffs.potion_wisdom) buffHtml += '<span class="c-potion-purple mr-2">[慎重藥水]</span>';
         if(this.state.buffs.potion_haste) buffHtml += '<span class="c-potion-purple mr-2">[加速藥水]</span>';
@@ -2757,7 +2770,7 @@ const game = {
         let dice = wDef && wDef.dice ? wDef.dice : '1d2';
         let dmg = Math.max(1, getDiceMax(dice) + (wpn ? Number(wpn.enchant) : 0) + this.getMeleeDmg());
         this.state.targetMonster.hp -= dmg;
-        this.logCombat(`破壞盔甲反擊 ${this.state.targetMonster.name}，造成 ${dmg} 點傷害！`, 'success');
+        this.logCombat(`【破壞盔甲】反擊撕裂了 ${this.state.targetMonster.name}，造成 ${dmg} 點傷害。`, 'skill-dark');
         this.updateMonsterHpBar();
         if (this.state.targetMonster.hp <= 0) this.monsterDied();
     },
@@ -2779,16 +2792,31 @@ const game = {
         return 20;
     },
 
+    getDarkElfBackwaterRank: function() {
+        if (this.state.classId !== 'dark_elf') return 0;
+        let ratio = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        if (ratio <= 0.15) return 3;
+        if (ratio <= 0.30) return 2;
+        if (ratio <= 0.50) return 1;
+        return 0;
+    },
+
     takeMagicDmg: function(base) {
-        if (this.state.buffs.de_uncanny_dodge && Math.random() < 0.25) {
-            this.logCombat(`暗影閃避避開了魔法傷害。`, 'success');
-            if (this.state.buffs.de_armor_break && this.state.classId === 'dark_elf' && this.state.targetMonster && this.state.targetMonster.isBoss) this.darkElfArmorBreakCounter();
-            return 0;
+        if (this.state.buffs.de_uncanny_dodge) {
+            let dodgeChance = 0.25 + this.getDarkElfBackwaterRank() * 0.05;
+            if (Math.random() < dodgeChance) {
+                this.logCombat(`【暗影閃避】你在黑影中錯開魔法軌跡，避開了傷害。`, 'skill-dark');
+                if (this.state.buffs.de_armor_break && this.state.classId === 'dark_elf' && this.state.targetMonster && this.state.targetMonster.isBoss) this.darkElfArmorBreakCounter();
+                return 0;
+            }
         }
         let targetMR = this.getMR();
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
         if (this.state.buffs.immune_to_harm) d = Math.max(1, Math.floor(d * 0.7));
-        if (this.state.buffs.elf_release_elemental) d = Math.max(1, Math.floor(d * 0.9));
+        if (this.state.buffs.elf_resist_magic) d = Math.max(1, Math.floor(d * (this.state.targetMonster?.isBoss ? 0.88 : 0.94)));
+        if (this.state.buffs.elf_iron_skin && this.state.targetMonster?.isBoss) d = Math.max(1, Math.floor(d * 0.93));
+        if (this.state.buffs.elf_release_elemental) d = Math.max(1, Math.floor(d * 0.82));
+        if (this.state.buffs.de_shadow_armor) d = Math.max(1, Math.floor(d * (this.state.targetMonster?.isBoss ? 0.88 : 0.94)));
         d = Math.max(d, this.getBossMagicDamageFloor(this.state.targetMonster));
         this.state.hp -= d;
         return d;
@@ -2921,7 +2949,8 @@ const game = {
         
         let dbf = this.state.targetMonster.debuffs || {};
         let isDarkElfBossMelee = this.state.classId === 'dark_elf' && this.state.targetMonster.isBoss && ['claw','dual_blade'].includes(weaponClass);
-        let doubleBreakChance = this.state.buffs.de_double_break && weaponClass === 'dual_blade' ? (isDarkElfBossMelee ? 0.4 : 0.35) : 0;
+        let deBackwaterRank = this.getDarkElfBackwaterRank();
+        let doubleBreakChance = this.state.buffs.de_double_break && weaponClass === 'dual_blade' ? ((isDarkElfBossMelee ? 0.4 : 0.35) + deBackwaterRank * 0.04) : 0;
         let doubleBreakTriggered = doubleBreakChance > 0 && Math.random() < doubleBreakChance;
         let tAc = this.state.targetMonster.ac + (dbf.disease > 0 ? 8 : 0) + (dbf.armor_break > 0 ? 30 : 0) + (this.state.buffs.de_double_break && isDarkElfBossMelee ? 15 : 0);
         if (doubleBreakTriggered) tAc = Math.max(0, tAc);
@@ -2932,7 +2961,7 @@ const game = {
         else if(roll === 20) { isHit = true; isCrit = true; }
         else if(roll + this.getMeleeHit() + (this.state.buffs.de_armor_break && isDarkElfBossMelee ? 15 : 0) + (this.state.level - this.state.targetMonster.level) >= 10 - tAc) isHit = true;
         if(!isHit && roll !== 1 && Math.random() < 0.25) isGraze = true;
-        if(isHit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass) && Math.random() < 0.12) isCrit = true;
+        if(isHit && this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass) && Math.random() < (0.12 + deBackwaterRank * 0.04)) isCrit = true;
         
         if(isHit || isGraze) {
             let dice = wDef && wDef.dice ? wDef.dice : '1d2';
@@ -2956,28 +2985,47 @@ const game = {
             if (isGraze) dmg = Math.max(1, Math.floor((getDiceMax(dice) + Math.max(0, this.getMeleeDmg()) + rangedPierceDr) * 0.3));
             let cls = this.getClassDef();
             if (this.state.targetMonster.isBoss && cls.bossDmgBonus) dmg = Math.max(1, Math.floor(dmg * (1 + cls.bossDmgBonus)));
-            if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) dmg = Math.max(1, Math.floor(dmg * 1.3));
+            if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) dmg = Math.max(1, Math.floor(dmg * 1.08));
             if (doubleBreakTriggered && !isGraze) {
                 dmg *= 2;
-                if (weaponClass === 'dual_blade' && Math.random() < 0.15) dmg *= 2;
+                if (weaponClass === 'dual_blade' && Math.random() < (0.15 + deBackwaterRank * 0.03)) dmg *= 2;
+                let followDmg = Math.max(1, Math.floor(dmg * (0.18 + deBackwaterRank * 0.06)));
+                this.state.targetMonster.hp -= followDmg;
+                this.logCombat(`【雙重破壞】第一擊撕開防線，黑刃追擊追加 ${followDmg} 點傷害。`, 'skill-dark');
                 isCrit = true;
             }
             if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) {
-                let absoluteDmg = Math.floor(this.state.maxMp * 0.1);
-                if (qDef && qDef.magicArrow && ['ancient_crossbow','bow_sayha'].includes(wpn?.itemId)) absoluteDmg += qDef.arrowDmg || 0;
-                this.state.targetMonster.hp -= absoluteDmg;
-                this.logCombat(`三重矢附加屬性傷害 ${absoluteDmg} 點。`, 'magic');
+                let arrowBase = Math.max(1, Math.floor(this.state.maxMp * 0.055));
+                if (qDef && qDef.magicArrow && ['ancient_crossbow','bow_sayha'].includes(wpn?.itemId)) arrowBase += Math.max(1, Math.floor((qDef.arrowDmg || 0) * 0.5));
+                let arrowHits = [
+                    Math.max(1, Math.floor(arrowBase * 0.9)),
+                    Math.max(1, arrowBase),
+                    Math.max(1, Math.floor(arrowBase * (this.state.targetMonster.isBoss ? 1.45 : 1.2)))
+                ];
+                this.state.targetMonster.hp -= arrowHits.reduce((sum, v) => sum + v, 0);
+                this.logCombat(`【三重矢】第一矢破空 ${arrowHits[0]}，第二矢化為風刃 ${arrowHits[1]}，第三矢凝聚魔力 ${arrowHits[2]}。`, 'skill-elf');
             }
-            if (this.state.buffs.de_enchant_venom && Math.random() < 0.2) {
-                let poisonDmg = Math.max(1, Math.floor(this.state.targetMonster.maxHp * 0.01));
-                this.state.targetMonster.hp -= poisonDmg;
-                this.logCombat(`附加劇毒侵蝕了 ${this.state.targetMonster.name}，造成 ${poisonDmg} 點傷害。`, 'magic');
+            if (this.state.buffs.de_enchant_venom && Math.random() < (0.2 + deBackwaterRank * 0.03)) {
+                let poisonDmg = Math.max(1, Math.floor(this.state.targetMonster.maxHp * (this.state.targetMonster.isBoss ? 0.008 : 0.012)));
+                let burstDmg = Math.max(1, Math.floor((dmg + poisonDmg) * (0.22 + deBackwaterRank * 0.07)));
+                this.state.targetMonster.hp -= poisonDmg + burstDmg;
+                this.logCombat(`【附加劇毒】毒刃侵蝕 ${poisonDmg}，黑血爆開再造成 ${burstDmg} 點傷害。`, 'skill-dark');
+            }
+            if (this.state.buffs.de_armor_break && isDarkElfBossMelee && !isGraze && Math.random() < (0.12 + deBackwaterRank * 0.05)) {
+                if (!this.state.targetMonster.debuffs) this.state.targetMonster.debuffs = {};
+                this.state.targetMonster.debuffs.armor_break = Math.max(this.state.targetMonster.debuffs.armor_break || 0, 5 + deBackwaterRank);
+                let crackDmg = Math.max(1, Math.floor(dmg * (0.16 + deBackwaterRank * 0.05)));
+                let shatterDmg = Math.max(1, Math.floor(dmg * (0.12 + deBackwaterRank * 0.05)));
+                this.state.targetMonster.hp -= crackDmg + shatterDmg;
+                this.logCombat(`【破壞盔甲】第一段裂甲 ${crackDmg}，第二段穿刺 ${shatterDmg}，防線崩解 ${this.state.targetMonster.debuffs.armor_break} 秒。`, 'skill-dark');
             }
             if (this.state.buffs.de_burning_spirit && this.state.classId === 'dark_elf' && (isCrit || dDmg >= getDiceMax(dice))) {
-                let leechRate = this.state.hp < this.state.maxHp * 0.4 ? 0.2 : 0.1;
+                let leechRate = this.state.hp < this.state.maxHp * 0.4 ? 0.22 + deBackwaterRank * 0.04 : 0.1;
                 let leech = Math.max(1, Math.floor(dmg * leechRate));
+                let backlash = Math.max(1, Math.floor(dmg * (0.1 + deBackwaterRank * 0.04)));
                 this.state.hp = Math.min(this.state.maxHp, this.state.hp + leech);
-                this.logCombat(`燃燒鬥志吸收了 ${leech} 點體力。`, 'success');
+                this.state.targetMonster.hp -= backlash;
+                this.logCombat(`【燃燒鬥志】血氣回流 ${leech}，背水反噬再造成 ${backlash} 點傷害。`, 'skill-dark');
             }
             let actionText = weaponClass === 'bow' ? '射出一箭命中了' : (['claw','dual_blade'].includes(weaponClass) ? '迅速撕裂了' : '命中了');
             this.logCombat(`你${isGraze ? '擦傷了' : actionText} ${this.state.targetMonster.name} 造成 ${dmg} 點傷害${isCrit?' (爆擊！)':''}${doubleBreakTriggered?' (破防！)':''}${bonusUndead > 0 ? ` (弱點加成 +${bonusUndead})` : ''}。`, 'hit');
@@ -3209,7 +3257,7 @@ if(Math.random()*100 <= this.getER()) {
             if (this.state.buffs.knight_counter_barrier && cbWDef && cbWDef.hands === 2 && Math.random() < 0.4) {
                 let counterDmg = Math.max(1, Math.floor(dmg * 1.5) + Math.abs(this.getAC()));
                 this.state.targetMonster.hp -= counterDmg;
-                this.logCombat(`反擊屏障反彈了 ${counterDmg} 點傷害。`, 'success');
+                this.logCombat(`【反擊屏障】巨刃架開攻勢，反彈了 ${counterDmg} 點傷害。`, 'skill-knight');
                 this.updateMonsterHpBar();
                 if(this.state.targetMonster.hp <= 0) this.monsterDied();
             }
@@ -3602,7 +3650,7 @@ if(Math.random()*100 <= this.getER()) {
                 }
 
                 if (tm.isBoss && ['antaras','death_knight','black_elder','valakas','fafurion','ice_queen','demon'].includes(tmId) && st % 18 === 0 && Math.random() < 0.35) {
-                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
+                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','de_shadow_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
                     this.logCombat(`${tm.name} 施展魔法相消術，強制洗掉了你的主要增益狀態！`, 'danger');
                     needUpdate = true;
                 }
@@ -3669,7 +3717,8 @@ if(Math.random()*100 <= this.getER()) {
                                     if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
                                     this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
                                 } else this.state.buffs[sId] = sp.duration;
-                                this.logCombat(`自動施放了 ${sp.name}。`, 'info');
+                                let skillType = sp.classes?.includes('elf') ? 'skill-elf' : (sp.classes?.includes('dark_elf') ? 'skill-dark' : (sp.classes?.includes('knight') ? 'skill-knight' : (sp.classes?.includes('wizard') ? 'skill-wizard' : 'info')));
+                                this.logCombat(`自動施放了 ${sp.name}。`, skillType);
                                 needUpdate = true;
                             }
                         }
@@ -3701,7 +3750,8 @@ if(Math.random()*100 <= this.getER()) {
                                 let h = sp.healBase + this.getMagicDmg();
                                 if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
                                 this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
-                                this.logCombat(`自動施放了 ${sp.name}。`, 'info');
+                                let skillType = sp.classes?.includes('elf') ? 'skill-elf' : (sp.classes?.includes('dark_elf') ? 'skill-dark' : (sp.classes?.includes('knight') ? 'skill-knight' : (sp.classes?.includes('wizard') ? 'skill-wizard' : 'info')));
+                                this.logCombat(`自動施放了 ${sp.name}。`, skillType);
                                 this.state.autoHealCd = 3;
                                 needUpdate = true;
                             }
@@ -3935,6 +3985,8 @@ window.onload = () => { game.init(); };
 </script>
 </body>
 </html>
+
+
 
 
 
