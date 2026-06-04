@@ -464,7 +464,7 @@ const ITEMS = {
     gem_high_sapphire: { name: '高品質藍寶石', type: 'gem', dropRate: 0.1 },
     gem_high_emerald: { name: '高品質綠寶石', type: 'gem', dropRate: 0.1 },
     eva_shield: { name: '伊娃之盾', type: 'shield', safe: 4, ac: -3, mr: 5, dropRate: 0.1 },
-    mana_cloak: { name: '瑪那斗篷', type: 'cloak', safe: 4, ac: -2, dropRate: 0.1, desc: 'MP+30，魔力恢復+5' },
+    mana_cloak: { name: '瑪那斗篷', type: 'cloak', safe: 4, ac: -2, mp: 30, mpRegen: 5, dropRate: 0.1, desc: 'MP+30，魔力恢復+5' },
     water_dragon_scale: { name: '水龍鱗', type: 'quest', dropRate: 0.05 },
     fire_dragon_scale: { name: '火龍鱗', type: 'quest', dropRate: 0.05 },
     water_dragon_scale_armor: { name: '水龍鱗盔甲', type: 'armor', safe: 4, ac: -8, mr: 10, dropRate: 0.01, legendary: true },
@@ -2061,6 +2061,20 @@ const game = {
         else if(def.type === 'quiver') typeName = '箭桶';
         
         if (typeName) html += `<div class="c-sys mb-2">[${typeName}]</div>`;
+        let detailBonus = {
+            str: def.str || 0, dex: def.dex || 0, con: def.con || 0, int: def.int || 0, wis: def.wis || 0,
+            hp: def.hp || 0, mp: def.mp || 0, hpRegen: def.hpRegen || 0, mpRegen: def.mpRegen || 0
+        };
+        const legacyDetailBonuses = {
+            gloves_str: { str: 2 },
+            amulet_str: { str: 1 }, amulet_dex: { dex: 1 }, amulet_con: { con: 1 }, amulet_int: { int: 1 }, amulet_wis: { wis: 1 },
+            belt_body: { hp: 50 }, belt_soul: { hp: 25, mp: 25 }, belt_mind: { mp: 50 },
+            robe_black_elder: { mp: 50, mpRegen: 12 }, sandals_black_elder: { mpRegen: 5 }
+        };
+        let legacyBonus = legacyDetailBonuses[item.itemId];
+        if (legacyBonus) {
+            for (let k in legacyBonus) detailBonus[k] = (detailBonus[k] || 0) + legacyBonus[k];
+        }
 
         if (def.type === 'weapon') {
             let baseAttack = def.dice ? def.dice.toLowerCase().split('d')[1] : 0;
@@ -2074,10 +2088,18 @@ const game = {
             if (def.ac !== undefined && def.ac !== 0) html += `<div>防禦力 (AC): <span class="text-white">${def.ac}</span></div>`;
             if (def.safe !== undefined) html += `<div>安定值: <span class="text-white">${def.safe !== undefined ? def.safe : 0}</span></div>`;
             if (def.mr) html += `<div>魔防 (MR): <span class="text-white">+${def.mr}%</span></div>`;
-            if (def.hp) html += `<div>最大 HP: <span class="text-white">+${def.hp}</span></div>`;
             if (def.dr) html += `<div>傷害減免: <span class="text-white">+${def.dr}</span></div>`;
+            if (def.mDmg) html += `<div>魔法額外傷害: <span class="text-white">+${def.mDmg}</span></div>`;
             if (def.arrowDmg) html += `<div>遠程傷害: <span class="text-white">+${def.arrowDmg}</span></div>`;
         }
+        const statNames = { str: '力量', dex: '敏捷', con: '體質', int: '智力', wis: '精神' };
+        for (let stat in statNames) {
+            if (detailBonus[stat]) html += `<div>${statNames[stat]}: <span class="text-white">+${detailBonus[stat]}</span></div>`;
+        }
+        if (detailBonus.hp) html += `<div>最大 HP: <span class="text-white">+${detailBonus.hp}</span></div>`;
+        if (detailBonus.mp) html += `<div>最大 MP: <span class="text-white">+${detailBonus.mp}</span></div>`;
+        if (detailBonus.hpRegen) html += `<div>體力恢復: <span class="text-white">+${detailBonus.hpRegen}</span></div>`;
+        if (detailBonus.mpRegen) html += `<div>魔力恢復: <span class="text-white">+${detailBonus.mpRegen}</span></div>`;
         
         if (def.desc) html += `<div class="c-warn mt-3 text-base">${def.desc}</div>`;
         
@@ -2352,9 +2374,9 @@ const game = {
         let dr = def.dropRate || 1;
         let realDr = dr / 100;
         let rarity = Math.max(1, Math.floor(1 / realDr));
-        if (def.type === 'weapon') return Math.floor(250 + rarity * 0.8 + getDiceMax(def.dice || '1d1') * 180 + (def.hit || 0) * 350 + (def.dmg || 0) * 500 + (def.mDmg || 0) * 800);
-        if (['amulet','ring','belt','earring'].includes(def.type)) return Math.floor(500 + rarity * 1.2 + Math.abs(def.ac || 0) * 500 + (def.mr || 0) * 180 + (def.hp || 0) * 25 + (def.mp || 0) * 25 + (def.hit || 0) * 500 + (def.dmg || 0) * 800);
-        return Math.floor(200 + rarity * 0.6 + Math.abs(def.ac || 0) * 450 + (def.mr || 0) * 150 + (def.dr || 0) * 1000 + (def.mDmg || 0) * 900);
+        if (def.type === 'weapon') return Math.max(100, Math.floor(250 + rarity * 0.8 + getDiceMax(def.dice || '1d1') * 180 + (def.hit || 0) * 350 + (def.dmg || 0) * 500 + (def.mDmg || 0) * 800));
+        if (['amulet','ring','belt','earring'].includes(def.type)) return Math.max(100, Math.floor(500 + rarity * 1.2 + Math.abs(def.ac || 0) * 500 + (def.mr || 0) * 180 + (def.hp || 0) * 25 + (def.mp || 0) * 25 + (def.hit || 0) * 500 + (def.dmg || 0) * 800));
+        return Math.max(100, Math.floor(200 + rarity * 0.6 + Math.abs(def.ac || 0) * 450 + (def.mr || 0) * 150 + (def.dr || 0) * 1000 + (def.mDmg || 0) * 900));
     },
 
     getBookSellPrice: function(item, def) {
