@@ -144,9 +144,10 @@
                     <div class="flex-1 flex flex-col h-full bg-zinc-900 border border-zinc-700 rounded-md p-3">
                         <div class="c-title mb-2 text-lg border-b border-zinc-700 pb-1"><span>背包清單</span></div>
                         <div class="flex flex-wrap justify-end gap-2 mb-2">
-                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllNonAccessoryEquipment()">一鍵出售所有飾品以外的裝備</button>
-                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllAccessories()">一鍵出售所有飾品</button>
-                            <button class="btn-ui c-sys border-gray-700" onclick="game.sellAllBooks()">一鍵出售所有技能書/精靈水晶/法書</button>
+                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllNonAccessoryEquipment()">出售所有飾品外裝備</button>
+                            <button class="btn-ui c-warn border-yellow-700" onclick="game.sellAllAccessories()">出售所有飾品</button>
+                            <button class="btn-ui c-sys border-gray-700" onclick="game.sellAllUnusableConsumables()">出售所有無法使用消耗品</button>
+                            <button class="btn-ui c-sys border-gray-700" onclick="game.sellAllUnusableSkillItems()">出售所有無法使用技能道具</button>
                         </div>
                         <div id="inventory-list" class="flex-1 overflow-y-auto custom-scroll space-y-1 pr-1"></div>
                     </div>
@@ -2485,6 +2486,21 @@ const game = {
         return def.sellPrice || BOOK_SELL_PRICE_OVERRIDES[item.itemId] || 100 * Math.pow((SPELLS[def.spellId] && SPELLS[def.spellId].level) || 1, 2);
     },
 
+    getConsumableSellPrice: function(item, def) {
+        if (!def || !def.price) return 0;
+        return Math.max(1, Math.floor(def.price * 0.35));
+    },
+
+    isUnusableSkillItem: function(item, def) {
+        if (!item || !def || def.type !== 'book') return false;
+        let spell = SPELLS[def.spellId];
+        if (!spell) return true;
+        if (this.state.spells.includes(def.spellId)) return true;
+        if (!this.canUseSpellForClass(def.spellId)) return true;
+        let learnableMaxLevel = this.getLearnableSpellMaxLevelForClass ? this.getLearnableSpellMaxLevelForClass(def.spellId) : this.getSpellMaxLevelForClass(def.spellId);
+        return spell.level > learnableMaxLevel;
+    },
+
     getUnequippedCount: function(itemKey) {
         let item = this.state.inventory[itemKey];
         if (!item) return 0;
@@ -2543,13 +2559,35 @@ const game = {
         );
     },
 
+    sellAllUnusableConsumables: function() {
+        this.sellBulkItems(
+            '無法使用消耗品',
+            function(item, def) {
+                if (!def) return false;
+
+                const consumableTypes = ['potion_hp', 'potion_mp', 'potion_buff'];
+                if (!consumableTypes.includes(def.type)) return false;
+
+                if (!def.classes || !Array.isArray(def.classes)) return false;
+
+                return !def.classes.includes(this.state.classId);
+            }.bind(this),
+            this.getConsumableSellPrice,
+            '只會出售目前職業無法使用的消耗品。'
+        );
+    },
+
     sellAllBooks: function() {
         this.sellBulkItems(
-            '技能書/精靈水晶/法書',
-            function(item, def) { return def.type === 'book'; },
+            '無法使用技能道具',
+            function(item, def) { return this.isUnusableSkillItem(item, def); },
             this.getBookSellPrice,
             ''
         );
+    },
+
+    sellAllUnusableSkillItems: function() {
+        this.sellAllBooks();
     },
 
     sellItem: function(itemKey, price) {
