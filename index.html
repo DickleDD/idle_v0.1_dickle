@@ -192,6 +192,17 @@
                         </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普寶石交換</div>
                         <div id="gem-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">龍鱗盔甲製作</div>
+                        <div class="grid grid-cols-1 gap-3 mb-8">
+                            <div class="list-item">
+                                <span class="c-legendary">水龍鱗盔甲 <span class="c-sys text-sm">需要：水龍鱗 x30、500,000 金幣</span></span>
+                                <button class="btn-ui !px-3 !py-1" onclick="game.craftDragonScaleArmor('water_dragon_scale','water_dragon_scale_armor',30,500000)">製作</button>
+                            </div>
+                            <div class="list-item">
+                                <span class="c-legendary">火龍鱗盔甲 <span class="c-sys text-sm">需要：火龍鱗 x30、500,000 金幣</span></span>
+                                <button class="btn-ui !px-3 !py-1" onclick="game.craftDragonScaleArmor('fire_dragon_scale','fire_dragon_scale_armor',30,500000)">製作</button>
+                            </div>
+                        </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">古代裝備製作</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
 
@@ -468,8 +479,8 @@ const ITEMS = {
     mana_cloak: { name: '瑪那斗篷', type: 'cloak', safe: 4, ac: -2, mp: 30, mpRegen: 5, dropRate: 0.1, desc: 'MP+30，魔力恢復+5' },
     water_dragon_scale: { name: '水龍鱗', type: 'quest', dropRate: 0.05 },
     fire_dragon_scale: { name: '火龍鱗', type: 'quest', dropRate: 0.05 },
-    water_dragon_scale_armor: { name: '水龍鱗盔甲', type: 'armor', safe: 4, ac: -8, mr: 10, dropRate: 0.01, legendary: true },
-    fire_dragon_scale_armor: { name: '火龍鱗盔甲', type: 'armor', safe: 4, ac: -8, dropRate: 0.01, legendary: true, desc: '火龍鱗打造的高階盔甲。' },
+    water_dragon_scale_armor: { name: '水龍鱗盔甲', type: 'armor', safe: 4, ac: -9, mr: 15, hp: 50, mp: 30, hpRegen: 5, mpRegen: 5, dropRate: 0.01, legendary: true, desc: '水龍鱗打造的傳說盔甲。AC-9、MR+15、HP+50、MP+30、體力恢復+5、魔力恢復+5。' },
+    fire_dragon_scale_armor: { name: '火龍鱗盔甲', type: 'armor', safe: 4, ac: -9, mr: 5, hp: 80, dmg: 2, hit: 1, dropRate: 0.01, legendary: true, desc: '火龍鱗打造的傳說盔甲。AC-9、MR+5、HP+80、額外傷害+2、額外命中+1。' },
     valakas_heart: { name: '巴拉卡斯之心', type: 'quest', unique: true },
     ice_queen_staff: { name: '冰之女王魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d3', hit: 0, mDmg: 2, dropRate: 0.03, legendary: true , classes: ['wizard'] },
     ice_queen_earring: { name: '冰之女王耳環', type: 'earring', safe: 0, ac: -1, mr: 3, dropRate: 0.03, legendary: true },
@@ -943,9 +954,21 @@ Object.assign(MAPS, {
         { id: 'deep_sea_horror', name: '深海恐怖', level: 70, hp: 11000, ac: -70, mr: 75, exp: 6400, atkSpeed: 1500, dice: '8d12+24', hitBonus: 28, isBoss: true, weight: 10, adena: [1000,2100], drops: [{id:'earring_freedom', rate: 0.12}, {id:'water_dragon_scale', rate: 2}, {id:'gem_high_sapphire', rate: 1}] }
     ]},
     elven_grave: { name: '精靈墓穴', monsters: [
-        { id: 'spirit_guardian', name: '精靈守護者', level: 55, hp: 1600, ac: -46, mr: 65, exp: 3100, atkSpeed: 1700, dice: '6d10+16', hitBonus: 19, weight: 55, adena: [360,650], drops: [{id:'bow_elven', rate: 0.25}, {id:'shield_elven', rate: 0.2}, {id:'crystal_elf_fire_weapon', rate: 0.18}] },
-        { id: 'ancient_elf', name: '古代精靈', level: 62, hp: 2600, ac: -54, mr: 80, exp: 4000, atkSpeed: 1700, dice: '7d10+18', hitBonus: 22, weight: 45, adena: [480,850], drops: [{id:'armor_elven_chain', rate: 0.2}, {id:'crystal_elf_iron_skin', rate: 0.18}, {id:'crystal_elf_elemental_fire', rate: 0.08}] },
-        { id: 'spirit_elder', name: '精靈長老', level: 74, hp: 13000, ac: -74, mr: 90, exp: 7000, atkSpeed: 1600, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'crystal_elf_storm_shot', rate: 0.5}, {id:'crystal_elf_iron_skin', rate: 0.5}, {id:'bow_sayha', rate: 0.1}, {id:'bow_moon', rate: 0.12}, {id:'crystal_elf_elemental_fire', rate: 0.5}, {id:'gem_high_emerald', rate: 1}] }
+        { id: 'wind_spirit_grave', name: '風靈', level: 55, hp: 1600, ac: -46, mr: 70, exp: 3100, atkSpeed: 1500, dice: '6d10+16', hitBonus: 20, weight: 48, adena: [360,650], ranged: true, magicProfile: { text: '風靈捲起風刃切裂你', dice: '5d10+14', chance: 0.28 }, drops: [{id:'crystal_elf_wind_shot', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.08}, {id:'gem_emerald', rate:3}, {id:'gem_quality_emerald', rate:0.8}, {id:'potion_blue', rate:5}, {id:'scroll_weapon', rate:0.4}] },
+        { id: 'water_spirit_grave', name: '水靈', level: 55, hp: 1650, ac: -47, mr: 80, exp: 3150, atkSpeed: 1650, dice: '6d10+14', hitBonus: 19, weight: 48, adena: [360,650], magicProfile: { text: '水靈凝成水錐刺向你', dice: '5d10+14', chance: 0.3 }, drops: [{id:'crystal_elf_resist_magic', rate:0.35}, {id:'crystal_elf_body_to_mind', rate:0.25}, {id:'crystal_elf_soul_to_mind', rate:0.08}, {id:'gem_sapphire', rate:3}, {id:'gem_quality_sapphire', rate:0.8}, {id:'potion_blue', rate:8}, {id:'scroll_armor', rate:0.4}] },
+        { id: 'fire_spirit_grave', name: '火靈', level: 56, hp: 1700, ac: -48, mr: 70, exp: 3250, atkSpeed: 1500, dice: '6d12+16', hitBonus: 21, weight: 46, adena: [380,680], magicProfile: { text: '火靈射出灼熱火箭', dice: '5d12+14', chance: 0.3 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.35}, {id:'crystal_elf_elemental_fire', rate:0.04}, {id:'gem_ruby', rate:3}, {id:'gem_quality_ruby', rate:0.8}, {id:'potion_haste', rate:4}, {id:'scroll_weapon', rate:0.5}] },
+        { id: 'earth_spirit_grave', name: '地靈', level: 56, hp: 1850, ac: -50, mr: 75, exp: 3300, atkSpeed: 1750, dice: '6d10+18', hitBonus: 20, weight: 46, adena: [380,680], magicProfile: { text: '地靈以地牙束縛你的腳步', dice: '5d10+16', chance: 0.28 }, drops: [{id:'crystal_elf_earth_skin', rate:0.35}, {id:'crystal_elf_iron_skin', rate:0.05}, {id:'gem_diamond', rate:3}, {id:'gem_quality_diamond', rate:0.8}, {id:'scroll_armor', rate:0.5}, {id:'potion_blue', rate:5}] },
+        { id: 'wind_spirit_slave', name: '風靈奴隸', level: 62, hp: 2600, ac: -56, mr: 80, exp: 4200, atkSpeed: 1450, dice: '7d10+22', hitBonus: 24, weight: 34, adena: [520,900], ranged: true, magicProfile: { text: '風靈奴隸召下極道落雷', dice: '6d10+20', chance: 0.34 }, drops: [{id:'crystal_elf_wind_shot', rate:0.45}, {id:'crystal_elf_storm_shot', rate:0.18}, {id:'crystal_elf_triple_arrow', rate:0.08}, {id:'gem_quality_emerald', rate:1.2}, {id:'gem_high_emerald', rate:0.25}, {id:'scroll_weapon', rate:0.7}, {id:'scroll_armor', rate:0.5}] },
+        { id: 'water_spirit_slave', name: '水靈奴隸', level: 62, hp: 2700, ac: -56, mr: 90, exp: 4250, atkSpeed: 1600, dice: '7d10+20', hitBonus: 23, weight: 34, adena: [520,900], magicProfile: { text: '水靈奴隸以水錐汲取生命', dice: '6d10+20', chance: 0.36 }, drops: [{id:'crystal_elf_body_to_mind', rate:0.45}, {id:'crystal_elf_soul_to_mind', rate:0.18}, {id:'crystal_elf_clear_mind', rate:0.25}, {id:'gem_quality_sapphire', rate:1.2}, {id:'gem_high_sapphire', rate:0.25}, {id:'potion_blue', rate:10}, {id:'scroll_armor', rate:0.7}] },
+        { id: 'fire_spirit_slave', name: '火靈奴隸', level: 63, hp: 2750, ac: -58, mr: 82, exp: 4400, atkSpeed: 1450, dice: '7d12+22', hitBonus: 25, weight: 32, adena: [550,950], magicProfile: { text: '火靈奴隸拋出燃燒火球', dice: '6d12+20', chance: 0.36 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.45}, {id:'crystal_elf_elemental_fire', rate:0.08}, {id:'crystal_elf_release_elemental', rate:0.08}, {id:'gem_quality_ruby', rate:1.2}, {id:'gem_high_ruby', rate:0.25}, {id:'scroll_weapon', rate:0.8}, {id:'potion_blue', rate:8}] },
+        { id: 'earth_spirit_slave', name: '地靈奴隸', level: 63, hp: 3100, ac: -60, mr: 85, exp: 4450, atkSpeed: 1700, dice: '7d10+24', hitBonus: 24, weight: 32, adena: [550,950], magicProfile: { text: '地靈奴隸震開地裂術', dice: '6d10+22', chance: 0.34 }, drops: [{id:'crystal_elf_earth_skin', rate:0.45}, {id:'crystal_elf_iron_skin', rate:0.12}, {id:'crystal_elf_release_elemental', rate:0.08}, {id:'gem_quality_diamond', rate:1.2}, {id:'gem_high_diamond', rate:0.25}, {id:'scroll_armor', rate:0.8}, {id:'scroll_weapon', rate:0.4}] },
+        { id: 'wind_spirit_lord_grave', name: '風靈之主', level: 70, hp: 8500, ac: -70, mr: 95, exp: 6500, atkSpeed: 1350, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 6, adena: [1100,2200], ranged: true, magicProfile: { text: '風靈之主喚下極道落雷', dice: '7d10+28', chance: 0.38 }, drops: [{id:'crystal_elf_storm_shot', rate:0.45}, {id:'crystal_elf_triple_arrow', rate:0.25}, {id:'crystal_elf_wind_shot', rate:0.8}, {id:'gem_high_emerald', rate:1}, {id:'gem_quality_emerald', rate:5}, {id:'scroll_weapon_blessed', rate:0.15}, {id:'scroll_weapon', rate:1.5}] },
+        { id: 'water_spirit_lord_grave', name: '水靈之主', level: 70, hp: 9000, ac: -70, mr: 100, exp: 6500, atkSpeed: 1500, dice: '8d10+28', hitBonus: 29, isBoss: true, weight: 6, adena: [1100,2200], magicProfile: { text: '水靈之主以水錐吸取生命', dice: '7d10+28', chance: 0.4 }, drops: [{id:'crystal_elf_soul_to_mind', rate:0.45}, {id:'crystal_elf_clear_mind', rate:0.6}, {id:'crystal_elf_body_to_mind', rate:0.8}, {id:'gem_high_sapphire', rate:1}, {id:'gem_quality_sapphire', rate:5}, {id:'potion_blue', rate:25}, {id:'scroll_armor_blessed', rate:0.15}, {id:'scroll_armor', rate:1.5}] },
+        { id: 'fire_spirit_lord_grave', name: '火靈之主', level: 71, hp: 8800, ac: -72, mr: 95, exp: 6700, atkSpeed: 1350, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 6, adena: [1150,2300], magicProfile: { text: '火靈之主燃起烈炎術', dice: '7d12+28', chance: 0.4 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.25}, {id:'crystal_elf_fire_weapon', rate:0.8}, {id:'crystal_elf_release_elemental', rate:0.2}, {id:'gem_high_ruby', rate:1}, {id:'gem_quality_ruby', rate:5}, {id:'scroll_weapon_blessed', rate:0.18}, {id:'scroll_weapon', rate:1.5}] },
+        { id: 'earth_spirit_lord_grave', name: '地靈之主', level: 71, hp: 9800, ac: -74, mr: 98, exp: 6700, atkSpeed: 1600, dice: '8d10+30', hitBonus: 30, isBoss: true, weight: 6, adena: [1150,2300], magicProfile: { text: '地靈之主撕開大地裂縫', dice: '7d10+30', chance: 0.38 }, drops: [{id:'crystal_elf_iron_skin', rate:0.35}, {id:'crystal_elf_release_elemental', rate:0.22}, {id:'crystal_elf_earth_skin', rate:0.8}, {id:'gem_high_diamond', rate:1}, {id:'gem_quality_diamond', rate:5}, {id:'scroll_armor_blessed', rate:0.18}, {id:'scroll_armor', rate:1.5}] },
+        { id: 'mambo_rabbit_minion', name: '曼波兔手下', level: 68, hp: 5200, ac: -66, mr: 85, exp: 5600, atkSpeed: 1250, dice: '7d12+24', hitBonus: 29, weight: 10, adena: [900,1700], magicProfile: { text: '曼波兔手下掀起跳躍波動', dice: '6d10+24', chance: 0.32 }, drops: [{id:'crystal_elf_triple_arrow', rate:0.12}, {id:'crystal_elf_soul_to_mind', rate:0.12}, {id:'crystal_elf_storm_shot', rate:0.12}, {id:'crystal_elf_iron_skin', rate:0.08}, {id:'gem_quality_diamond', rate:1.2}, {id:'gem_quality_emerald', rate:1.2}, {id:'gem_quality_sapphire', rate:1.2}, {id:'gem_quality_ruby', rate:1.2}, {id:'potion_haste', rate:6}, {id:'potion_blue', rate:8}] },
+        { id: 'mambo_king', name: '曼波王', level: 74, hp: 12000, ac: -76, mr: 95, exp: 7200, atkSpeed: 1250, dice: '8d12+30', hitBonus: 32, isBoss: true, weight: 5, adena: [1400,2800], magicProfile: { text: '曼波王震出巨大跳躍波動', dice: '7d12+30', chance: 0.42 }, drops: [{id:'crystal_elf_triple_arrow', rate:0.35}, {id:'crystal_elf_soul_to_mind', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.3}, {id:'crystal_elf_iron_skin', rate:0.25}, {id:'crystal_elf_release_elemental', rate:0.18}, {id:'gem_high_diamond', rate:1}, {id:'gem_high_emerald', rate:1}, {id:'gem_high_sapphire', rate:1}, {id:'gem_high_ruby', rate:1}, {id:'scroll_weapon_blessed', rate:0.25}, {id:'scroll_armor_blessed', rate:0.25}] },
+        { id: 'elf_supervisor', name: '精靈監督者', level: 78, hp: 18000, ac: -82, mr: 105, exp: 7800, atkSpeed: 1350, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 3, adena: [1800,3600], magicProfile: { text: '精靈監督者舞出紫色火焰', dice: '8d12+32', chance: 0.45 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.35}, {id:'crystal_elf_iron_skin', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.45}, {id:'crystal_elf_triple_arrow', rate:0.4}, {id:'crystal_elf_soul_to_mind', rate:0.4}, {id:'crystal_elf_release_elemental', rate:0.3}, {id:'book_knight_shock_stun', rate:0.2}, {id:'bow_moon', rate:0.12}, {id:'ring_harpy', rate:0.2}, {id:'gem_high_diamond', rate:2}, {id:'gem_high_emerald', rate:2}, {id:'gem_high_sapphire', rate:2}, {id:'gem_high_ruby', rate:2}, {id:'scroll_weapon_blessed', rate:0.5}, {id:'scroll_armor_blessed', rate:0.5}] }
     ]},
     shadow_temple: { name: '暗影神殿', monsters: [
         { id: 'shadow_beast', name: '影子魔獸', level: 58, hp: 1800, ac: -50, mr: 70, exp: 3600, atkSpeed: 1500, dice: '7d10+18', hitBonus: 22, weight: 48, adena: [420,760], drops: [{id:'cloak_shadow', rate: 0.18}, {id:'crystal_dark_shadow_armor', rate: 0.18}, {id:'gem_quality_diamond', rate: 0.8}] },
@@ -953,10 +976,16 @@ Object.assign(MAPS, {
         { id: 'succubus_queen', name: '思克巴女皇', level: 70, hp: 12000, ac: -72, mr: 90, exp: 6600, atkSpeed: 1500, dice: '8d10+26', hitBonus: 30, isBoss: true, weight: 8, adena: [1200,2400], drops: [{id:'crystal_dark_uncanny_dodge', rate: 0.5}, {id:'ring_abyss', rate: 0.12}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     lastavard: { name: '拉斯塔巴德地下洞穴', monsters: [
-        { id: 'dark_black_knight', name: '暗黑黑騎士', level: 64, hp: 2800, ac: -58, mr: 65, exp: 4600, atkSpeed: 1500, dice: '7d12+22', hitBonus: 25, weight: 38, adena: [560,980], drops: [{id:'claw_balanka', rate: 0.03}, {id:'book_knight_reduction_armor', rate: 0.25}, {id:'book_knight_solid_carriage', rate: 0.03}, {id:'sword_red_knight', rate: 0.15}] },
-        { id: 'dark_elf_mage', name: '黑暗妖精法師', level: 66, hp: 2400, ac: -56, mr: 90, exp: 4800, atkSpeed: 1800, dice: '7d10+24', hitBonus: 24, weight: 36, adena: [600,1050], drops: [{id:'staff_sorcery', rate: 0.15}, {id:'robe_mage', rate: 0.15}, {id:'crystal_dark_dress_mighty', rate: 0.18}] },
-        { id: 'elite_black_knight', name: '菁英黑騎士', level: 72, hp: 7000, ac: -72, mr: 75, exp: 6800, atkSpeed: 1400, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 12, adena: [1100,2200], drops: [{id:'crossbow_lastabad_heavy', rate: 0.1}, {id:'book_knight_shock_stun', rate: 0.5}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'dual_blade_bloody', rate: 0.12}] },
-        { id: 'lord_of_lastavard', name: '拉斯塔巴德將軍', level: 82, hp: 26000, ac: -86, mr: 95, exp: 8000, atkSpeed: 1500, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 4, adena: [1700,3400], drops: [{id:'dual_red_shadow', rate: 0.1}, {id:'book_knight_counter_barrier', rate: 0.5}, {id:'blade_ronde', rate: 0.08}, {id:'crystal_dark_double_break', rate: 0.5}, {id:'scroll_weapon_blessed', rate: 0.5}] }
+        { id: 'lasta_patrol', name: '黑暗妖精殘兵(巡守)', level: 64, hp: 2600, ac: -56, mr: 65, exp: 4500, atkSpeed: 1500, dice: '7d10+20', hitBonus: 24, weight: 16, adena: [650,1150], ranged: true, drops: [{id:'dual_bronze', rate:1.2}, {id:'dual_spike', rate:0.8}, {id:'claw_bronze', rate:1.2}, {id:'claw_steel', rate:0.8}, {id:'bow_lastabad', rate:0.08}, {id:'sword_red_knight', rate:0.12}, {id:'scroll_armor', rate:0.5}, {id:'gem_quality_diamond', rate:0.8}] },
+        { id: 'lasta_flower', name: '深淵之花', level: 65, hp: 3200, ac: -55, mr: 85, exp: 4700, atkSpeed: 1700, dice: '7d10+22', hitBonus: 23, weight: 10, adena: [620,1100], magicProfile: { text: '深淵之花釋放地底邪氣', dice: '5d10+18', chance: 0.32 }, drops: [{id:'claw_shadow', rate:0.35}, {id:'dual_shadow', rate:0.35}, {id:'mana_cloak', rate:0.08}, {id:'gem_quality_emerald', rate:1}, {id:'gem_high_emerald', rate:0.15}, {id:'scroll_armor', rate:0.6}, {id:'potion_blue', rate:5}] },
+        { id: 'lasta_dark_spirit', name: '闇之精靈', level: 65, hp: 2800, ac: -58, mr: 95, exp: 4800, atkSpeed: 1500, dice: '7d10+20', hitBonus: 24, weight: 10, adena: [600,1080], magicProfile: { text: '闇之精靈凝聚黑暗之力', dice: '5d10+20', chance: 0.35 }, drops: [{id:'dual_silver', rate:0.3}, {id:'claw_silver', rate:0.3}, {id:'dual_abyss', rate:0.12}, {id:'claw_shadow_high', rate:0.05}, {id:'gem_quality_sapphire', rate:1}, {id:'gem_high_sapphire', rate:0.15}, {id:'scroll_weapon', rate:0.4}] },
+        { id: 'lasta_spear_soldier', name: '黑暗妖精兵(槍)', level: 66, hp: 3100, ac: -60, mr: 70, exp: 5000, atkSpeed: 1450, dice: '7d12+22', hitBonus: 25, weight: 14, adena: [680,1200], drops: [{id:'dual_spike', rate:1}, {id:'dual_steel', rate:0.9}, {id:'dual_damascus', rate:0.12}, {id:'claw_steel', rate:0.9}, {id:'claw_damascus', rate:0.12}, {id:'scroll_armor', rate:0.7}, {id:'scroll_weapon', rate:0.35}, {id:'gem_quality_diamond', rate:0.8}] },
+        { id: 'lasta_archer', name: '黑暗妖精兵(弓)', level: 66, hp: 2700, ac: -57, mr: 70, exp: 4900, atkSpeed: 1500, dice: '7d10+24', hitBonus: 25, weight: 14, adena: [650,1150], ranged: true, drops: [{id:'bow_lastabad', rate:0.25}, {id:'crossbow_lastabad', rate:0.18}, {id:'crossbow_lastabad_heavy', rate:0.06}, {id:'dual_short', rate:0.12}, {id:'claw_short', rate:0.12}, {id:'potion_haste', rate:4}, {id:'scroll_weapon', rate:0.4}, {id:'gem_quality_emerald', rate:0.8}] },
+        { id: 'lasta_thief', name: '黑暗妖精兵(盜賊)', level: 67, hp: 2900, ac: -62, mr: 75, exp: 5100, atkSpeed: 1150, dice: '6d12+28', hitBonus: 27, weight: 12, adena: [700,1250], drops: [{id:'dual_short', rate:0.25}, {id:'claw_short', rate:0.25}, {id:'dual_shadow', rate:0.45}, {id:'claw_shadow', rate:0.45}, {id:'dual_dark_high', rate:0.012}, {id:'claw_dark_high', rate:0.012}, {id:'scroll_weapon', rate:0.45}, {id:'gem_quality_ruby', rate:0.8}] },
+        { id: 'lasta_elite_soldier', name: '黑暗妖精兵(上兵)', level: 68, hp: 3600, ac: -66, mr: 75, exp: 5400, atkSpeed: 1400, dice: '8d10+26', hitBonus: 27, weight: 10, adena: [760,1350], drops: [{id:'dual_blade_dark', rate:0.25}, {id:'claw_dark', rate:0.22}, {id:'dual_lastabad', rate:0.1}, {id:'dual_shadow_high', rate:0.06}, {id:'claw_shadow_high', rate:0.06}, {id:'book_knight_reduction_armor', rate:0.2}, {id:'book_knight_solid_carriage', rate:0.05}, {id:'scroll_armor', rate:0.8}, {id:'scroll_weapon', rate:0.5}] },
+        { id: 'lasta_spirit_king', name: '闇精靈王', level: 72, hp: 9000, ac: -72, mr: 95, exp: 6800, atkSpeed: 1350, dice: '8d12+30', hitBonus: 31, weight: 4, adena: [1800,3200], isBoss: true, magicProfile: { text: '闇精靈王召喚深闇衝擊', dice: '7d10+30', chance: 0.38 }, drops: [{id:'dual_shadow_high', rate:0.25}, {id:'claw_shadow_high', rate:0.25}, {id:'dual_diad', rate:0.08}, {id:'dual_dark_high', rate:0.05}, {id:'claw_dark_high', rate:0.05}, {id:'dual_blade_bloody', rate:0.03}, {id:'claw_bloody', rate:0.012}, {id:'blade_ronde', rate:0.04}, {id:'scroll_weapon_blessed', rate:0.25}, {id:'scroll_armor_blessed', rate:0.25}, {id:'gem_high_diamond', rate:1.2}] },
+        { id: 'lasta_mage_soldier', name: '黑暗妖精兵(法師)', level: 67, hp: 2600, ac: -56, mr: 100, exp: 5200, atkSpeed: 1800, dice: '7d10+24', hitBonus: 24, weight: 10, adena: [720,1280], magicProfile: { text: '黑暗妖精法師施展冰錐攻擊', dice: '6d10+22', chance: 0.42 }, drops: [{id:'staff_sorcery', rate:0.18}, {id:'robe_mage', rate:0.18}, {id:'potion_blue', rate:8}, {id:'book_blizzard', rate:0.08}, {id:'book_cancel', rate:0.08}, {id:'book_full_heal', rate:0.12}, {id:'gem_quality_sapphire', rate:1}, {id:'scroll_armor', rate:0.5}] },
+        { id: 'lasta_spirit_envoy', name: '黑暗精靈使', level: 70, hp: 6200, ac: -68, mr: 105, exp: 6200, atkSpeed: 1550, dice: '8d10+28', hitBonus: 29, weight: 6, adena: [1300,2400], magicProfile: { text: '黑暗精靈使釋放闇之氣息', dice: '7d10+26', chance: 0.45 }, drops: [{id:'dual_diad', rate:0.06}, {id:'dual_dark_high', rate:0.03}, {id:'claw_dark_high', rate:0.03}, {id:'claw_balanka', rate:0.04}, {id:'crossbow_lastabad_heavy', rate:0.1}, {id:'crystal_dark_dress_mighty', rate:0.25}, {id:'crystal_dark_double_break', rate:0.25}, {id:'scroll_weapon_blessed', rate:0.12}, {id:'scroll_armor_blessed', rate:0.12}, {id:'gem_high_sapphire', rate:0.8}] }
     ]},
     demon_temple: { name: '魔族神殿', monsters: [
         { id: 'chaos_guardian', name: '混沌守護者', level: 68, hp: 4200, ac: -66, mr: 85, exp: 5600, atkSpeed: 1600, dice: '8d10+24', hitBonus: 28, weight: 25, adena: [760,1400], drops: [{id:'sword_mail_breaker', rate: 0.1}, {id:'crystal_elf_storm_shot', rate: 0.15}, {id:'crystal_dark_shadow_fang', rate: 0.15}] },
@@ -1258,19 +1287,13 @@ const DICKLE_BALANCE_040 = (() => {
     [['book_fire_storm',0.01],['book_lightning_storm',0.01],['book_summon',0.001],['book_immune',0.001]].forEach(d => addDrop(getM('pirate_island','lizardman_warrior'), d[0], d[1]));
     MAPS.pirate_island.monsters.push({ id: 'pirate_skeleton_soldier', name: '海賊骷髏士兵', level: 50, hp: 1100, ac: -38, exp: 2400, atkSpeed: 1500, dice: '5d10+14', hitBonus: 20, isUndead: true, weight: 54, adena: [280,470], ranged: true, drops: [{id:'crystal_elf_triple_arrow', rate:0.01}, {id:'crossbow_shadow', rate:0.005}, {id:'crossbow_dark', rate:0.01}] });
 
-    // Elven grave crystal commons.
-    const elfCrystalRates = { crystal_elf_resist_magic:1.2, crystal_elf_body_to_mind:0.8, crystal_elf_soul_to_mind:0.3, crystal_elf_clear_mind:0.5, crystal_elf_fire_weapon:0.5, crystal_elf_wind_shot:0.5, crystal_elf_earth_skin:0.5, crystal_elf_release_elemental:0.2, crystal_elf_triple_arrow:0.01, crystal_elf_storm_shot:0.08, crystal_elf_iron_skin:0.08, crystal_elf_elemental_fire:0.05 };
-    each('elven_grave', m => Object.entries(elfCrystalRates).forEach(([id, rate]) => addDrop(m, id, m.isBoss ? rate * 3 : rate)));
-
     // Shadow, Lastavard, Demon Temple.
     tune('shadow_temple', 'shadow_beast', { name: '混沌的司祭' });
     tune('shadow_temple', 'cursed_dark_elf_fighter', { name: '死亡的司祭' });
     tune('shadow_temple', 'succubus_queen', { name: '死亡與火焰之影' });
     lowerMap('lastavard', 7, 0.86, 0.9);
-    tune('lastavard', 'dark_black_knight', { name: '黑暗妖精殘兵' });
-    tune('lastavard', 'elite_black_knight', { name: '拉斯塔巴德馴獸師', companionProfile: { text: '馴獸師的黑暗寵物撲咬了你', dice: '4d10+12', chance: 0.55 } });
-    const lastaPool = [['dual_bronze',1],['dual_spike',0.8],['dual_steel',0.7],['dual_shadow',0.4],['dual_silver',0.25],['dual_blade_dark',0.18],['dual_short',0.12],['dual_abyss',0.08],['dual_damascus',0.08],['dual_lastabad',0.06],['dual_shadow_high',0.03],['dual_diad',0.02],['dual_dark_high',0.008],['dual_blade_bloody',0.006],['blade_ronde',0.01],['claw_bronze',1],['claw_steel',0.7],['claw_shadow',0.4],['claw_short',0.2],['claw_silver',0.2],['claw_dark',0.15],['claw_damascus',0.08],['claw_shadow_high',0.04],['claw_dark_high',0.01],['claw_bloody',0.001],['bow_lastabad',0.1],['crossbow_lastabad',0.08],['crossbow_lastabad_heavy',0.03],['crystal_dark_enchant_venom',1],['crystal_dark_shadow_armor',0.8],['crystal_dark_burning_spirit',0.5],['crystal_dark_shadow_fang',0.3],['crystal_dark_uncanny_dodge',0.15],['crystal_dark_double_break',0.1],['crystal_dark_dress_mighty',0.1],['crystal_dark_armor_break',0.01]];
-    each('lastavard', m => lastaPool.forEach(d => addDrop(m, d[0], m.isBoss ? d[1] * 2 : d[1])));
+    const lastaDarkCrystalPool = [['crystal_dark_enchant_venom',1], ['crystal_dark_shadow_armor',0.8], ['crystal_dark_burning_spirit',0.45], ['crystal_dark_shadow_fang',0.3], ['crystal_dark_uncanny_dodge',0.12], ['crystal_dark_double_break',0.1], ['crystal_dark_dress_mighty',0.1], ['crystal_dark_armor_break',0.01]];
+    each('lastavard', m => lastaDarkCrystalPool.forEach(([id, rate]) => addDrop(m, id, m.isBoss ? rate * 2.5 : rate)));
     tune('demon_temple', 'chaos_guardian', { name: '墮落的司祭' });
     tune('demon_temple', 'mammoth', { name: '墮落', magicProfile: { text: '以墮落神力壓碎你的靈魂', dice: '7d12+24', chance: 0.45 } });
 
@@ -1390,11 +1413,11 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     softenMagic('eva_kingdom', 'eva_hildes', 0.35);
     setDrops(getM('eva_kingdom', 'crabman'), [['scroll_armor', 0.8], ['book_str_buff', 0.5], ['gem_quality_sapphire', 0.8], ['potion_orange', 5]]);
     setDrops(getM('eva_kingdom', 'starfish'), [['potion_blue', 3], ['potion_courage', 2], ['gem_emerald', 2.5], ['gem_quality_emerald', 0.8], ['scroll_armor', 0.5]]);
-    setDrops(getM('eva_kingdom', 'shark'), [['mana_cloak', 0.15], ['belt_mind', 0.08], ['gem_quality_sapphire', 1], ['potion_blue', 4], ['scroll_weapon', 0.4]]);
-    setDrops(getM('eva_kingdom', 'eva_hildes'), [['gem_quality_sapphire', 1], ['gem_high_sapphire', 0.25], ['potion_blue', 5], ['book_berserker', 0.12], ['book_invisibility', 0.05], ['book_call_lightning', 0.15], ['crystal_elf_storm_shot', 0.08], ['crystal_dark_double_break', 0.05]]);
-    setDrops(getM('eva_kingdom', 'eva_electon'), [['scroll_armor', 1], ['gem_diamond', 3], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.2], ['potion_courage', 2], ['book_call_lightning', 0.12], ['book_summon', 0.04]]);
-    setDrops(getM('eva_kingdom', 'eva_quistanche'), [['scroll_weapon', 1], ['scroll_armor', 0.8], ['gem_diamond', 3], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.2], ['potion_courage', 2], ['crystal_elf_iron_skin', 0.08], ['crystal_dark_uncanny_dodge', 0.06]]);
-    setDrops(getM('eva_kingdom', 'water_spirit_lord'), [['eva_shield', 0.5], ['water_dragon_scale', 0.5], ['gem_high_sapphire', 0.8], ['gem_high_emerald', 0.5], ['scroll_armor_blessed', 0.15], ['scroll_weapon_blessed', 0.1]]);
+    setDrops(getM('eva_kingdom', 'shark'), [['mana_cloak', 0.15], ['belt_mind', 0.08], ['gem_quality_sapphire', 1], ['potion_blue', 4], ['scroll_weapon', 0.4], ['water_dragon_scale', 0.2]]);
+    setDrops(getM('eva_kingdom', 'eva_hildes'), [['gem_quality_sapphire', 1], ['gem_high_sapphire', 0.25], ['potion_blue', 5], ['book_berserker', 0.12], ['book_invisibility', 0.05], ['book_call_lightning', 0.15], ['crystal_elf_storm_shot', 0.08], ['crystal_dark_double_break', 0.05], ['water_dragon_scale', 0.3]]);
+    setDrops(getM('eva_kingdom', 'eva_electon'), [['scroll_armor', 1], ['gem_diamond', 3], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.2], ['potion_courage', 2], ['book_call_lightning', 0.12], ['book_summon', 0.04], ['water_dragon_scale', 0.3]]);
+    setDrops(getM('eva_kingdom', 'eva_quistanche'), [['scroll_weapon', 1], ['scroll_armor', 0.8], ['gem_diamond', 3], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.2], ['potion_courage', 2], ['crystal_elf_iron_skin', 0.08], ['crystal_dark_uncanny_dodge', 0.06], ['water_dragon_scale', 0.4]]);
+    setDrops(getM('eva_kingdom', 'water_spirit_lord'), [['eva_shield', 0.5], ['water_dragon_scale', 1.5], ['gem_high_sapphire', 0.8], ['gem_high_emerald', 0.5], ['scroll_armor_blessed', 0.15], ['scroll_weapon_blessed', 0.1]]);
 
     // Fire dragon cave: lower spikes, stronger fire rewards.
     weaken('fire_dragon_cave', 'dragon_fly', 0.92, 2, 1);
@@ -1414,6 +1437,83 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     setDrops(getM('fire_dragon_cave', 'lava_golem'), [['armor_metal', 1.5], ['fire_dragon_scale', 0.6], ['gem_quality_diamond', 1.2], ['gem_high_diamond', 0.2], ['scroll_armor', 1], ['armor_crystal', 0.1]]);
     setDrops(getM('fire_dragon_cave', 'ifrit'), [['crystal_elf_elemental_fire', 0.7], ['katana', 1.5], ['fire_dragon_scale', 2.5], ['book_fire_storm', 0.6], ['gem_high_ruby', 1], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.5], ['scroll_weapon_blessed', 0.15], ['scroll_armor_blessed', 0.15]]);
     setDrops(getM('fire_dragon_cave', 'phoenix'), [['scroll_weapon_blessed', 0.5], ['scroll_armor_blessed', 0.5], ['fire_dragon_scale', 5], ['gem_high_ruby', 2], ['gem_high_diamond', 1], ['gem_quality_ruby', 10], ['gem_quality_diamond', 5], ['book_fire_storm', 1], ['crystal_elf_elemental_fire', 1]]);
+
+    function normalizeLowEquipmentDropRates() {
+        const EQUIP_TYPES = new Set(['weapon','helmet','tshirt','armor','shield','cloak','leggings','gloves','boots','amulet','earring','belt','ring','quiver']);
+        const JACKPOT_EXEMPT_ITEMS = new Set(['gloves_str','hammer_thor','sword_dk_fire','ancient_scroll','ancient_sword','ancient_great_sword','ancient_crossbow','ancient_dual_blade','ancient_staff','ancient_leather_armor','ancient_robe_armor','ancient_metal_armor','valakas_heart','ice_queen_staff','ice_queen_earring','ring_abyss','ring_earth','belt_body','belt_soul','belt_mind','belt_ogre','dual_red_shadow','blade_ronde','claw_bloody','dual_blade_bloody','claw_balanka']);
+        const getFloorRate = (item, monster) => {
+            if (item.legendary) return monster && monster.isBoss ? 0.08 : 0.05;
+            if (['amulet','earring','belt','ring'].includes(item.type)) return monster && monster.isBoss ? 0.12 : 0.08;
+            if (item.classes && Array.isArray(item.classes) && item.classes.length > 0) return monster && monster.isBoss ? 0.18 : 0.12;
+            return monster && monster.isBoss ? 0.2 : 0.15;
+        };
+        Object.values(MAPS).forEach(map => {
+            if (!map || !Array.isArray(map.monsters)) return;
+            map.monsters.forEach(monster => {
+                if (!monster || !Array.isArray(monster.drops)) return;
+                monster.drops.forEach(drop => {
+                    if (!drop || !drop.id) return;
+                    const item = ITEMS[drop.id];
+                    if (!item || !EQUIP_TYPES.has(item.type) || JACKPOT_EXEMPT_ITEMS.has(drop.id)) return;
+                    const oldRate = Number(drop.rate || 0);
+                    if (oldRate <= 0 || oldRate >= 0.1) return;
+                    drop.rate = Math.max(oldRate, getFloorRate(item, monster));
+                });
+            });
+        });
+    }
+
+    function normalizeClassSkillDropRates() {
+        const CLASS_SKILL_FLOORS = {
+            crystal_elf_soul_to_mind: 0.12,
+            crystal_elf_triple_arrow: 0.12,
+            crystal_elf_storm_shot: 0.1,
+            crystal_elf_iron_skin: 0.08,
+            crystal_elf_release_elemental: 0.08,
+            crystal_elf_elemental_fire: 0.05,
+            crystal_dark_burning_spirit: 0.18,
+            crystal_dark_shadow_fang: 0.15,
+            crystal_dark_uncanny_dodge: 0.1,
+            crystal_dark_dress_mighty: 0.12,
+            crystal_dark_double_break: 0.08,
+            crystal_dark_armor_break: 0.04,
+            book_knight_reduction_armor: 0.12,
+            book_knight_solid_carriage: 0.1,
+            book_knight_shock_stun: 0.08,
+            book_knight_counter_barrier: 0.04
+        };
+        const BOSS_CLASS_SKILL_FLOORS = {
+            crystal_elf_elemental_fire: 0.15,
+            crystal_elf_iron_skin: 0.15,
+            crystal_dark_double_break: 0.2,
+            crystal_dark_armor_break: 0.08,
+            book_knight_shock_stun: 0.2,
+            book_knight_counter_barrier: 0.15
+        };
+        Object.values(MAPS).forEach(map => {
+            if (!map || !Array.isArray(map.monsters)) return;
+            map.monsters.forEach(monster => {
+                if (!monster || !Array.isArray(monster.drops)) return;
+                monster.drops.forEach(drop => {
+                    if (!drop || !drop.id) return;
+                    const item = ITEMS[drop.id];
+                    if (!item || item.type !== 'book' || !item.spellId || item.price) return;
+                    const spell = SPELLS[item.spellId];
+                    if (!spell || !Array.isArray(spell.classes)) return;
+                    const isClassSkill = spell.classes.length === 1 && ['elf','dark_elf','knight'].includes(spell.classes[0]);
+                    if (!isClassSkill) return;
+                    const baseFloor = CLASS_SKILL_FLOORS[drop.id];
+                    if (!baseFloor) return;
+                    const floorRate = monster.isBoss && BOSS_CLASS_SKILL_FLOORS[drop.id] ? BOSS_CLASS_SKILL_FLOORS[drop.id] : baseFloor;
+                    const oldRate = Number(drop.rate || 0);
+                    if (oldRate > 0 && oldRate < floorRate) drop.rate = floorRate;
+                });
+            });
+        });
+    }
+
+    normalizeLowEquipmentDropRates();
+    normalizeClassSkillDropRates();
 })();
 
 const game = {
@@ -1953,6 +2053,17 @@ const game = {
         if (this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) return strBonus + dexBonus + wpnHit + sets.hit + 2;
         return strBonus + dexBonus + wpnHit + sets.hit;
     },
+    canCurrentWeaponBeDamaged: function() {
+        let wKey = this.state.equipment.weapon;
+        if (!wKey || !this.state.inventory[wKey]) return false;
+        let item = this.state.inventory[wKey];
+        let def = ITEMS[item.itemId];
+        if (!def) return false;
+        let weaponClass = this.getWeaponClass(item.itemId);
+        if (weaponClass === 'bow' || weaponClass === 'claw' || weaponClass === 'dual_blade') return false;
+        if (def.unbreakable || (def.desc && def.desc.includes('不會損壞'))) return false;
+        return true;
+    },
     getMeleeDmg: function() {
         let strBonus = this.getStrBonus().dmg;
         let dexBonus = this.getDexBonus().hit;
@@ -1980,8 +2091,7 @@ const game = {
         if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnDmg += 3;
         if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnDmg += 6;
         if (this.state.buffs.berserkers) wpnDmg += 5;
-        let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
-        if (this.state.buffs.player_weapon_break > 0 && !(wDef && wDef.unbreakable) && !['bow','claw','dual_blade'].includes(weaponClass)) wpnDmg -= 10;
+        if (this.state.buffs.player_weapon_break > 0 && this.canCurrentWeaponBeDamaged()) wpnDmg -= 10;
         let gearDmg = 0;
         for(let slot in this.state.equipment) {
             if (slot === 'weapon') continue;
@@ -2843,6 +2953,28 @@ const game = {
         this.renderInventory();
         this.updateUI();
     },
+    craftDragonScaleArmor: function(scaleId, armorId, requiredScaleCount = 30, requiredAdena = 500000) {
+        const scaleDef = ITEMS[scaleId];
+        const armorDef = ITEMS[armorId];
+        if (!scaleDef || !armorDef) {
+            this.logSystem('製作失敗：找不到指定的材料或裝備。', 'danger');
+            return;
+        }
+        if (this.getItemCount(scaleId) < requiredScaleCount) {
+            this.logSystem(`製作失敗：需要 ${scaleDef.name} x${requiredScaleCount}。`, 'danger');
+            return;
+        }
+        if ((this.state.adena || 0) < requiredAdena) {
+            this.logSystem(`製作失敗：需要 ${requiredAdena.toLocaleString()} 金幣。`, 'danger');
+            return;
+        }
+        this.removeItemById(scaleId, requiredScaleCount);
+        this.state.adena -= requiredAdena;
+        this.addInventory(armorId, 1, 0, false);
+        this.logSystem(`製作完成：${armorDef.name}。`, 'reward');
+        this.renderInventory();
+        this.updateUI();
+    },
     updateSettingsUI: function() {
         let atkSel = document.getElementById('cfg-auto-attack');
         let healSel = document.getElementById('cfg-heal-spell');
@@ -2991,7 +3123,7 @@ const game = {
     getBossMagicDamageFloor: function(monster) {
         if (!monster || !monster.isBoss) return 0;
         if (['antaras','fafurion','valakas','lindvior','ancient_guardian'].includes(monster.id)) return 60;
-        if (['ice_queen','demon','mammoth','lord_of_lastavard','elite_black_knight','death_knight','black_elder','phoenix','ifrit'].includes(monster.id)) return 35;
+        if (['ice_queen','demon','mammoth','lasta_spirit_king','death_knight','black_elder','phoenix','ifrit'].includes(monster.id)) return 35;
         return 20;
     },
 
@@ -3411,7 +3543,7 @@ const game = {
             return;
         }
 
-        if (this.state.targetMonster.breaksWeapon && Math.random() < 0.08) {
+        if (this.state.targetMonster.breaksWeapon && this.canCurrentWeaponBeDamaged() && Math.random() < 0.08) {
             this.state.buffs.player_weapon_break = 10;
             this.logCombat(`${this.state.targetMonster.name} 的堅硬外殼震裂了你的武器，短時間內攻擊力下降！`, 'danger');
         }
@@ -3798,9 +3930,9 @@ if(Math.random()*100 <= this.getER()) {
                     this.logCombat(`林德拜爾施展${spellText}，整個棲息地被風壓扭曲！`, 'danger');
                     this.takeMagicDmg(rollDice('7d12') + 30); needUpdate = true; this.checkPlayerDeath();
                 }
-                if (tmId === 'elite_black_knight' && st % 6 === 0) {
+                if (tmId === 'lasta_spirit_envoy' && st % 6 === 0) {
                     let petDmg = this.takeMagicDmg(rollDice('4d10') + 12);
-                    this.logCombat(`馴獸師的黑暗寵物對你發動攻擊，造成 ${petDmg} 點傷害。`, 'danger');
+                    this.logCombat(`黑暗精靈使喚出的闇影對你發動攻擊，造成 ${petDmg} 點傷害。`, 'danger');
                     needUpdate = true; this.checkPlayerDeath();
                 }
 
@@ -3859,7 +3991,7 @@ if(Math.random()*100 <= this.getER()) {
                     }
                 }
 
-                if (['ifrit','valakas','phoenix'].includes(tmId) && st % 16 === 0) {
+                if (['ifrit','valakas','phoenix'].includes(tmId) && st % 16 === 0 && this.canCurrentWeaponBeDamaged()) {
                     this.state.buffs.player_weapon_break = 18;
                     this.logCombat(`${tm.name} 施展了壞物術，你的武器傷害降低了！`, 'danger');
                     needUpdate = true;
@@ -3875,7 +4007,7 @@ if(Math.random()*100 <= this.getER()) {
                         this.logCombat(`安塔瑞斯施展了毒氣風暴！`, 'danger');
                         needUpdate = true;
                     }
-                    if (st % 40 === 0) {
+                    if (st % 40 === 0 && this.canCurrentWeaponBeDamaged()) {
                         this.state.buffs.player_weapon_break = 20;
                         this.logCombat(`安塔瑞斯施展了壞物術，你的武器傷害降低了！`, 'danger');
                         needUpdate = true;
