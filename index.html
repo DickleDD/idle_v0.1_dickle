@@ -1346,6 +1346,39 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     setDrops(getM('heine_lake', 'doppleganger'), [['crossbow_shadow', 0.08], ['crossbow_dark', 0.08], ['mana_cloak', 0.2], ['potion_blue', 4], ['gem_sapphire', 2.5], ['gem_quality_sapphire', 0.6], ['scroll_armor', 0.5]]);
     setDrops(getM('heine_lake', 'giant_crocodile'), [['scroll_armor', 1.5], ['book_call_lightning', 0.5], ['eva_shield', 0.2], ['gem_emerald', 5], ['gem_quality_emerald', 0.8], ['potion_courage', 5]]);
 
+    // v0.5: Giran outskirts and Giant Ant Cave floor split.
+    const cloneMonster = (mapId, id, patch = {}) => {
+        const base = getM(mapId, id);
+        if (!base) return null;
+        return { ...base, drops: (base.drops || []).map(d => ({ ...d })), ...patch };
+    };
+    const moveMonster = (fromMapId, toMapId, monsterId) => {
+        const source = MAPS[fromMapId];
+        const target = MAPS[toMapId];
+        if (!source || !target) return;
+        const idx = source.monsters.findIndex(m => m.id === monsterId);
+        if (idx < 0) return;
+        const [monster] = source.monsters.splice(idx, 1);
+        if (!target.monsters.some(m => m.id === monsterId)) target.monsters.push(monster);
+    };
+    const giranMonsters = [
+        { id: 'griffin', name: '格利芬', level: 31, hp: 380, mp: 150, ac: -20, mr: 10, alignment: -30, size: 'large', exp: 962, atkSpeed: 1600, dice: '4d8+6', hitBonus: 7, weight: 72, adena: [163,270], adenaAlways: true, drops: [{id:'gem_quality_diamond', rate: 0.5}, {id:'gem_quality_ruby', rate: 0.3}, {id:'gem_quality_sapphire', rate: 0.1}, {id:'gem_quality_emerald', rate: 0.2}, {id:'scroll_weapon', rate: 2}, {id:'book_immune', rate: 0.5}, {id:'book_tornado', rate: 0.1}, {id:'crystal_elf_release_elemental', rate: 0.1}, {id:'crystal_elf_triple_arrow', rate: 0.05}, {id:'crystal_elf_wind_shot', rate: 0.5}, {id:'potion_haste', rate: 10}] },
+        { id: 'cyclops', name: '獨眼巨人', level: 40, hp: 800, mp: 50, ac: -23, mr: 30, alignment: -37, size: 'large', exp: 1601, atkSpeed: 1700, dice: '5d10+10', hitBonus: 10, weight: 60, adena: [265,429], adenaAlways: true, drops: [{id:'helm_str_magic', rate: 0.5}, {id:'leather_jacket', rate: 2.5}, {id:'gloves_normal', rate: 5}, {id:'potion_courage', rate: 5}, {id:'scroll_weapon', rate: 1}, {id:'book_str_buff', rate: 1}, {id:'book_slow', rate: 0.3}, {id:'book_summon', rate: 0.05}, {id:'book_quake', rate: 0.5}, {id:'crystal_elf_triple_arrow', rate: 0.05}, {id:'crystal_elf_earth_skin', rate: 0.2}, {id:'scroll_armor', rate: 0.1}] },
+        { id: 'bandit', name: '盜賊', level: 33, hp: 420, ac: -30, exp: 1090, atkSpeed: 1600, dice: '4d10+7', hitBonus: 8, weight: 66, adena: [205,335], adenaAlways: true, drops: [{id:'sword_damascus', rate: 0.5}, {id:'sword_damascus_two_handed', rate: 0.12}, {id:'dual_damascus', rate: 0.12}, {id:'claw_damascus', rate: 0.12}, {id:'gem_diamond', rate: 0.5}, {id:'gem_ruby', rate: 0.5}, {id:'gem_sapphire', rate: 0.5}, {id:'gem_emerald', rate: 0.5}, {id:'scroll_armor', rate: 0.3}, {id:'scroll_weapon', rate: 0.2}] },
+        cloneMonster('desert', 'lycan', { weight: 74 }),
+        cloneMonster('desert', 'lizardman', { weight: 76 })
+    ].filter(Boolean);
+    MAPS.giran_outskirts = { name: '奇岩周邊', monsters: giranMonsters };
+    moveMonster('heine_lake', 'giran_outskirts', 'doppleganger');
+
+    if (MAPS.giant_ant_cave) {
+        MAPS.giant_ant_cave.name = '巨蟻洞穴1樓';
+        const queen = getM('giant_ant_cave', 'giant_ant_queen');
+        MAPS.giant_ant_cave.monsters.forEach(m => { if (m.id === 'giant_ant') m.name = '巨蟻'; });
+        MAPS.giant_ant_cave.monsters = MAPS.giant_ant_cave.monsters.filter(m => m.id !== 'giant_ant_queen');
+        if (queen) MAPS.giant_ant_cave_2f = { name: '巨蟻洞穴2樓', monsters: [queen] };
+    }
+
     // Eva kingdom: smoother entry, added midgame rewards.
     weaken('eva_kingdom', 'crabman', 0.92, 2, 1);
     weaken('eva_kingdom', 'starfish', 0.92, 2, 1);
