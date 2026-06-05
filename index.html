@@ -265,6 +265,20 @@
                              <button class="btn-ui flex-1 py-2 c-success border-green-800 hover:bg-green-900 !text-lg" onclick="game.saveGame()">儲存進度</button>
                              <button class="btn-ui flex-1 py-2 c-err border-red-800 hover:bg-red-900 !text-lg" onclick="game.deleteSave()">刪除存檔</button>
                         </div>
+                        <div class="c-title mt-6 mb-3 border-b border-gray-800 pb-2 text-xl">存檔匯出 / 匯入</div>
+                        <div class="grid grid-cols-1 gap-3 c-sys bg-gray-900 p-4 rounded border border-gray-800">
+                            <div class="flex flex-wrap gap-3">
+                                <button class="btn-ui flex-1 min-w-[150px] py-2 c-info border-blue-800 hover:bg-blue-900" onclick="game.exportSaveFile()">匯出 JSON 檔</button>
+                                <button class="btn-ui flex-1 min-w-[150px] py-2 c-info border-blue-800 hover:bg-blue-900" onclick="document.getElementById('save-import-file').click()">匯入 JSON 檔</button>
+                                <input id="save-import-file" type="file" accept="application/json,.json,.txt" class="hidden" onchange="game.importSaveFile(this)">
+                            </div>
+                            <textarea id="save-transfer-text" class="w-full h-28 bg-black border border-gray-700 rounded p-2 text-xs text-gray-200 outline-none custom-scroll" placeholder="可在此匯出純文字存檔，或貼上純文字/JSON 存檔後匯入。"></textarea>
+                            <div class="flex flex-wrap gap-3">
+                                <button class="btn-ui flex-1 min-w-[150px] py-2 c-success border-green-800 hover:bg-green-900" onclick="game.exportSaveText()">匯出純文字</button>
+                                <button class="btn-ui flex-1 min-w-[150px] py-2 c-warn border-yellow-800 hover:bg-yellow-900" onclick="game.importSaveText()">匯入純文字</button>
+                            </div>
+                            <div class="text-xs c-warn">提醒：匯入存檔後請重新整理頁面，再按讀取存檔。</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -463,18 +477,18 @@ const ITEMS = {
     potion_wisdom: { name: '慎重藥水', type: 'potion_buff', duration: 300, price: 750 },
     potion_haste: { name: '加速藥水', type: 'potion_buff', buffId: 'potion_haste', duration: 1200, price: 300 },
     potion_courage: { name: '勇氣藥水', type: 'potion_buff', buffId: 'second_haste', duration: 600, price: 800, classes: ['knight'], desc: '二段加速，可與加速藥水疊加。' },
-    gem_diamond: { name: '鑽石', type: 'gem', dropRate: 1 },
-    gem_ruby: { name: '紅寶石', type: 'gem', dropRate: 1 },
-    gem_sapphire: { name: '藍寶石', type: 'gem', dropRate: 1 },
-    gem_emerald: { name: '綠寶石', type: 'gem', dropRate: 1 },
-    gem_quality_diamond: { name: '品質鑽石', type: 'gem', dropRate: 0.5 },
-    gem_quality_ruby: { name: '品質紅寶石', type: 'gem', dropRate: 0.5 },
-    gem_quality_sapphire: { name: '品質藍寶石', type: 'gem', dropRate: 0.5 },
-    gem_quality_emerald: { name: '品質綠寶石', type: 'gem', dropRate: 0.5 },
-    gem_high_diamond: { name: '高品質鑽石', type: 'gem', dropRate: 0.1 },
-    gem_high_ruby: { name: '高品質紅寶石', type: 'gem', dropRate: 0.1 },
-    gem_high_sapphire: { name: '高品質藍寶石', type: 'gem', dropRate: 0.1 },
-    gem_high_emerald: { name: '高品質綠寶石', type: 'gem', dropRate: 0.1 },
+    gem_diamond: { name: '鑽石', type: 'gem', dropRate: 1, sellPrice: 500 },
+    gem_ruby: { name: '紅寶石', type: 'gem', dropRate: 1, sellPrice: 500 },
+    gem_sapphire: { name: '藍寶石', type: 'gem', dropRate: 1, sellPrice: 500 },
+    gem_emerald: { name: '綠寶石', type: 'gem', dropRate: 1, sellPrice: 500 },
+    gem_quality_diamond: { name: '品質鑽石', type: 'gem', dropRate: 0.5, sellPrice: 1500 },
+    gem_quality_ruby: { name: '品質紅寶石', type: 'gem', dropRate: 0.5, sellPrice: 1500 },
+    gem_quality_sapphire: { name: '品質藍寶石', type: 'gem', dropRate: 0.5, sellPrice: 1500 },
+    gem_quality_emerald: { name: '品質綠寶石', type: 'gem', dropRate: 0.5, sellPrice: 1500 },
+    gem_high_diamond: { name: '高品質鑽石', type: 'gem', dropRate: 0.1, sellPrice: 5000 },
+    gem_high_ruby: { name: '高品質紅寶石', type: 'gem', dropRate: 0.1, sellPrice: 5000 },
+    gem_high_sapphire: { name: '高品質藍寶石', type: 'gem', dropRate: 0.1, sellPrice: 5000 },
+    gem_high_emerald: { name: '高品質綠寶石', type: 'gem', dropRate: 0.1, sellPrice: 5000 },
     eva_shield: { name: '伊娃之盾', type: 'shield', safe: 4, ac: -3, mr: 5, dropRate: 0.1 },
     mana_cloak: { name: '瑪那斗篷', type: 'cloak', safe: 4, ac: -2, mp: 30, mpRegen: 5, dropRate: 0.1, desc: 'MP+30，魔力恢復+5' },
     water_dragon_scale: { name: '水龍鱗', type: 'quest', dropRate: 0.05 },
@@ -1586,16 +1600,89 @@ const game = {
         document.getElementById('creation-menu').classList.add('hidden');
         document.getElementById('start-menu').classList.remove('hidden');
     },
-    saveGame: function() {
-        const saveData = {
+    getSaveData: function() {
+        return {
             classId: this.state.classId, level: this.state.level, exp: this.state.exp, adena: this.state.adena,
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
             settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
         };
+    },
+    saveGame: function() {
+        const saveData = this.getSaveData();
         localStorage.setItem('lineageIdleSave', JSON.stringify(saveData));
         this.logSystem('遊戲進度已儲存。', 'reward');
+    },
+    getSaveExportText: function() {
+        return JSON.stringify(this.getSaveData(), null, 2);
+    },
+    exportSaveFile: function() {
+        try {
+            const text = this.getSaveExportText();
+            const blob = new Blob([text], { type: 'application/json;charset=utf-8' });
+            const a = document.createElement('a');
+            const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+            const url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = `lineage-idle-save-${date}.json`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+            this.logSystem('存檔 JSON 已匯出。', 'reward');
+        } catch (e) {
+            this.logSystem('匯出存檔失敗。', 'danger');
+        }
+    },
+    exportSaveText: function() {
+        const box = document.getElementById('save-transfer-text');
+        if (!box) return;
+        try {
+            box.value = this.getSaveExportText();
+            box.focus();
+            box.select();
+            this.logSystem('純文字存檔已產生，可複製保存。', 'reward');
+        } catch (e) {
+            this.logSystem('匯出純文字存檔失敗。', 'danger');
+        }
+    },
+    importSaveText: function() {
+        const box = document.getElementById('save-transfer-text');
+        if (!box || !box.value.trim()) {
+            this.logSystem('請先貼上存檔文字。', 'danger');
+            return;
+        }
+        this.importSaveString(box.value);
+    },
+    importSaveFile: function(input) {
+        const file = input && input.files && input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.importSaveString(String(reader.result || ''));
+            input.value = '';
+        };
+        reader.onerror = () => {
+            this.logSystem('讀取存檔檔案失敗。', 'danger');
+            input.value = '';
+        };
+        reader.readAsText(file, 'utf-8');
+    },
+    importSaveString: function(rawText) {
+        try {
+            const data = JSON.parse(rawText.trim());
+            if (!data || typeof data !== 'object' || !data.classId || !data.inventory || !data.equipment) {
+                this.logSystem('匯入失敗：存檔格式不正確。', 'danger');
+                return;
+            }
+            localStorage.setItem('lineageIdleSave', JSON.stringify(data));
+            this.checkSaveFile();
+            this.logSystem('存檔已匯入。請重新整理頁面，再按讀取存檔。', 'reward');
+            alert('存檔已匯入。請重新整理頁面，再按「讀取存檔」。');
+        } catch (e) {
+            this.logSystem('匯入失敗：無法解析存檔文字。', 'danger');
+        }
     },
     loadGame: function() {
         const savedDataStr = localStorage.getItem('lineageIdleSave');
@@ -2472,6 +2559,9 @@ const game = {
             } else if (def.type === 'book') {
                 canSell = true;
                 sellPrice = this.getBookSellPrice(item, def);
+            } else if (def.type === 'gem' && def.sellPrice) {
+                canSell = true;
+                sellPrice = def.sellPrice;
             }
 
             if (canSell) actions += `<button class="btn-ui c-sys border-gray-700" onclick="game.sellItem('${key}', ${sellPrice})" title="售價: ${sellPrice} 金幣">販賣</button>`;
