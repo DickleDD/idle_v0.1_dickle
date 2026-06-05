@@ -27,6 +27,7 @@
         .set-active-row { background: linear-gradient(90deg, rgba(88,28,135,0.4) 0%, rgba(24,24,27,0) 100%); border-left: 3px solid #c084fc; }
         .modal-overlay { background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(2px); }
         .spell-grid-item { background-color: #1f2937; border: 1px solid #3f3f46; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; min-height: 80px; }
+        .pet-card { background-color: #111827; border: 1px solid #374151; border-radius: 6px; padding: 12px; }
         .c-skill-elf { color: #7dd3fc; text-shadow: 0 0 8px rgba(56,189,248,.95), 0 0 16px rgba(34,211,238,.45); font-weight: 700; }
         .c-skill-dark { color: #f0abfc; text-shadow: 0 0 8px rgba(217,70,239,.95), 0 0 18px rgba(239,68,68,.45); font-weight: 700; }
         .c-skill-knight { color: #fde68a; text-shadow: 0 0 8px rgba(245,158,11,.9), 0 0 16px rgba(251,191,36,.35); font-weight: 700; }
@@ -114,6 +115,7 @@
                 </div>
                 <div class="mt-4 border-t border-gray-800 pt-4 text-xl"><span class="c-warn">金幣: <span id="ui-adena" class="font-bold">0</span></span></div>
                 <div id="ui-buffs" class="mt-3 text-sm min-h-[28px] text-gray-400"></div>
+                <div id="ui-pet-status" class="mt-4 border-t border-gray-800 pt-3 text-sm"></div>
             </div>
             <div class="panel-border p-3 flex-shrink-0 rounded-md bg-zinc-900 border-zinc-800 flex items-center justify-between gap-3 shadow-inner">
                 <span class="c-magic font-bold ml-1">自動施放攻擊魔法:</span>
@@ -132,6 +134,7 @@
             <div class="flex text-lg items-end gap-1 px-1">
                 <button class="tab-btn active" onclick="game.switchTab('inv')">裝備與背包</button>
                 <button class="tab-btn" onclick="game.switchTab('magic')">已學習魔法</button>
+                <button class="tab-btn" onclick="game.switchTab('pet')">寵物</button>
                 <button class="tab-btn" onclick="game.switchTab('shop')">商店交換和製作</button>
                 <button class="tab-btn" onclick="game.switchTab('settings')">設定</button>
             </div>
@@ -158,6 +161,16 @@
                     </div>
                     <div id="skill-list" class="flex-1 overflow-y-auto custom-scroll pr-2 space-y-4"></div>
                 </div>
+                <div id="tab-pet" class="flex-1 flex flex-col h-full overflow-hidden hidden">
+                    <div class="c-title mb-3 text-xl border-b border-gray-800 pb-2 flex justify-between">
+                        <span>寵物夥伴</span><span id="ui-active-pet" class="text-base c-sys font-normal">尚未召喚</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 mb-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
+                        <div>寵物可透過金幣契約取得，同時只能召喚一隻。牠會自動參戰並累積寵物經驗。</div>
+                        <div class="text-sm c-sys">坦護型可分擔傷害，破甲型會削弱怪物 AC，法攻型造成魔法傷害，祝福型會替主人維持短時間增益。</div>
+                    </div>
+                    <div id="pet-list" class="flex-1 overflow-y-auto custom-scroll pr-2 grid grid-cols-2 gap-3 content-start"></div>
+                </div>
                 <div id="tab-shop" class="flex-1 flex flex-col h-full overflow-hidden hidden">
                     <div class="flex-1 overflow-y-auto custom-scroll pr-2">
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">消耗品商店</div>
@@ -170,8 +183,21 @@
                             <div class="list-item"><span class="c-potion-purple">加速藥水</span> <div class="flex items-center gap-3"><span class="c-warn">300 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_haste')">購買</button></div></div>
                             <div class="list-item"><span class="c-potion-purple">勇氣藥水</span> <div class="flex items-center gap-3"><span class="c-warn">800 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_courage')">購買</button></div></div>
                             <div class="list-item"><span class="c-potion-purple">精靈餅乾</span> <div class="flex items-center gap-3"><span class="c-warn">1200 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('elven_wafer')">購買</button></div></div>
+                            <div class="list-item mt-2 border-t border-gray-800 pt-4"><span class="c-info">寵物復活卷軸 <span class="c-sys text-sm">復活後 HP/MP 50%</span></span> <div class="flex items-center gap-3"><span class="c-warn">50,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_pet_resurrection')">購買</button></div></div>
+                            <div class="list-item"><span class="c-blessed">受祝福的寵物復活卷軸 <span class="c-sys text-sm">復活後 HP/MP 100%</span></span> <div class="flex items-center gap-3"><span class="c-warn">100,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_pet_resurrection_blessed')">購買</button></div></div>
                             <div class="list-item mt-2 border-t border-gray-800 pt-4"><span class="c-item">對武器施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">75,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_weapon')">購買</button></div></div>
                             <div class="list-item"><span class="c-item">對盔甲施法的卷軸</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('scroll_armor')">購買</button></div></div>
+                        </div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">高級寵物裝備</div>
+                        <div class="grid grid-cols-1 gap-3 mb-8">
+                            <div class="list-item"><span class="c-warn">鬥犬之牙</span> <div class="flex items-center gap-3"><span class="c-warn">50,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_fang_fighting')">購買</button></div></div>
+                            <div class="list-item"><span class="c-warn">鋼鐵之牙</span> <div class="flex items-center gap-3"><span class="c-warn">60,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_fang_steel')">購買</button></div></div>
+                            <div class="list-item"><span class="c-warn">獵犬之牙</span> <div class="flex items-center gap-3"><span class="c-warn">60,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_fang_hound')">購買</button></div></div>
+                            <div class="list-item"><span class="c-warn">勝利之牙</span> <div class="flex items-center gap-3"><span class="c-warn">100,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_fang_victory')">購買</button></div></div>
+                            <div class="list-item border-t border-gray-800 pt-4"><span class="c-item">寵物皮盔甲</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_armor_leather')">購買</button></div></div>
+                            <div class="list-item"><span class="c-item">寵物鋼鐵盔甲</span> <div class="flex items-center gap-3"><span class="c-warn">250,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_armor_steel')">購買</button></div></div>
+                            <div class="list-item"><span class="c-item">寵物骷髏盔甲</span> <div class="flex items-center gap-3"><span class="c-warn">30,000 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('pet_armor_skeleton')">購買</button></div></div>
+                            <div class="c-sys text-sm border-t border-gray-800 pt-3">寵物裝備只有使用進化果實的寵物可以使用。黃金之牙以上與寵物十字盔甲以上改由 30~50 等怪物低機率掉落。</div>
                         </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">弓箭補給</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
@@ -231,6 +257,14 @@
                             <div class="flex items-center gap-2 border-b border-gray-700 pb-4">
                                 <input type="checkbox" id="cfg-auto-buy" onchange="game.updateSettings()" class="w-5 h-5 accent-gray-500 cursor-pointer"> <label for="cfg-auto-buy" class="cursor-pointer hover:text-white">藥水耗盡時自動購買至 100 瓶 (將扣除金幣)</label>
                             </div>
+                            <div class="flex items-center flex-wrap gap-3 pt-2">
+                                <span class="c-info">寵物體力低於</span><input type="number" id="cfg-pet-hp-threshold" class="w-20 bg-black border border-gray-600 text-center text-white py-1 rounded" value="30" onchange="game.updateSettings()">
+                                <span class="c-info">%</span><span class="c-info">時自動使用背包內:</span>
+                                <select id="cfg-pet-hp-type" class="bg-black border border-gray-600 text-white py-1 px-2 rounded" onchange="game.updateSettings()">
+                                    <option value="potion_red">治癒藥水</option><option value="potion_orange">強力治癒藥水</option><option value="potion_clear">終極治癒藥水</option>
+                                </select>
+                            </div>
+                            <div class="text-xs c-sys italic border-b border-gray-700 pb-4">寵物自動喝水只使用背包既有藥水，不會自動購買。</div>
                             <div class="flex items-center gap-2 mt-4">
                                 <input type="checkbox" id="cfg-auto-mp" onchange="game.updateSettings()" class="w-5 h-5 accent-gray-500 cursor-pointer"> <label for="cfg-auto-mp" class="cursor-pointer hover:text-white">自動購買並使用 藍色藥水 (每次1瓶)</label>
                             </div>
@@ -336,7 +370,7 @@ const compareItems = (keyA, keyB, inventory) => {
     let itemA = inventory[keyA], itemB = inventory[keyB];
     let defA = ITEMS[itemA.itemId] || { type: 'unknown', name: '未知' };
     let defB = ITEMS[itemB.itemId] || { type: 'unknown', name: '未知' };
-    const typeOrder = { 'potion_hp':1, 'potion_mp':1, 'potion_buff':1, 'scroll':2, 'book':3, 'gem':4, 'weapon':5, 'quiver':6, 'helmet':7, 'tshirt':8, 'armor':9, 'shield':10, 'cloak':11, 'leggings':12, 'gloves':13, 'boots':14, 'amulet':15, 'earring':16, 'belt':17, 'ring':18, 'quest':99 };
+    const typeOrder = { 'potion_hp':1, 'potion_mp':1, 'potion_buff':1, 'pet_scroll':2, 'scroll':2, 'pet_fruit':3, 'book':4, 'gem':5, 'pet_weapon':6, 'pet_armor':7, 'weapon':8, 'quiver':9, 'helmet':10, 'tshirt':11, 'armor':12, 'shield':13, 'cloak':14, 'leggings':15, 'gloves':16, 'boots':17, 'amulet':18, 'earring':19, 'belt':20, 'ring':21, 'quest':99 };
     let tA = typeOrder[defA.type] || 99, tB = typeOrder[defB.type] || 99;
     if (tA !== tB) return tA - tB;
     let bA = itemA.isBlessed || defA.isBlessed ? 1 : 0, bB = itemB.isBlessed || defB.isBlessed ? 1 : 0;
@@ -477,6 +511,22 @@ const ITEMS = {
     potion_wisdom: { name: '慎重藥水', type: 'potion_buff', duration: 300, price: 750 },
     potion_haste: { name: '加速藥水', type: 'potion_buff', buffId: 'potion_haste', duration: 1200, price: 300 },
     potion_courage: { name: '勇氣藥水', type: 'potion_buff', buffId: 'second_haste', duration: 600, price: 800, classes: ['knight'], desc: '二段加速，可與加速藥水疊加。' },
+    scroll_pet_resurrection: { name: '寵物復活卷軸', type: 'pet_scroll', price: 50000, reviveRate: 0.5, mpRate: 0.5, desc: '復活死亡中的寵物，恢復 50% HP / MP。' },
+    scroll_pet_resurrection_blessed: { name: '受祝福的寵物復活卷軸', type: 'pet_scroll', price: 100000, reviveRate: 1, mpRate: 1, isBlessed: true, desc: '滿血滿魔復活死亡中的寵物。' },
+    pet_evolution_fruit: { name: '寵物進化果實', type: 'pet_fruit', dropRate: 0.08, desc: '讓寵物進化為高級寵物。高級寵物可裝備專屬武器、防具，並提升 HP / MP 與攻擊上限。' },
+    pet_fang_fighting: { name: '鬥犬之牙', type: 'pet_weapon', price: 50000, petHit: 3, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功+3（不可加值）。' },
+    pet_fang_steel: { name: '鋼鐵之牙', type: 'pet_weapon', price: 60000, petDmg: 1, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。額外攻擊點數+1（不可加值）。' },
+    pet_fang_hound: { name: '獵犬之牙', type: 'pet_weapon', price: 60000, petHit: 5, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功+5（不可加值）。' },
+    pet_fang_victory: { name: '勝利之牙', type: 'pet_weapon', price: 100000, petHit: 2, petDmg: 1, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功+2、額外攻擊點數+1（不可加值）。' },
+    pet_fang_golden: { name: '黃金之牙', type: 'pet_weapon', price: 120000, petHit: 1, petDmg: 1, petMDmg: 1, material: '金', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功+1、額外攻擊點數+1、魔攻+1（不可加值）。' },
+    pet_fang_doom: { name: '破滅之牙', type: 'pet_weapon', price: 150000, petHit: -3, petDmg: 2, material: '黑色米索莉', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功-3、額外攻擊點數+2（不可加值）。' },
+    pet_fang_divine: { name: '神之牙', type: 'pet_weapon', price: 150000, petHit: 3, petMDmg: 2, material: '奧里哈魯根', highPetOnly: true, noEnchant: true, desc: '高等寵物專用。攻擊成功+3、魔攻+2（不可加值）。' },
+    pet_armor_leather: { name: '寵物皮盔甲', type: 'pet_armor', price: 30000, ac: -4, material: '皮', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
+    pet_armor_steel: { name: '寵物鋼鐵盔甲', type: 'pet_armor', price: 250000, ac: -8, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
+    pet_armor_skeleton: { name: '寵物骷髏盔甲', type: 'pet_armor', price: 30000, ac: -7, material: '骨頭', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
+    pet_armor_cross: { name: '寵物十字盔甲', type: 'pet_armor', price: 180000, ac: -13, material: '鐵', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
+    pet_armor_mithril: { name: '寵物米索莉盔甲', type: 'pet_armor', price: 200000, ac: -12, material: '米索莉', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
+    pet_armor_chain: { name: '寵物鏈甲', type: 'pet_armor', price: 450000, ac: -20, material: '金屬', highPetOnly: true, noEnchant: true, desc: '高等寵物專屬盔甲（不可加值）。' },
     gem_diamond: { name: '鑽石', type: 'gem', dropRate: 1, sellPrice: 500 },
     gem_ruby: { name: '紅寶石', type: 'gem', dropRate: 1, sellPrice: 500 },
     gem_sapphire: { name: '藍寶石', type: 'gem', dropRate: 1, sellPrice: 500 },
@@ -662,6 +712,13 @@ const GEM_EXCHANGES = {
             { id: 'quiver_black_mithril', count: 1, weight: 5 }, { id: 'quiver_oriharukon', count: 1, weight: 5 }
         ]
     }
+};
+
+const PETS = {
+    guardian_wolf: { id: 'guardian_wolf', name: '熊', role: '坦護', price: 25000, desc: '分擔主人受到的物理傷害，等級越高越可靠。', dice: '1d6+2', hpBase: 90, hpPerLevel: 18, mpBase: 20, mpPerLevel: 3, ac: 4, speed: 2600, color: 'c-success' },
+    armor_lynx: { id: 'armor_lynx', name: '哈士奇', role: '物理破甲', price: 40000, desc: '攻擊時有機率使怪物防禦崩解，讓主人的物理攻擊更容易命中。', dice: '1d7+3', hpBase: 70, hpPerLevel: 13, mpBase: 28, mpPerLevel: 4, ac: 6, speed: 2300, armorBreak: 4, color: 'c-warn' },
+    arcane_sprite: { id: 'arcane_sprite', name: '暴走兔', role: '魔法輸出', price: 60000, desc: '以魔力彈轟擊敵人，對高防禦怪物也能穩定輸出。', dice: '2d6+4', hpBase: 52, hpPerLevel: 9, mpBase: 70, mpPerLevel: 10, ac: 8, speed: 3000, magic: true, color: 'c-magic' },
+    bless_fox: { id: 'bless_fox', name: '狐狸', role: '主人增益', price: 50000, desc: '定期替主人上祝福，提高傷害、命中與魔法威力。', dice: '1d4+1', hpBase: 58, hpPerLevel: 10, mpBase: 64, mpPerLevel: 9, ac: 7, speed: 3200, buff: 'pet_blessing', color: 'c-info' }
 };
 
 const MAPS = {
@@ -1039,12 +1096,12 @@ Object.assign(ITEMS, {
     elven_wafer: { name: '精靈餅乾', type: 'potion_buff', buffId: 'second_haste', duration: 600, price: 1200, classes: ['elf','dark_elf'], desc: '二段加速，可與加速藥水疊加。' },
     boots_dark: { name: '黑暗長靴', type: 'boots', safe: 4, ac: -2, dropRate: 0.3, classes: ['dark_elf'] },
     sandals_dark_elf: { name: '黑暗妖精涼鞋', type: 'boots', safe: 4, ac: -3, mpRegen: 3, dropRate: 0.1, legendary: true, classes: ['dark_elf'] },
-    quiver_normal: { name: '普通箭桶', type: 'quiver', safe: 0, arrowDmg: 0, price: 1000, desc: '無限普通箭。' , classes: ['knight','elf','wizard','dark_elf'] },
-    quiver_silver: { name: '銀箭桶', type: 'quiver', safe: 0, arrowDmg: 0, undeadBonus: true, price: 8000, desc: '無限銀箭，對不死族與狼人追加 3~6 傷害。' , classes: ['knight','elf','wizard','dark_elf'] },
-    quiver_mithril: { name: '米索莉箭桶', type: 'quiver', safe: 0, arrowDmg: 3, undeadBonus: true, dropRate: 0.5, desc: '無限米索莉箭，遠程傷害+3。' },
-    quiver_oriharukon: { name: '奧里哈魯根箭桶', type: 'quiver', safe: 0, arrowDmg: 5, undeadBonus: true, pierceDr: 2, dropRate: 0.08, legendary: true, desc: '遠程傷害+5，無視 2 點減傷。' },
-    quiver_black_mithril: { name: '黑色米索莉箭桶', type: 'quiver', safe: 0, arrowDmg: 7, dropRate: 0.06, legendary: true, desc: '遠程傷害+7。' },
-    quiver_ancient: { name: '古代之箭桶', type: 'quiver', safe: 0, arrowDmg: 8, magicArrow: true, dropRate: 0.04, legendary: true, desc: '古老弩槍與沙哈之弓可將箭矢轉為魔法屬性傷害。' },
+    quiver_normal: { name: '普通箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 0, price: 1000, desc: '無限普通箭。可用盔甲卷軸強化，強化值會套用 AC。' , classes: ['knight','elf','wizard','dark_elf'] },
+    quiver_silver: { name: '銀箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 0, undeadBonus: true, price: 8000, desc: '無限銀箭，對不死族與狼人追加 3~6 傷害。可用盔甲卷軸強化，強化值會套用 AC。' , classes: ['knight','elf','wizard','dark_elf'] },
+    quiver_mithril: { name: '米索莉箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 3, undeadBonus: true, dropRate: 0.5, desc: '無限米索莉箭，遠程傷害+3。可用盔甲卷軸強化，強化值會套用 AC。' },
+    quiver_oriharukon: { name: '奧里哈魯根箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 5, undeadBonus: true, pierceDr: 2, dropRate: 0.08, legendary: true, desc: '遠程傷害+5，無視 2 點減傷。可用盔甲卷軸強化，強化值會套用 AC。' },
+    quiver_black_mithril: { name: '黑色米索莉箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 7, dropRate: 0.06, legendary: true, desc: '遠程傷害+7。可用盔甲卷軸強化，強化值會套用 AC。' },
+    quiver_ancient: { name: '古代之箭桶', type: 'quiver', safe: 4, ac: 0, arrowDmg: 8, magicArrow: true, dropRate: 0.04, legendary: true, desc: '古老弩槍與沙哈之弓可將箭矢轉為魔法屬性傷害。可用盔甲卷軸強化，強化值會套用 AC。' },
     sealed_forgotten_sword: { name: '受封印 被遺忘的劍', type: 'quest', dropRate: 0.2 },
     sealed_forgotten_great_sword: { name: '受封印 被遺忘的巨劍', type: 'quest', dropRate: 0.2 },
     sealed_forgotten_crossbow: { name: '受封印 被遺忘的弩槍', type: 'weapon', weaponClass: 'bow', hands: 2, speed: 950, safe: 6, dice: '1d2', hit: 0, dropRate: 0.2, classes: ['elf'] },
@@ -1536,10 +1593,11 @@ const game = {
         baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0,
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
-        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
+        pets: {}, activePet: null, petProtectMode: false,
+        settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoPetHpThreshold: 30, autoPetHpType: 'potion_red', autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
-        battleLoop: null, monsterLoop: null, magicLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
+        battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
+        potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
     },
 
     init: function() {
@@ -1606,6 +1664,7 @@ const game = {
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
+            pets: this.state.pets, activePet: this.state.activePet,
             settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
         };
     },
@@ -1730,6 +1789,27 @@ const game = {
                 this.state.createPoints = parseInt(savedData.createPoints) || 0;
                 this.state.bonusPoints = parseInt(savedData.bonusPoints) || 0;
                 this.state.spells = Array.isArray(savedData.spells) ? savedData.spells.filter(id => SPELLS[id]) : [];
+                this.state.pets = {};
+                if (savedData.pets && typeof savedData.pets === 'object') {
+                    Object.keys(savedData.pets).forEach(pid => {
+                        if (!PETS[pid]) return;
+                        const savedPet = savedData.pets[pid] || {};
+                        this.state.pets[pid] = {
+                            level: Math.max(1, parseInt(savedPet.level) || 1),
+                            exp: Math.max(0, parseInt(savedPet.exp) || 0),
+                            hp: Math.max(0, parseInt(savedPet.hp) || 0),
+                            mp: Math.max(0, parseInt(savedPet.mp) || 0),
+                            evolved: !!savedPet.evolved,
+                            deadUntil: Math.max(0, parseInt(savedPet.deadUntil) || 0),
+                            equipment: {
+                                weapon: savedPet.equipment?.weapon || null,
+                                armor: savedPet.equipment?.armor || null
+                            }
+                        };
+                        this.normalizePetVitals(pid);
+                    });
+                }
+                this.state.activePet = PETS[savedData.activePet] && this.state.pets[savedData.activePet] ? savedData.activePet : null;
                 this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
                 this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
@@ -1737,6 +1817,8 @@ const game = {
                 
                 this.state.settings = { ...this.state.settings, ...(savedData.settings || {}) };
                 this.state.settings.autoHpThreshold = parseInt(this.state.settings.autoHpThreshold) || 5;
+                this.state.settings.autoPetHpThreshold = parseInt(this.state.settings.autoPetHpThreshold) || 30;
+                if(!this.state.settings.autoPetHpType) this.state.settings.autoPetHpType = 'potion_red';
                 this.state.settings.autoHealThreshold = parseInt(this.state.settings.autoHealThreshold) || 50;
                 this.state.settings.autoAttackMpThreshold = parseInt(this.state.settings.autoAttackMpThreshold) || 0;
                 if(!this.state.settings.autoHealSpell) this.state.settings.autoHealSpell = 'none';
@@ -1749,6 +1831,7 @@ const game = {
                 this.state.zombieTick = 0;
                 this.state.monsterSpecialTick = 0;
                 this.state.autoMpSkillCd = 0;
+                this.state.petPotionCooldown = 0;
                 
                 document.getElementById('char-creation-modal').style.display = 'none';
                 document.getElementById('main-ui').classList.remove('hidden');
@@ -1760,10 +1843,13 @@ const game = {
                 this.updateUI();
                 this.renderInventory();
                 this.renderSkills();
+                this.renderPets();
                 this.updateSettingsUI();
                 
                 document.getElementById('cfg-hp-threshold').value = this.state.settings.autoHpThreshold;
                 document.getElementById('cfg-hp-type').value = this.state.settings.autoHpType || 'potion_red';
+                document.getElementById('cfg-pet-hp-threshold').value = this.state.settings.autoPetHpThreshold;
+                document.getElementById('cfg-pet-hp-type').value = this.state.settings.autoPetHpType || 'potion_red';
                 document.getElementById('cfg-auto-buy').checked = !!this.state.settings.autoBuyHp;
                 document.getElementById('cfg-auto-mp').checked = !!this.state.settings.autoBuyMp;
                 document.getElementById('cfg-auto-wis').checked = !!this.state.settings.autoBuyWis;
@@ -1807,6 +1893,7 @@ const game = {
     switchTab: function(tabId, evt = null) {
         document.getElementById('tab-inv').classList.add('hidden');
         document.getElementById('tab-magic').classList.add('hidden');
+        document.getElementById('tab-pet').classList.add('hidden');
         document.getElementById('tab-shop').classList.add('hidden');
         document.getElementById('tab-settings').classList.add('hidden');
         document.getElementById(`tab-${tabId}`).classList.remove('hidden');
@@ -1815,7 +1902,359 @@ const game = {
         if(target) target.classList.add('active');
         if(tabId === 'inv') this.renderInventory();
         if(tabId === 'magic') this.renderSkills();
+        if(tabId === 'pet') this.renderPets();
         if(tabId === 'settings') this.updateSettingsUI();
+    },
+
+    getPetExpReq: function(level) {
+        return Math.floor(80 * Math.pow(Math.max(1, level), 1.55));
+    },
+    renderPetStatus: function() {
+        const box = document.getElementById('ui-pet-status');
+        if (!box) return;
+        const petIds = Object.keys(this.state.pets || {});
+        let petId = this.state.activePet || petIds.find(pid => this.state.pets[pid]?.deadUntil) || petIds[0];
+        if (!petId || !PETS[petId] || !this.state.pets[petId]) {
+            box.innerHTML = '<div class="c-title mb-2">寵物狀態</div><div class="c-sys italic">尚未召喚寵物</div>';
+            return;
+        }
+        this.normalizePetVitals(petId);
+        const active = { def: PETS[petId], data: this.state.pets[petId] };
+        const data = active.data;
+        const maxHp = this.getPetMaxHp(petId), maxMp = this.getPetMaxMp(petId);
+        const req = this.getPetExpReq(data.level);
+        const hpPct = maxHp > 0 ? Math.max(0, Math.floor((data.hp / maxHp) * 100)) : 0;
+        const mpPct = maxMp > 0 ? Math.max(0, Math.floor((data.mp / maxMp) * 100)) : 0;
+        const expPct = req > 0 ? Math.min(100, Math.floor(((data.exp || 0) / req) * 100)) : 0;
+        const cdText = data.deadUntil ? `<div class="c-err mt-1">死亡CD: ${Math.max(1, Math.ceil((data.deadUntil - Date.now()) / 1000))} 秒</div>` : '';
+        box.innerHTML = `
+            <div class="c-title mb-2">寵物狀態</div>
+            <div class="flex justify-between mb-1"><span class="${active.def.color} font-bold">${this.getPetDisplayName(petId)}</span><span class="c-warn">Lv.${data.level}</span></div>
+            <div class="space-y-1">
+                <div class="flex items-center">HP:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${hpPct}%;"></div><span class="bar-text">${data.hp}/${maxHp}</span></div></div>
+                <div class="flex items-center">MP:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${mpPct}%;"></div><span class="bar-text">${data.mp}/${maxMp}</span></div></div>
+                <div class="flex items-center">EXP:<div class="bar-container flex-1"><div class="bar-fill exp" style="width:${expPct}%;"></div><span class="bar-text">${data.exp || 0}/${req}</span></div></div>
+            </div>
+            ${cdText}
+        `;
+    },
+    getPetLevel: function(petId) {
+        return Math.max(1, parseInt(this.state.pets?.[petId]?.level) || 1);
+    },
+    getActivePetData: function() {
+        if (!this.state.activePet || !PETS[this.state.activePet] || !this.state.pets[this.state.activePet]) return null;
+        this.normalizePetVitals(this.state.activePet);
+        return { def: PETS[this.state.activePet], data: this.state.pets[this.state.activePet] };
+    },
+    getPetDisplayName: function(petId) {
+        const def = PETS[petId], data = this.state.pets?.[petId];
+        if (!def) return '未知寵物';
+        return data?.evolved ? `高級${def.name}` : def.name;
+    },
+    getPetEquipDef: function(petId, slot) {
+        const key = this.state.pets?.[petId]?.equipment?.[slot];
+        if (!key || !this.state.inventory[key]) return null;
+        return ITEMS[this.state.inventory[key].itemId] || null;
+    },
+    getPetEquipStats: function(petId) {
+        const weapon = this.getPetEquipDef(petId, 'weapon');
+        const armor = this.getPetEquipDef(petId, 'armor');
+        return {
+            hit: weapon?.petHit || 0,
+            dmg: weapon?.petDmg || 0,
+            mDmg: weapon?.petMDmg || 0,
+            ac: armor?.ac || 0,
+            weaponName: weapon?.name || '無',
+            armorName: armor?.name || '無'
+        };
+    },
+    getPetMaxHp: function(petId) {
+        const def = PETS[petId], data = this.state.pets?.[petId];
+        if (!def || !data) return 1;
+        const evolved = data.evolved ? 1.35 : 1;
+        return Math.floor((def.hpBase + this.getPetLevel(petId) * def.hpPerLevel) * evolved);
+    },
+    getPetMaxMp: function(petId) {
+        const def = PETS[petId], data = this.state.pets?.[petId];
+        if (!def || !data) return 0;
+        const evolved = data.evolved ? 1.4 : 1;
+        return Math.floor((def.mpBase + this.getPetLevel(petId) * def.mpPerLevel) * evolved);
+    },
+    normalizePetVitals: function(petId) {
+        const data = this.state.pets?.[petId];
+        if (!data || !PETS[petId]) return;
+        if (!data.equipment) data.equipment = { weapon: null, armor: null };
+        if (data.deadUntil && Date.now() >= data.deadUntil) {
+            data.deadUntil = 0;
+            data.hp = this.getPetMaxHp(petId);
+            data.mp = this.getPetMaxMp(petId);
+            this.logSystem(`${this.getPetDisplayName(petId)} 從死亡冷卻中恢復。`, 'reward');
+        }
+        const maxHp = this.getPetMaxHp(petId), maxMp = this.getPetMaxMp(petId);
+        if (!data.deadUntil && (!data.hp || data.hp <= 0)) data.hp = maxHp;
+        if (data.mp === undefined || data.mp === null) data.mp = maxMp;
+        data.hp = Math.min(maxHp, Math.max(0, parseInt(data.hp) || 0));
+        data.mp = Math.min(maxMp, Math.max(0, parseInt(data.mp) || 0));
+    },
+    isPetAlive: function(petId = this.state.activePet) {
+        const data = this.state.pets?.[petId];
+        if (!data) return false;
+        this.normalizePetVitals(petId);
+        return !data.deadUntil && data.hp > 0;
+    },
+    killPet: function(petId, reason = '') {
+        const data = this.state.pets?.[petId];
+        if (!data) return;
+        data.hp = 0;
+        data.deadUntil = Date.now() + 10 * 60 * 1000;
+        if (this.state.activePet === petId) this.state.activePet = null;
+        this.state.petProtectMode = false;
+        this.logCombat(`${this.getPetDisplayName(petId)} 倒下了，進入死亡冷卻 10 分鐘${reason ? '：' + reason : '。'}`, 'danger');
+        this.renderPets();
+        this.updateUI();
+    },
+    revivePetWithScroll: function(itemKey) {
+        const item = this.state.inventory[itemKey], def = item ? ITEMS[item.itemId] : null;
+        if (!def || def.type !== 'pet_scroll') return;
+        const deadPetId = Object.keys(this.state.pets).find(pid => this.state.pets[pid].deadUntil || this.state.pets[pid].hp <= 0);
+        if (!deadPetId) {
+            this.logSystem('目前沒有死亡中的寵物。', 'danger');
+            return;
+        }
+        this.removeInventory(itemKey, 1);
+        const data = this.state.pets[deadPetId];
+        data.deadUntil = 0;
+        data.hp = Math.max(1, Math.floor(this.getPetMaxHp(deadPetId) * (def.reviveRate || 1)));
+        data.mp = Math.floor(this.getPetMaxMp(deadPetId) * (def.mpRate || def.reviveRate || 1));
+        this.state.activePet = deadPetId;
+        this.logSystem(`使用 ${def.name}，${this.getPetDisplayName(deadPetId)} 已復活。`, def.isBlessed ? 'blessed' : 'reward');
+        this.renderPets();
+        this.updateUI();
+    },
+    evolvePet: function(petId) {
+        const data = this.state.pets?.[petId];
+        if (!data || !PETS[petId]) return;
+        if (data.evolved) {
+            this.logSystem(`${this.getPetDisplayName(petId)} 已經是高級寵物。`);
+            return;
+        }
+        if (data.deadUntil || data.hp <= 0) {
+            this.logSystem('死亡中的寵物無法進化。', 'danger');
+            return;
+        }
+        if (!this.removeItemById('pet_evolution_fruit', 1)) {
+            this.logSystem('需要寵物進化果實。', 'danger');
+            return;
+        }
+        data.evolved = true;
+        data.hp = this.getPetMaxHp(petId);
+        data.mp = this.getPetMaxMp(petId);
+        this.logSystem(`${PETS[petId].name} 進化為 ${this.getPetDisplayName(petId)}！`, 'reward');
+        this.renderPets();
+        this.updateUI();
+    },
+    usePetEvolutionFruit: function(itemKey) {
+        const item = this.state.inventory[itemKey];
+        if (!item || item.itemId !== 'pet_evolution_fruit') return;
+        const candidates = Object.keys(this.state.pets || {}).filter(pid => this.state.pets[pid] && !this.state.pets[pid].evolved && this.isPetAlive(pid));
+        const target = this.state.activePet && candidates.includes(this.state.activePet) ? this.state.activePet : candidates[0];
+        if (!target) {
+            this.logSystem('沒有可進化的存活寵物。', 'danger');
+            return;
+        }
+        this.removeInventory(itemKey, 1);
+        const data = this.state.pets[target];
+        data.evolved = true;
+        data.hp = this.getPetMaxHp(target);
+        data.mp = this.getPetMaxMp(target);
+        this.logSystem(`${PETS[target].name} 進化為 ${this.getPetDisplayName(target)}！`, 'reward');
+        this.renderInventory();
+        this.renderPets();
+        this.updateUI();
+    },
+    equipPetItem: function(itemKey) {
+        const item = this.state.inventory[itemKey], def = item ? ITEMS[item.itemId] : null;
+        const active = this.getActivePetData();
+        if (!def || !['pet_weapon','pet_armor'].includes(def.type) || !active) return;
+        if (this.getUnequippedCount(itemKey) <= 0 && active.data.equipment[def.type === 'pet_weapon' ? 'weapon' : 'armor'] !== itemKey) return;
+        if (!active.data.evolved) {
+            this.logSystem('只有高級寵物可以裝備寵物專屬裝備。', 'danger');
+            return;
+        }
+        const slot = def.type === 'pet_weapon' ? 'weapon' : 'armor';
+        active.data.equipment[slot] = itemKey;
+        this.logSystem(`${this.getPetDisplayName(this.state.activePet)} 裝備了 ${def.name}。`, 'reward');
+        this.renderInventory();
+        this.renderPets();
+    },
+    unequipPetItem: function(petId, slot) {
+        const data = this.state.pets?.[petId];
+        if (!data?.equipment?.[slot]) return;
+        data.equipment[slot] = null;
+        this.renderInventory();
+        this.renderPets();
+    },
+    contractPet: function(petId) {
+        const def = PETS[petId];
+        if (!def) return;
+        if (this.state.pets[petId]) {
+            this.logSystem(`${def.name} 已經是你的夥伴。`);
+            return;
+        }
+        if (this.state.adena < def.price) {
+            this.logSystem(`契約 ${def.name} 需要 ${def.price.toLocaleString()} 金幣。`, 'danger');
+            return;
+        }
+        this.state.adena -= def.price;
+        this.state.pets[petId] = { level: 1, exp: 0, hp: 0, mp: 0, evolved: false, deadUntil: 0, equipment: { weapon: null, armor: null } };
+        this.normalizePetVitals(petId);
+        this.state.activePet = petId;
+        this.logSystem(`完成契約：${def.name} 加入隊伍。`, 'reward');
+        this.renderPets();
+        this.updateUI();
+    },
+    summonPet: function(petId) {
+        const def = PETS[petId];
+        if (!def || !this.state.pets[petId]) return;
+        this.normalizePetVitals(petId);
+        if (!this.isPetAlive(petId)) {
+            const remain = Math.ceil((this.state.pets[petId].deadUntil - Date.now()) / 1000);
+            this.logSystem(`${this.getPetDisplayName(petId)} 死亡冷卻中，剩餘 ${Math.max(1, remain)} 秒。`, 'danger');
+            return;
+        }
+        this.state.activePet = petId;
+        this.logSystem(`${this.getPetDisplayName(petId)} 進入戰鬥隊列。`, 'reward');
+        this.renderPets();
+        this.updateUI();
+    },
+    dismissPet: function() {
+        if (this.state.activePet && PETS[this.state.activePet]) this.logSystem(`${PETS[this.state.activePet].name} 暫時休息。`);
+        this.state.activePet = null;
+        this.renderPets();
+        this.updateUI();
+    },
+    renderPets: function() {
+        const list = document.getElementById('pet-list');
+        if (!list) return;
+        Object.keys(this.state.pets || {}).forEach(pid => this.normalizePetVitals(pid));
+        const activeName = this.state.activePet && PETS[this.state.activePet] ? this.getPetDisplayName(this.state.activePet) : '尚未召喚';
+        const activeEl = document.getElementById('ui-active-pet');
+        if (activeEl) activeEl.innerText = activeName;
+        list.innerHTML = '';
+        Object.values(PETS).forEach(def => {
+            const owned = !!this.state.pets[def.id];
+            const data = this.state.pets[def.id] || { level: 1, exp: 0, hp: 0, mp: 0, evolved: false, equipment: { weapon: null, armor: null } };
+            const lvl = Math.max(1, parseInt(data.level) || 1);
+            const req = this.getPetExpReq(lvl);
+            const pct = Math.min(100, Math.floor((Math.max(0, data.exp || 0) / req) * 100));
+            const isActive = this.state.activePet === def.id;
+            const alive = owned && this.isPetAlive(def.id);
+            const eqStats = owned ? this.getPetEquipStats(def.id) : { weaponName: '無', armorName: '無' };
+            const deadText = owned && data.deadUntil ? `死亡冷卻 ${Math.max(1, Math.ceil((data.deadUntil - Date.now()) / 1000))} 秒` : '';
+            const fruitCount = this.getItemCount('pet_evolution_fruit');
+            const action = owned
+                ? (isActive ? `<button class="btn-ui !px-3 !py-1 c-sys" onclick="game.dismissPet()">休息</button>` : `<button class="btn-ui !px-3 !py-1 c-success" ${alive ? '' : 'disabled'} onclick="game.summonPet('${def.id}')">召喚</button>`)
+                : `<button class="btn-ui !px-3 !py-1 c-warn" onclick="game.contractPet('${def.id}')">契約 ${def.price.toLocaleString()}</button>`;
+            const expHtml = owned ? `<div class="mt-2 c-sys text-xs">EXP ${Math.max(0, data.exp || 0)}/${req}（詳細血量顯示於左側角色狀態）</div>` : '';
+            const equipHtml = owned ? `
+                <div class="mt-3 c-sys text-xs leading-relaxed border-t border-gray-700 pt-2">
+                    <div>武器：<span class="c-item">${eqStats.weaponName}</span></div>
+                    <div>防具：<span class="c-item">${eqStats.armorName}</span></div>
+                    <div class="flex gap-2 mt-1">
+                        ${data.equipment?.weapon ? `<button class="btn-ui !text-xs" onclick="game.unequipPetItem('${def.id}','weapon')">卸武器</button>` : ''}
+                        ${data.equipment?.armor ? `<button class="btn-ui !text-xs" onclick="game.unequipPetItem('${def.id}','armor')">卸防具</button>` : ''}
+                    </div>
+                </div>` : '';
+            const evolveHtml = owned && !data.evolved ? `<button class="btn-ui !px-3 !py-1 c-magic" ${fruitCount > 0 && alive ? '' : 'disabled'} onclick="game.evolvePet('${def.id}')">進化</button>` : '';
+            list.insertAdjacentHTML('beforeend', `
+                <div class="pet-card ${isActive ? 'set-active-row' : ''}">
+                    <div class="flex justify-between items-start gap-2 mb-2">
+                        <div><span class="${def.color} font-bold text-lg">${owned ? this.getPetDisplayName(def.id) : def.name}</span><span class="c-sys text-sm ml-2">${def.role}</span></div>
+                        <div class="c-warn">${owned ? 'Lv.' + lvl : '未契約'}</div>
+                    </div>
+                    <div class="c-sys text-sm min-h-[42px]">${def.desc}</div>
+                    ${expHtml}
+                    ${equipHtml}
+                    <div class="mt-3 flex justify-between items-center gap-2">
+                        <span class="${deadText ? 'c-err' : 'c-sys'} text-sm">${owned ? (deadText || (isActive ? '目前同行' : (data.evolved ? '高級寵物' : '可召喚'))) : '需要金幣契約'}</span>
+                        <div class="flex gap-2">${evolveHtml}${action}</div>
+                    </div>
+                </div>
+            `);
+        });
+    },
+    gainPetExp: function(exp) {
+        const active = this.getActivePetData();
+        if (!active) return;
+        active.data.exp = Math.max(0, (active.data.exp || 0) + Math.max(1, Math.floor(exp)));
+        let leveled = false;
+        while (active.data.level < 50 && active.data.exp >= this.getPetExpReq(active.data.level)) {
+            active.data.exp -= this.getPetExpReq(active.data.level);
+            active.data.level++;
+            leveled = true;
+        }
+        if (leveled) this.logSystem(`${active.def.name} 成長到了 Lv.${active.data.level}。`, 'reward');
+        this.renderPets();
+    },
+    petAct: function() {
+        const active = this.getActivePetData();
+        if (!active || !this.state.targetMonster || this.state.hp <= 0 || !this.isPetAlive(this.state.activePet)) return;
+        const def = active.def;
+        const petName = this.getPetDisplayName(this.state.activePet);
+        const lvl = Math.max(1, parseInt(active.data.level) || 1);
+        const target = this.state.targetMonster;
+        const eq = this.getPetEquipStats(this.state.activePet);
+        const evolvedBonus = active.data.evolved ? 1.25 : 1;
+        active.data.mp = Math.min(this.getPetMaxMp(this.state.activePet), active.data.mp + Math.max(1, Math.floor(lvl / 8)));
+        if (def.buff) {
+            if (active.data.mp < 8) return;
+            active.data.mp -= 8;
+            this.state.buffs.pet_blessing = 12;
+            this.logCombat(`${petName} 施放靈巧祝福，主人短時間傷害、命中與魔法威力提升。`, 'success');
+            this.updateUI();
+        }
+        let hitRoll = rollDice('1d20');
+        let hit = hitRoll === 20 || (hitRoll !== 1 && hitRoll + lvl + eq.hit + Math.floor(this.state.level / 3) >= 10 - target.ac);
+        if (!hit && !def.magic) {
+            this.logCombat(`${petName} 的攻擊未命中 ${target.name}。`);
+            this.renderPets();
+            return;
+        }
+        let dmg = Math.floor((rollDice(def.dice) + Math.floor(lvl * 1.4) + eq.dmg) * evolvedBonus);
+        if (def.magic) {
+            if (active.data.mp >= 10) {
+                active.data.mp -= 10;
+                dmg += 6 + eq.mDmg * 5;
+            }
+            dmg = this.calcMagicDmgToMonster(dmg + eq.mDmg + Math.max(0, Math.floor(this.getMagicDmg() * 0.5)));
+            this.logCombat(`${petName} 釋放奧術彈，造成 ${dmg} 點魔法傷害。`, 'magic');
+        } else {
+            if (def.armorBreak && Math.random() < Math.min(0.55, 0.22 + lvl * 0.012)) {
+                if (!target.debuffs) target.debuffs = {};
+                target.debuffs.armor_break = Math.max(target.debuffs.armor_break || 0, def.armorBreak + Math.floor(lvl / 8));
+                if (active.data.mp >= 6) {
+                    active.data.mp -= 6;
+                    target.debuffs.armor_break += 2;
+                }
+                this.logCombat(`${petName} 撕裂 ${target.name} 的防線，破甲 ${target.debuffs.armor_break} 秒。`, 'success');
+            }
+            this.logCombat(`${petName} 攻擊 ${target.name}，造成 ${dmg} 點傷害。`, 'success');
+        }
+        target.hp -= Math.max(1, dmg);
+        this.updateMonsterHpBar();
+        if (target.hp <= 0) this.monsterDied();
+        this.renderPets();
+    },
+    getPetGuardReduction: function(dmg) {
+        const active = this.getActivePetData();
+        if (!active || active.def.id !== 'guardian_wolf' || !this.isPetAlive(this.state.activePet)) return 0;
+        const lvl = Math.max(1, parseInt(active.data.level) || 1);
+        const rate = Math.min(0.35, 0.12 + lvl * 0.006);
+        const blocked = Math.min(dmg - 1, Math.max(0, Math.floor(dmg * rate)));
+        active.data.hp = Math.max(0, active.data.hp - Math.ceil(blocked * 0.5));
+        if (active.data.hp <= 0) this.killPet(this.state.activePet, '守護主人時承受過量傷害。');
+        else this.renderPets();
+        return blocked;
     },
 
     getClassDef: function() {
@@ -1905,6 +2344,7 @@ const game = {
         this.updateUI();
         this.renderInventory();
         this.renderSkills();
+        this.renderPets();
         this.logSystem('歡迎來到天堂放置版。你的冒險開始了！', 'reward');
         this.startLoops();
         this.startBattle();
@@ -2136,6 +2576,7 @@ const game = {
         if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += 5;
         if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += 8;
         if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) wpnHit += 30;
+        if (this.state.buffs.pet_blessing) wpnHit += 2;
         if (weaponClass === 'bow') return dexBonus * 2 + wpnHit + sets.hit + Math.floor(this.state.level / 10);
         if (this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) return strBonus + dexBonus + wpnHit + sets.hit + 2;
         return strBonus + dexBonus + wpnHit + sets.hit;
@@ -2178,6 +2619,7 @@ const game = {
         if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnDmg += 3;
         if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnDmg += 6;
         if (this.state.buffs.berserkers) wpnDmg += 5;
+        if (this.state.buffs.pet_blessing) wpnDmg += 2;
         if (this.state.buffs.player_weapon_break > 0 && this.canCurrentWeaponBeDamaged()) wpnDmg -= 10;
         let gearDmg = 0;
         for(let slot in this.state.equipment) {
@@ -2215,6 +2657,7 @@ const game = {
             if(ITEMS[item.itemId] && ITEMS[item.itemId].mDmg) m += ITEMS[item.itemId].mDmg;
         }
         if (this.state.buffs.potion_wisdom) m += 2;
+        if (this.state.buffs.pet_blessing) m += 1;
         m += this.getSetBonuses().mDmg || 0;
         return m + Math.floor(this.state.level / 4);
     },
@@ -2289,6 +2732,7 @@ const game = {
         let buffHtml = '';
         let sets = this.getSetBonuses();
         if (sets.active.length > 0) sets.active.forEach(sName => { buffHtml += `<span class="c-legendary mr-2">[${sName}]</span>`; });
+        if(this.state.activePet && PETS[this.state.activePet]) buffHtml += `<span class="${PETS[this.state.activePet].color} mr-2">[同行:${this.getPetDisplayName(this.state.activePet)}]</span>`;
         if(this.state.buffs.dex_buff) buffHtml += '<span class="c-success mr-2">[通暢氣脈]</span>';
         if(this.state.buffs.str_buff) buffHtml += '<span class="c-success mr-2">[體魄強健]</span>';
         if(this.state.buffs.enchant_weapon) buffHtml += '<span class="c-success mr-2">[擬似魔武]</span>';
@@ -2315,6 +2759,7 @@ const game = {
         if(this.state.buffs.de_double_break) buffHtml += '<span class="c-skill-dark mr-2">[雙重破壞]</span>';
         if(this.state.buffs.de_armor_break) buffHtml += '<span class="c-skill-dark mr-2">[破壞盔甲]</span>';
         if(this.state.buffs.de_dress_mighty) buffHtml += '<span class="c-skill-dark mr-2">[力量提升]</span>';
+        if(this.state.buffs.pet_blessing) buffHtml += '<span class="c-info mr-2">[寵物祝福]</span>';
         if(this.state.buffs.potion_blue) buffHtml += '<span class="c-potion-blue mr-2">[藍色藥水]</span>';
         if(this.state.buffs.potion_wisdom) buffHtml += '<span class="c-potion-purple mr-2">[慎重藥水]</span>';
         if(this.state.buffs.potion_haste) buffHtml += '<span class="c-potion-purple mr-2">[加速藥水]</span>';
@@ -2325,6 +2770,7 @@ const game = {
         if(this.state.buffs.heal_erosion) buffHtml += '<span class="c-err mr-2">[治癒侵蝕]</span>';
         if(this.state.buffs.stun) buffHtml += '<span class="c-err mr-2">[衝暈]</span>';
         document.getElementById('ui-buffs').innerHTML = buffHtml || '無附加狀態';
+        this.renderPetStatus();
         this.renderGemExchange();
     },
 
@@ -2332,6 +2778,10 @@ const game = {
         if (!item || !def) return 'c-item';
         if (def.legendary && Number(item.enchant) < 4) return 'c-legendary';
         if (item.isBlessed || def.isBlessed) return 'c-blessed';
+        if (def.type === 'pet_weapon') return def.petMDmg ? 'c-magic' : 'c-warn';
+        if (def.type === 'pet_armor') return 'c-info';
+        if (def.type === 'pet_fruit') return 'c-magic';
+        if (def.type === 'pet_scroll') return def.isBlessed ? 'c-blessed' : 'c-info';
         if (def.type === 'gem') return 'c-enchant';
         if (def.type === 'potion_hp') {
             if (item.itemId === 'potion_red') return 'c-potion-red';
@@ -2391,6 +2841,10 @@ const game = {
         else if(def.type === 'gloves') typeName = '手套';
         else if(def.type === 'gem') typeName = '寶石材料';
         else if(def.type === 'quiver') typeName = '箭桶';
+        else if(def.type === 'pet_weapon') typeName = '寵物武器';
+        else if(def.type === 'pet_armor') typeName = '寵物防具';
+        else if(def.type === 'pet_scroll') typeName = '寵物卷軸';
+        else if(def.type === 'pet_fruit') typeName = '寵物道具';
         
         if (typeName) html += `<div class="c-sys mb-2">[${typeName}]</div>`;
         let detailBonus = {
@@ -2418,11 +2872,20 @@ const game = {
             if (def.isUndeadSlayer) html += `<div class="c-info mt-1">對不死族與狼人族造成 3~6 點額外傷害</div>`;
         } else if (['helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring','quiver'].includes(def.type)) {
             if (def.ac !== undefined && def.ac !== 0) html += `<div>防禦力 (AC): <span class="text-white">${def.ac}</span></div>`;
+            if (def.type === 'quiver') html += `<div>目前強化 AC: <span class="text-white">${-(Number(item.enchant) || 0)}</span></div>`;
             if (def.safe !== undefined) html += `<div>安定值: <span class="text-white">${def.safe !== undefined ? def.safe : 0}</span></div>`;
             if (def.mr) html += `<div>魔防 (MR): <span class="text-white">+${def.mr}%</span></div>`;
             if (def.dr) html += `<div>傷害減免: <span class="text-white">+${def.dr}</span></div>`;
             if (def.mDmg) html += `<div>魔法額外傷害: <span class="text-white">+${def.mDmg}</span></div>`;
             if (def.arrowDmg) html += `<div>遠程傷害: <span class="text-white">+${def.arrowDmg}</span></div>`;
+        } else if (def.type === 'pet_weapon') {
+            if (def.petHit) html += `<div>寵物攻擊成功: <span class="text-white">${def.petHit > 0 ? '+' : ''}${def.petHit}</span></div>`;
+            if (def.petDmg) html += `<div>寵物額外攻擊點數: <span class="text-white">+${def.petDmg}</span></div>`;
+            if (def.petMDmg) html += `<div>寵物魔攻: <span class="text-white">+${def.petMDmg}</span></div>`;
+            if (def.material) html += `<div>材質: <span class="text-white">${def.material}</span></div>`;
+        } else if (def.type === 'pet_armor') {
+            if (def.ac !== undefined) html += `<div>寵物防禦力 (AC): <span class="text-white">${def.ac}</span></div>`;
+            if (def.material) html += `<div>材質: <span class="text-white">${def.material}</span></div>`;
         }
         const statNames = { str: '力量', dex: '敏捷', con: '體質', int: '智力', wis: '精神' };
         for (let stat in statNames) {
@@ -2462,6 +2925,11 @@ const game = {
             if(this.state.inventory[itemKey].count <= 0) {
                 for(let slot in this.state.equipment) {
                     if(this.state.equipment[slot] === itemKey) this.state.equipment[slot] = null;
+                }
+                for(let pid in this.state.pets) {
+                    let peq = this.state.pets[pid].equipment;
+                    if (peq?.weapon === itemKey) peq.weapon = null;
+                    if (peq?.armor === itemKey) peq.armor = null;
                 }
                 delete this.state.inventory[itemKey];
             }
@@ -2530,6 +2998,11 @@ const game = {
             let def = ITEMS[item.itemId] || { type: 'unknown', name: '未知' };
             let equippedCount = 0;
             for(let slot in this.state.equipment) { if(this.state.equipment[slot] === key) equippedCount++; }
+            for(let pid in this.state.pets) {
+                let peq = this.state.pets[pid].equipment;
+                if (peq?.weapon === key) equippedCount++;
+                if (peq?.armor === key) equippedCount++;
+            }
             let displayCount = item.count - equippedCount;
             if(displayCount <= 0) return;
 
@@ -2540,11 +3013,18 @@ const game = {
             if(['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
                 actions += `<button class="btn-ui border-yellow-700 text-yellow-300" onclick="game.equip('${key}')">裝備</button> `;
-                if(!['belt','amulet','ring','quiver'].includes(def.type)) actions += `<button class="btn-ui" onclick="game.openEnchantModal('${key}')">強化</button> `;
+                if(!['belt','amulet','ring'].includes(def.type)) actions += `<button class="btn-ui" onclick="game.openEnchantModal('${key}')">強化</button> `;
+            } else if(['pet_weapon','pet_armor'].includes(def.type)) {
+                actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
+                actions += `<button class="btn-ui border-yellow-700 text-yellow-300" onclick="game.equipPetItem('${key}')">寵物裝備</button> `;
             } else if(def.type === 'book') {
                 actions += `<button class="btn-ui c-success border-green-800" onclick="game.learnSpell('${key}')">學習</button> `;
             } else if(def.type.startsWith('potion')) {
                 actions += `<button class="btn-ui c-info border-blue-800" onclick="game.usePotion('${key}')">使用</button> `;
+            } else if(def.type === 'pet_scroll') {
+                actions += `<button class="btn-ui c-info border-blue-800" onclick="game.revivePetWithScroll('${key}')">復活</button> `;
+            } else if(def.type === 'pet_fruit') {
+                actions += `<button class="btn-ui c-magic border-purple-800" onclick="game.usePetEvolutionFruit('${key}')">使用</button> `;
             } else if(def.type === 'gem') {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
             } else if (def.type === 'quest') {
@@ -2553,7 +3033,7 @@ const game = {
 
             let canSell = false;
             let sellPrice = 0;
-            if (['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) {
+            if (['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver','pet_weapon','pet_armor'].includes(def.type)) {
                 sellPrice = this.getEquipmentSellPrice(item, def);
                 canSell = sellPrice > 0;
             } else if (def.type === 'book') {
@@ -2671,6 +3151,19 @@ const game = {
         }
         this.updateUI();
     },
+    usePotionOnPet: function(itemKey) {
+        const active = this.getActivePetData();
+        const item = this.state.inventory[itemKey];
+        const def = item ? ITEMS[item.itemId] : null;
+        if (!active || !def || def.type !== 'potion_hp' || !this.isPetAlive(this.state.activePet)) return false;
+        this.removeInventory(itemKey, 1);
+        const heal = Math.max(1, Math.floor(def.heal * 1.35));
+        active.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), active.data.hp + heal);
+        this.logCombat(`${this.getPetDisplayName(this.state.activePet)} 使用了 ${def.name}，恢復 ${heal} 點體力。`, 'success');
+        this.renderPets();
+        this.updateUI();
+        return true;
+    },
     learnSpell: function(itemKey) {
         if (this.state.buffs.petrified > 0 || this.state.buffs.stun > 0) {
             this.logCombat(`異常狀態中無法學習魔法。`, 'danger');
@@ -2703,13 +3196,15 @@ const game = {
 
     getEquipmentSellPrice: function(item, def) {
         if (!item || !def) return 0;
-        if (!['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) return 0;
+        if (!['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver','pet_weapon','pet_armor'].includes(def.type)) return 0;
         if (Number(item.enchant) !== 0 || def.unique) return 0;
         if (item.isBlessed || def.isBlessed) return 100000;
         let dr = def.dropRate || 1;
         let realDr = dr / 100;
         let rarity = Math.max(1, Math.floor(1 / realDr));
         if (def.type === 'weapon') return Math.max(100, Math.floor(250 + rarity * 0.8 + getDiceMax(def.dice || '1d1') * 180 + (def.hit || 0) * 350 + (def.dmg || 0) * 500 + (def.mDmg || 0) * 800));
+        if (def.type === 'pet_weapon') return Math.max(100, Math.floor((def.price || 10000) * 0.35));
+        if (def.type === 'pet_armor') return Math.max(100, Math.floor((def.price || 10000) * 0.35));
         if (['amulet','ring','belt','earring'].includes(def.type)) return Math.max(100, Math.floor(500 + rarity * 1.2 + Math.abs(def.ac || 0) * 500 + (def.mr || 0) * 180 + (def.hp || 0) * 25 + (def.mp || 0) * 25 + (def.hit || 0) * 500 + (def.dmg || 0) * 800));
         return Math.max(100, Math.floor(200 + rarity * 0.6 + Math.abs(def.ac || 0) * 450 + (def.mr || 0) * 150 + (def.dr || 0) * 1000 + (def.mDmg || 0) * 900));
     },
@@ -2739,6 +3234,11 @@ const game = {
         if (!item) return 0;
         let equippedCount = 0;
         for (let slot in this.state.equipment) if (this.state.equipment[slot] === itemKey) equippedCount++;
+        for (let pid in this.state.pets) {
+            let peq = this.state.pets[pid].equipment;
+            if (peq?.weapon === itemKey) equippedCount++;
+            if (peq?.armor === itemKey) equippedCount++;
+        }
         return Math.max(0, item.count - equippedCount);
     },
 
@@ -3105,10 +3605,16 @@ const game = {
         if (hasteChk) hasteChk.checked = !!this.state.settings.autoBuyHaste;
         let secondHasteChk = document.getElementById('cfg-auto-second-haste');
         if (secondHasteChk) secondHasteChk.checked = !!this.state.settings.autoBuySecondHaste;
+        let petHpTh = document.getElementById('cfg-pet-hp-threshold');
+        if (petHpTh) petHpTh.value = this.state.settings.autoPetHpThreshold || 30;
+        let petHpType = document.getElementById('cfg-pet-hp-type');
+        if (petHpType) petHpType.value = this.state.settings.autoPetHpType || 'potion_red';
     },
     updateSettings: function() {
         this.state.settings.autoHpThreshold = parseInt(document.getElementById('cfg-hp-threshold').value) || 5;
         this.state.settings.autoHpType = document.getElementById('cfg-hp-type').value;
+        this.state.settings.autoPetHpThreshold = parseInt(document.getElementById('cfg-pet-hp-threshold').value) || 30;
+        this.state.settings.autoPetHpType = document.getElementById('cfg-pet-hp-type').value;
         this.state.settings.autoBuyHp = document.getElementById('cfg-auto-buy').checked;
         this.state.settings.autoBuyMp = document.getElementById('cfg-auto-mp').checked;
         this.state.settings.autoBuyWis = document.getElementById('cfg-auto-wis').checked;
@@ -3609,8 +4115,70 @@ const game = {
             if(this.state.targetMonster.hp <= 0) this.monsterDied();
         }
     },
+    chooseMonsterTarget: function() {
+        const active = this.getActivePetData();
+        const hasPet = active && this.isPetAlive(this.state.activePet);
+        const hpPct = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        if (hpPct < 0.05 && hasPet) this.state.petProtectMode = true;
+        if (hpPct >= 0.30 || !hasPet) this.state.petProtectMode = false;
+        if (!hasPet) return 'player';
+        if (this.state.petProtectMode) return 'pet';
+        let chance = 0.12;
+        if (active.def.id === 'guardian_wolf') chance = hpPct < 0.35 ? 0.5 : 0.35;
+        else if (active.def.armorBreak) chance = 0.25;
+        else if (active.def.magic) chance = 0.2;
+        else if (active.def.buff) chance = 0.15;
+        if (this.state.targetMonster?.isBoss) chance += 0.08;
+        return Math.random() < chance ? 'pet' : 'player';
+    },
+    getPetAC: function(petId) {
+        const def = PETS[petId], data = this.state.pets?.[petId];
+        if (!def || !data) return 10;
+        const eq = this.getPetEquipStats(petId);
+        return def.ac - Math.floor(this.getPetLevel(petId) / 6) + eq.ac + (data.evolved ? -3 : 0);
+    },
+    takePetMagicDmg: function(petId, base) {
+        const data = this.state.pets?.[petId];
+        if (!data) return 0;
+        const dmg = Math.max(1, Math.floor(base * (data.evolved ? 0.82 : 1)));
+        data.hp = Math.max(0, data.hp - dmg);
+        if (data.hp <= 0) this.killPet(petId, '被魔法擊倒。');
+        else this.renderPets();
+        return dmg;
+    },
+    monsterAttackPet: function() {
+        const petId = this.state.activePet;
+        const active = this.getActivePetData();
+        if (!active || !this.isPetAlive(petId)) return false;
+        let roll = rollDice('1d20');
+        let isHit = false, isCrit = false;
+        const dbf = this.state.targetMonster.debuffs || {};
+        let darknessPenalty = (dbf.darkness > 0) ? -5 : 0;
+        let diseasePenalty = (dbf.disease > 0) ? -4 : 0;
+        let monsterLvl = this.state.targetMonster.level;
+        let extraHit = Math.floor(monsterLvl / 2) + Math.floor(monsterLvl / 10) * 2;
+        if (this.state.targetMonster.hitBonus) extraHit += this.state.targetMonster.hitBonus;
+        if(roll === 1) isHit = false;
+        else if(roll === 20) { isHit = true; isCrit = true; }
+        else if(roll + extraHit + darknessPenalty + diseasePenalty + (monsterLvl - active.data.level) >= 10 - this.getPetAC(petId)) isHit = true;
+        if (!isHit) {
+            this.logCombat(`${this.state.targetMonster.name} 攻擊 ${this.getPetDisplayName(petId)}，但沒有命中。`);
+            return true;
+        }
+        let parts = this.state.targetMonster.dice.split('+');
+        let dDmg = isCrit ? parseInt(parts[0].split('d')[1]) : rollDice(parts[0]);
+        let baseD = parts[1] ? parseInt(parts[1]) : 0;
+        if (dbf.weapon_break > 0) baseD -= 10;
+        let dmg = Math.max(1, dDmg + baseD - (active.data.evolved ? 2 : 0));
+        active.data.hp = Math.max(0, active.data.hp - dmg);
+        this.logCombat(`${this.state.targetMonster.name} 命中了 ${this.getPetDisplayName(petId)}，造成 ${dmg} 點傷害。`, 'danger');
+        if (active.data.hp <= 0) this.killPet(petId, '承受怪物攻擊。');
+        else this.renderPets();
+        return true;
+    },
     monsterAttack: function() {
         if(!this.state.targetMonster || this.state.hp <= 0) return;
+        const monsterTarget = this.chooseMonsterTarget();
         
         if (this.state.buffs.tame_monster && !this.state.targetMonster.isBoss) {
             if (Math.random() < (1 / this.state.targetMonster.level)) {
@@ -3626,8 +4194,10 @@ const game = {
         
                 let specialMagic = this.state.targetMonster.magicProfile;
         if (specialMagic && Math.random() < (specialMagic.chance || 0.35)) {
-            let magicDmg = this.takeMagicDmg(rollDice(specialMagic.dice || '4d10+10'));
-            this.logCombat(`${this.state.targetMonster.name} ${specialMagic.text}，造成 ${magicDmg} 點魔法傷害！`, 'danger');
+            const targetPetId = this.state.activePet;
+            const targetName = monsterTarget === 'pet' ? this.getPetDisplayName(targetPetId) : '你';
+            let magicDmg = monsterTarget === 'pet' ? this.takePetMagicDmg(targetPetId, rollDice(specialMagic.dice || '4d10+10')) : this.takeMagicDmg(rollDice(specialMagic.dice || '4d10+10'));
+            this.logCombat(`${this.state.targetMonster.name} ${specialMagic.text}，對${targetName}造成 ${magicDmg} 點魔法傷害！`, 'danger');
             this.updateUI();
             if(this.state.hp <= 0) this.checkPlayerDeath();
             return;
@@ -3639,10 +4209,16 @@ const game = {
         }
 
         if (this.state.targetMonster.companionProfile && Math.random() < (this.state.targetMonster.companionProfile.chance || 0.45)) {
-            let petDmg = this.takeMagicDmg(rollDice(this.state.targetMonster.companionProfile.dice || '3d10+10'));
-            this.logCombat(`${this.state.targetMonster.companionProfile.text}，造成 ${petDmg} 點傷害。`, 'danger');
+            const targetPetId = this.state.activePet;
+            const targetName = monsterTarget === 'pet' ? this.getPetDisplayName(targetPetId) : '你';
+            let petDmg = monsterTarget === 'pet' ? this.takePetMagicDmg(targetPetId, rollDice(this.state.targetMonster.companionProfile.dice || '3d10+10')) : this.takeMagicDmg(rollDice(this.state.targetMonster.companionProfile.dice || '3d10+10'));
+            this.logCombat(`${this.state.targetMonster.companionProfile.text}，對${targetName}造成 ${petDmg} 點傷害。`, 'danger');
             this.updateUI();
             if(this.state.hp <= 0) this.checkPlayerDeath();
+        }
+        if (monsterTarget === 'pet' && this.monsterAttackPet()) {
+            this.updateUI();
+            return;
         }
 if(Math.random()*100 <= this.getER()) {
             this.logCombat(`你閃避了 ${this.state.targetMonster.name} 的攻擊！`, 'success');
@@ -3674,6 +4250,12 @@ if(Math.random()*100 <= this.getER()) {
             let dmg = Math.max(1, dDmg + baseD - dr); 
             if (this.state.buffs.immune_to_harm) dmg = Math.max(1, Math.floor(dmg * 0.7));
             if (this.state.buffs.knight_reduction_armor && this.state.classId === 'knight' && this.state.hp <= this.state.maxHp * 0.35) dmg = Math.max(1, Math.floor(dmg * 0.6));
+            const guardPetName = this.state.activePet ? this.getPetDisplayName(this.state.activePet) : '';
+            let petGuard = this.getPetGuardReduction(dmg);
+            if (petGuard > 0) {
+                dmg -= petGuard;
+                this.logCombat(`${guardPetName} 擋下了 ${petGuard} 點傷害。`, 'success');
+            }
             
             this.state.hp -= dmg;
             this.logCombat(`${this.state.targetMonster.name} 命中了你，造成 ${dmg} 點傷害。`, 'danger');
@@ -3767,9 +4349,22 @@ if(Math.random()*100 <= this.getER()) {
         }
         return drops[drops.length - 1] || null;
     },
+    rollPetEquipmentDrop: function(m, multi = 1) {
+        if (!m || m.level < 30 || m.level > 50) return false;
+        const pools = [];
+        if (m.level >= 30 && m.level <= 35) pools.push({ id: 'pet_fang_golden', rate: 0.035 }, { id: 'pet_armor_cross', rate: 0.03 });
+        if (m.level >= 36 && m.level <= 42) pools.push({ id: 'pet_fang_doom', rate: 0.03 }, { id: 'pet_armor_mithril', rate: 0.025 });
+        if (m.level >= 43 && m.level <= 50) pools.push({ id: 'pet_fang_divine', rate: 0.02 }, { id: 'pet_armor_chain', rate: 0.018 });
+        let dropped = false;
+        pools.forEach(drop => {
+            if (this.awardMonsterDrop(m, { id: drop.id, rate: drop.rate * multi })) dropped = true;
+        });
+        return dropped;
+    },
     monsterDied: function() {
         let m = this.state.targetMonster;
         this.state.exp += m.exp;
+        this.gainPetExp(Math.max(1, Math.floor(m.exp * (m.isBoss ? 0.18 : 0.35))));
         
         let multi = m.isBoss ? 10 : 1;
         let goldMsg = '';
@@ -3796,6 +4391,11 @@ if(Math.random()*100 <= this.getER()) {
             if(Math.random()*100 < 0.5 * multi) { this.addInventory('scroll_weapon',1,0,false); this.logSystem(`${m.name} 給你 對武器施法的卷軸。`, 'reward'); }
             if(Math.random()*100 < 0.01 * multi) { this.addInventory('scroll_weapon_blessed',1,0,false); this.logSystem(`${m.name} 給你 受祝福的 對武器施法的卷軸。`, 'blessed'); }
         }
+        if (lv >= 20 && lv <= 30 && Math.random()*100 < 0.08 * multi) {
+            this.addInventory('pet_evolution_fruit', 1, 0, false);
+            this.logSystem(`${m.name} 給你 寵物進化果實。`, 'reward');
+        }
+        this.rollPetEquipmentDrop(m, multi);
         if (lv >= 31) {
             if(Math.random()*100 < 0.1 * multi) { this.addInventory('scroll_accessory',1,0,false); this.logSystem(`${m.name} 給你 對飾品施法的卷軸。`, 'reward'); }
         }
@@ -3950,6 +4550,12 @@ if(Math.random()*100 <= this.getER()) {
                 
                 this.state.mp = Math.min(this.state.maxMp, this.state.mp + r);
             }
+            const active = this.getActivePetData();
+            if (active && this.isPetAlive(this.state.activePet)) {
+                active.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), active.data.hp + Math.max(1, Math.floor(active.data.level / 6)));
+                active.data.mp = Math.min(this.getPetMaxMp(this.state.activePet), active.data.mp + Math.max(1, Math.floor(active.data.level / 5)));
+                this.renderPets();
+            }
             this.updateUI();
         }, 16000); 
         
@@ -3958,6 +4564,9 @@ if(Math.random()*100 <= this.getER()) {
             
             let needUpdate = false;
             let availSpells = this.getAvailableSpells();
+            Object.keys(this.state.pets || {}).forEach(pid => this.normalizePetVitals(pid));
+            this.renderPetStatus();
+            if (document.getElementById('tab-pet') && !document.getElementById('tab-pet').classList.contains('hidden')) this.renderPets();
             
             if (this.state.buffs.petrified > 0 || this.state.buffs.heal_erosion > 0 || this.state.buffs.poison_storm > 0 || this.state.buffs.player_weapon_break > 0 || this.state.buffs.stun > 0) {
                 if (this.state.settings.autoBuffs.includes('cancel') && this.state.mp >= 40) {
@@ -4243,6 +4852,7 @@ if(Math.random()*100 <= this.getER()) {
                 }
                 
                 if(this.state.potionCooldown > 0) this.state.potionCooldown--;
+                if(this.state.petPotionCooldown > 0) this.state.petPotionCooldown--;
                 if(this.state.potionCooldown <= 0 && this.state.hp < this.state.maxHp && this.state.hp <= this.state.settings.autoHpThreshold) {
                     let type = this.state.settings.autoHpType;
                     let potKey = null;
@@ -4254,6 +4864,16 @@ if(Math.random()*100 <= this.getER()) {
                         this.logSystem(`自動購買了 100 瓶 ${ITEMS[type].name}。`);
                     }
                     if(potKey && this.state.inventory[potKey].count > 0) { this.usePotion(potKey); this.state.potionCooldown = 1; }
+                }
+                const activePet = this.getActivePetData();
+                if(activePet && this.isPetAlive(this.state.activePet) && this.state.petPotionCooldown <= 0) {
+                    const maxPetHp = this.getPetMaxHp(this.state.activePet);
+                    const petThreshold = Math.max(1, parseInt(this.state.settings.autoPetHpThreshold) || 30);
+                    if(activePet.data.hp < maxPetHp && activePet.data.hp <= Math.floor(maxPetHp * petThreshold / 100)) {
+                        let petPotType = this.state.settings.autoPetHpType || 'potion_red';
+                        let petPotKey = Object.keys(this.state.inventory).find(k => this.state.inventory[k].itemId === petPotType);
+                        if(petPotKey && this.state.inventory[petPotKey].count > 0 && this.usePotionOnPet(petPotKey)) this.state.petPotionCooldown = 1;
+                    }
                 }
                 
                 if (this.state.settings.autoBuyMp && (!this.state.buffs.potion_blue || this.state.buffs.potion_blue <= 0)) {
@@ -4328,6 +4948,7 @@ if(Math.random()*100 <= this.getER()) {
         clearTimeout(this.state.battleLoop);
         clearTimeout(this.state.magicLoop);
         clearTimeout(this.state.monsterLoop);
+        clearTimeout(this.state.petLoop);
         this.state.isPlaying = true;
         if(!this.state.targetMonster) this.spawnMonster();
         
@@ -4366,16 +4987,27 @@ if(Math.random()*100 <= this.getER()) {
             if (this.state.targetMonster?.debuffs?.slow > 0 && !this.state.targetMonster.isBoss) speed += 1000;
             this.state.monsterLoop = setTimeout(monsterLoopFn, speed);
         };
+
+        const petLoopFn = () => {
+            if(!this.state.isPlaying || this.state.hp <= 0) return;
+            if(this.state.targetMonster && !(this.state.buffs.petrified > 0) && !(this.state.buffs.stun > 0)) this.petAct();
+            const active = this.getActivePetData();
+            const baseSpeed = active ? active.def.speed : 3000;
+            const lvl = active ? Math.max(1, parseInt(active.data.level) || 1) : 1;
+            this.state.petLoop = setTimeout(petLoopFn, Math.max(1400, baseSpeed - lvl * 18));
+        };
         
         this.state.battleLoop = setTimeout(playerLoopFn, 1000);
         this.state.magicLoop = setTimeout(magicLoopFn, 3000);
         this.state.monsterLoop = setTimeout(monsterLoopFn, 2000);
+        this.state.petLoop = setTimeout(petLoopFn, 1800);
     },
     stopBattle: function() {
         this.state.isPlaying = false;
         clearTimeout(this.state.battleLoop);
         clearTimeout(this.state.magicLoop);
         clearTimeout(this.state.monsterLoop);
+        clearTimeout(this.state.petLoop);
         clearTimeout(this.state.mapChangeLoop);
     }
 };
