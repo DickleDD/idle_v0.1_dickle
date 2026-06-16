@@ -1658,6 +1658,9 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
 })();
 
 const LEVEL_BONUS_STAT_CAP = 35;
+const BACKGROUND_CATCHUP_MIN_SECONDS = 10;
+const BACKGROUND_CATCHUP_MAX_SECONDS = 6 * 60 * 60;
+const BACKGROUND_CATCHUP_MAX_KILLS = 600;
 
 const game = {
     state: {
@@ -1669,11 +1672,14 @@ const game = {
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoPetHpThreshold: 30, autoPetHpType: 'potion_red', autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false
+        potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false,
+        lastActiveAt: Date.now()
     },
+    backgroundHandlersReady: false,
 
     init: function() {
         this.renderMapSelect();
+        this.setupBackgroundCatchupHandlers();
         this.checkSaveFile();
     },
 
@@ -1734,6 +1740,7 @@ const game = {
         return {
             classId: this.state.classId, level: this.state.level, exp: this.state.exp, adena: this.state.adena,
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
+            lastActiveAt: this.state.lastActiveAt || Date.now(),
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints, bonusPointsGrantedLevel: this.state.bonusPointsGrantedLevel, bonusPointMigrationV1: this.state.bonusPointMigrationV1,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
             pets: this.state.pets, activePet: this.state.activePet,
@@ -1741,6 +1748,7 @@ const game = {
         };
     },
     saveGame: function() {
+        this.markActiveTimestamp(true);
         const saveData = this.getSaveData();
         localStorage.setItem('lineageIdleSave', JSON.stringify(saveData));
         this.logSystem('遊戲進度已儲存。', 'reward');
@@ -1914,6 +1922,7 @@ const game = {
                 this.calculateMaxHpMp();
                 this.state.hp = parseInt(savedData.hp) || this.state.maxHp;
                 this.state.mp = parseInt(savedData.mp) || this.state.maxMp;
+                this.state.lastActiveAt = parseInt(savedData.lastActiveAt) || Date.now();
                 
                 this.updateUI();
                 this.renderInventory();
@@ -1940,6 +1949,7 @@ const game = {
                 this.migrateBonusPointsFromOldSave();
                 let loadedLevelUps = this.checkLevelUp();
                 if (loadedLevelUps > 0) this.logSystem(`讀檔時補升 ${loadedLevelUps} 級，已修正超過100%的經驗值。`, 'reward');
+                this.applyBackgroundCatchup('離線進度');
                 localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
                 this.updateUI();
                 
@@ -2264,7 +2274,7 @@ const game = {
             `);
         });
     },
-    gainPetExp: function(exp) {
+    gainPetExp: function(exp, silent = false) {
         const active = this.getActivePetData();
         if (!active) return;
         active.data.exp = Math.max(0, (active.data.exp || 0) + Math.max(1, Math.floor(exp)));
@@ -2274,8 +2284,8 @@ const game = {
             active.data.level++;
             leveled = true;
         }
-        if (leveled) this.logSystem(`${active.def.name} 成長到了 Lv.${active.data.level}。`, 'reward');
-        this.renderPets();
+        if (leveled && !silent) this.logSystem(`${active.def.name} 成長到了 Lv.${active.data.level}。`, 'reward');
+        if (!silent) this.renderPets();
     },
     petAct: function() {
         const active = this.getActivePetData();
@@ -2579,6 +2589,7 @@ const game = {
         this.calculateMaxHpMp();
         this.state.hp = this.state.maxHp;
         this.state.mp = this.state.maxMp;
+        this.markActiveTimestamp(true);
         this.updateUI();
         this.renderInventory();
         this.renderSkills();
@@ -4676,7 +4687,7 @@ if(Math.random()*100 <= this.getER()) {
         if (m.level < 70) return ['gem_high_diamond','gem_high_ruby','gem_high_sapphire','gem_high_emerald','scroll_armor','scroll_weapon'];
         return ['gem_high_diamond','gem_high_ruby','gem_high_sapphire','gem_high_emerald','scroll_armor_blessed','scroll_weapon_blessed','ancient_scroll'];
     },
-    awardMonsterDrop: function(m, drop, forceDrop = false) {
+    awardMonsterDrop: function(m, drop, forceDrop = false, silent = false) {
         if (!drop || this.isRemovedSystemItem(drop.id) || !ITEMS[drop.id]) return false;
         if (m && m.isBoss && this.isBossTrashDrop(drop.id)) return false;
         if (!forceDrop && Math.random() * 100 >= drop.rate) return false;
@@ -4685,7 +4696,7 @@ if(Math.random()*100 <= this.getER()) {
         if (def.type === 'book' && this.state.spells.includes(def.spellId)) {
             let sell = def.sellPrice || BOOK_SELL_PRICE_OVERRIDES[drop.id] || 100 * Math.pow(SPELLS[def.spellId].level, 2);
             this.state.adena += sell;
-            this.logSystem(`賣出重複的 ${def.name} 獲得 ${sell} 金幣。`);
+            if (!silent) this.logSystem(`賣出重複的 ${def.name} 獲得 ${sell} 金幣。`);
             return true;
         }
 
@@ -4703,7 +4714,7 @@ if(Math.random()*100 <= this.getER()) {
         let name = def.name;
         if (def.isUndeadSlayer) name += ' (弱點加成)';
         if (isBlessed) name = '受祝福的 ' + name;
-        this.logSystem(`${m.name} 給你 ${name}${drop.count > 1 ? ' x' + drop.count : ''}。`, isBlessed ? 'blessed' : 'reward');
+        if (!silent) this.logSystem(`${m.name} 給你 ${name}${drop.count > 1 ? ' x' + drop.count : ''}。`, isBlessed ? 'blessed' : 'reward');
         return true;
     },
     pickWeightedDrop: function(drops) {
@@ -4716,7 +4727,7 @@ if(Math.random()*100 <= this.getER()) {
         }
         return drops[drops.length - 1] || null;
     },
-    rollPetEquipmentDrop: function(m, multi = 1) {
+    rollPetEquipmentDrop: function(m, multi = 1, silent = false) {
         if (!m || m.level < 30 || m.level > 50) return false;
         const pools = [];
         if (m.level >= 30 && m.level <= 35) pools.push({ id: 'pet_fang_golden', rate: 0.035 }, { id: 'pet_armor_cross', rate: 0.03 });
@@ -4724,7 +4735,7 @@ if(Math.random()*100 <= this.getER()) {
         if (m.level >= 43 && m.level <= 50) pools.push({ id: 'pet_fang_divine', rate: 0.02 }, { id: 'pet_armor_chain', rate: 0.018 });
         let dropped = false;
         pools.forEach(drop => {
-            if (this.awardMonsterDrop(m, { id: drop.id, rate: drop.rate * multi })) dropped = true;
+            if (this.awardMonsterDrop(m, { id: drop.id, rate: drop.rate * multi }, false, silent)) dropped = true;
         });
         return dropped;
     },
@@ -4874,10 +4885,278 @@ if(Math.random()*100 <= this.getER()) {
         return leveled;
     },
 
+    isGameLoaded: function() {
+        const main = document.getElementById('main-ui');
+        return !!main && !main.classList.contains('hidden');
+    },
+    setupBackgroundCatchupHandlers: function() {
+        if (this.backgroundHandlersReady) return;
+        this.backgroundHandlersReady = true;
+        document.addEventListener('visibilitychange', () => {
+            if (!this.isGameLoaded()) return;
+            if (document.hidden) this.persistActiveTimestamp();
+            else this.applyBackgroundCatchup('背景進度');
+        });
+        window.addEventListener('focus', () => {
+            if (this.isGameLoaded()) this.applyBackgroundCatchup('背景進度');
+        });
+        window.addEventListener('pagehide', () => this.persistActiveTimestamp());
+        window.addEventListener('beforeunload', () => this.persistActiveTimestamp());
+    },
+    markActiveTimestamp: function(force = false) {
+        if (!force && typeof document !== 'undefined' && document.hidden) return;
+        this.state.lastActiveAt = Date.now();
+    },
+    persistActiveTimestamp: function() {
+        if (!this.isGameLoaded()) return;
+        this.markActiveTimestamp(true);
+        try {
+            localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
+        } catch (e) {}
+    },
+    getBackgroundMonsters: function() {
+        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) return [];
+        if (this.state.currentMap === 'antaras_lair' && this.state.antarasDeadUntil > Date.now()) return [];
+        let map = MAPS[this.state.currentMap];
+        if (!map || !Array.isArray(map.monsters)) return [];
+        let normal = map.monsters.filter(m => m && !m.isBoss && (m.weight || 0) > 0);
+        if (normal.length > 0) return normal;
+        return map.monsters.filter(m => m && !m.isBoss && (m.weight || 0) >= 0);
+    },
+    pickBackgroundMonster: function(monsters) {
+        let total = monsters.reduce((sum, m) => sum + Math.max(1, m.weight || 1), 0);
+        let r = Math.random() * total;
+        for (let m of monsters) {
+            r -= Math.max(1, m.weight || 1);
+            if (r <= 0) return m;
+        }
+        return monsters[monsters.length - 1] || null;
+    },
+    getBackgroundWeightedAverage: function(monsters, field, fallback = 1) {
+        let totalWeight = 0;
+        let totalValue = 0;
+        monsters.forEach(m => {
+            let weight = Math.max(1, m.weight || 1);
+            let value = Number(m[field]);
+            if (!Number.isFinite(value)) value = fallback;
+            totalWeight += weight;
+            totalValue += value * weight;
+        });
+        return totalWeight > 0 ? totalValue / totalWeight : fallback;
+    },
+    getBackgroundAttackSpeedSeconds: function() {
+        let wKey = this.state.equipment.weapon;
+        let speed = (wKey && this.state.inventory[wKey]) ? (ITEMS[this.state.inventory[wKey].itemId]?.speed || 1200) : 1200;
+        let reduction = 0;
+        if (this.state.buffs.haste || this.state.buffs.potion_haste || this.state.currentMap === 'hidden_valley') reduction += 0.2;
+        if (this.state.buffs.second_haste) reduction += 0.15;
+        if (this.state.buffs.greater_haste) reduction += 0.3;
+        if (this.state.buffs.elf_dance_of_fire && this.isElfMeleeWeaponStyle()) reduction += 0.15;
+        return Math.max(0.35, speed * (1 - Math.min(0.75, reduction)) / 1000);
+    },
+    estimateBackgroundKillSeconds: function(monsters) {
+        let avgHp = Math.max(1, this.getBackgroundWeightedAverage(monsters, 'hp', 80));
+        let avgLevel = this.getBackgroundWeightedAverage(monsters, 'level', this.state.level);
+        let wKey = this.state.equipment.weapon;
+        let wpn = wKey && this.state.inventory[wKey] ? this.state.inventory[wKey] : null;
+        let wDef = wpn ? ITEMS[wpn.itemId] : null;
+        let diceMax = getDiceMax(wDef?.dice || '1d2') + (wpn ? Number(wpn.enchant) || 0 : 0);
+        let hitDamage = Math.max(2, Math.floor(diceMax * 0.55) + this.getMeleeDmg());
+        let hitRate = 0.58 + this.getMeleeHit() * 0.015 + (this.state.level - avgLevel) * 0.012;
+        hitRate = Math.max(0.30, Math.min(0.95, hitRate));
+        let dps = hitDamage * hitRate / this.getBackgroundAttackSpeedSeconds();
+
+        let sId = this.state.settings.autoAttack;
+        let spell = SPELLS[sId];
+        if (spell && spell.type === 'attack' && this.getAvailableSpells().includes(sId) && this.state.level >= this.getSpellRequiredLevel(sId)) {
+            let cost = this.getSpellCost(spell);
+            if (this.state.maxMp >= cost && this.state.settings.autoAttackMpThreshold <= this.state.maxMp) {
+                let magicDamage = Math.max(1, getDiceMax(spell.dice || '1d4') * 0.55 + (spell.baseDmg || 0) + this.getMagicDmg());
+                dps += (magicDamage / 3) * 0.65;
+            }
+        }
+
+        const active = this.getActivePetData();
+        if (active && this.isPetAlive(this.state.activePet)) {
+            let lvl = Math.max(1, parseInt(active.data.level) || 1);
+            let petSpeed = Math.max(1.4, ((active.def.speed || 3000) - lvl * 18) / 1000);
+            dps += Math.max(1, lvl * 0.45) / petSpeed;
+        }
+
+        return Math.max(2.5, Math.min(90, avgHp / Math.max(1, dps) + 0.8));
+    },
+    applyBackgroundRegen: function(seconds) {
+        let ticks = Math.floor(seconds / 16);
+        if (ticks <= 0) return;
+        if(this.state.hp > 0 && this.state.hp < this.state.maxHp && !this.state.buffs.berserkers) {
+            let con = this.getEffStat('con');
+            let h = con<=13?1:con-12;
+            if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
+            for(let slot in this.state.equipment) {
+                let itemKey = this.state.equipment[slot];
+                if(itemKey && this.state.inventory[itemKey]) {
+                    let def = ITEMS[this.state.inventory[itemKey].itemId];
+                    if(def && def.hpRegen) h += def.hpRegen;
+                }
+            }
+            this.state.hp = Math.min(this.state.maxHp, this.state.hp + Math.max(0, h) * ticks);
+        }
+        if(this.state.mp < this.state.maxMp) {
+            let wis = this.getEffStat('wis');
+            let r = wis<=14?1:wis<=16?2:wis===17?3:4;
+            if(this.state.buffs.potion_blue) r += (wis<=11?1:1+(wis-10));
+            if(this.state.buffs.potion_wisdom) r += 2;
+            for(let slot in this.state.equipment) {
+                let itemKey = this.state.equipment[slot];
+                if(itemKey && this.state.inventory[itemKey]) {
+                    let def = ITEMS[this.state.inventory[itemKey].itemId];
+                    if(def && def.mpRegen) r += def.mpRegen;
+                }
+            }
+            r += this.getSetBonuses().mpRegen || 0;
+            let robeKey = this.state.equipment.armor;
+            if(robeKey && this.state.inventory[robeKey]) {
+                let robeDef = ITEMS[this.state.inventory[robeKey].itemId];
+                if (robeDef && robeDef.name === '黑長者長袍') r += 12;
+            }
+            let shoesKey = this.state.equipment.boots;
+            if(shoesKey && this.state.inventory[shoesKey]) {
+                let shoesDef = ITEMS[this.state.inventory[shoesKey].itemId];
+                if (shoesDef && shoesDef.name === '黑長者涼鞋') r += 5;
+            }
+            this.state.mp = Math.min(this.state.maxMp, this.state.mp + Math.max(0, r) * ticks);
+        }
+        const active = this.getActivePetData();
+        if (active && this.isPetAlive(this.state.activePet)) {
+            active.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), active.data.hp + Math.max(1, Math.floor(active.data.level / 6)) * ticks);
+            active.data.mp = Math.min(this.getPetMaxMp(this.state.activePet), active.data.mp + Math.max(1, Math.floor(active.data.level / 5)) * ticks);
+        }
+    },
+    advanceBackgroundBuffs: function(seconds) {
+        for(let key in this.state.buffs) {
+            if(this.state.buffs[key] > 0) {
+                this.state.buffs[key] -= seconds;
+                if(this.state.buffs[key] <= 0) delete this.state.buffs[key];
+            }
+        }
+        if (this.state.targetMonster && this.state.targetMonster.debuffs) {
+            for(let key in this.state.targetMonster.debuffs) {
+                this.state.targetMonster.debuffs[key] -= seconds;
+                if(this.state.targetMonster.debuffs[key] <= 0) delete this.state.targetMonster.debuffs[key];
+            }
+        }
+    },
+    rollBackgroundAdena: function(m) {
+        if (!m || !Array.isArray(m.adena)) return 0;
+        if (!(m.adenaAlways || Math.random() < 0.70)) return 0;
+        return Math.max(0, m.adena[0] + Math.floor(Math.random() * (m.adena[1] - m.adena[0] + 1)));
+    },
+    rollBackgroundExtraDrops: function(m, multi = 1) {
+        let count = 0;
+        const addSilent = (id, rate, itemCount = 1, blessed = false) => {
+            if(Math.random() * 100 < rate) {
+                this.addInventory(id, itemCount, 0, blessed);
+                count++;
+            }
+        };
+        let lv = m.level || 1;
+        if (lv >= 11) {
+            addSilent('scroll_armor', 0.5 * multi);
+            addSilent('scroll_armor_blessed', 0.01 * multi);
+        }
+        if (lv >= 21) {
+            addSilent('scroll_weapon', 0.5 * multi);
+            addSilent('scroll_weapon_blessed', 0.01 * multi);
+        }
+        if (lv >= 20 && lv <= 30) addSilent('pet_evolution_fruit', 0.08 * multi);
+        if (lv >= 31) addSilent('scroll_accessory', 0.1 * multi);
+        if (this.rollPetEquipmentDrop(m, multi, true)) count++;
+        return count;
+    },
+    applyBackgroundCatchup: function(label = '背景進度') {
+        if (!this.isGameLoaded()) return { seconds: 0, kills: 0 };
+        let now = Date.now();
+        let last = parseInt(this.state.lastActiveAt) || now;
+        let elapsed = Math.floor((now - last) / 1000);
+        if (elapsed < BACKGROUND_CATCHUP_MIN_SECONDS) {
+            this.state.lastActiveAt = now;
+            return { seconds: 0, kills: 0 };
+        }
+
+        let seconds = Math.min(elapsed, BACKGROUND_CATCHUP_MAX_SECONDS);
+        this.state.lastActiveAt = now;
+        this.applyBackgroundRegen(seconds);
+        this.advanceBackgroundBuffs(seconds);
+
+        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) {
+            this.forceLeaveHiddenValley();
+            this.persistActiveTimestamp();
+            return { seconds, kills: 0 };
+        }
+
+        let monsters = this.getBackgroundMonsters();
+        if (!monsters.length || this.state.hp <= 0) {
+            this.updateUI();
+            this.persistActiveTimestamp();
+            return { seconds, kills: 0 };
+        }
+
+        let killSeconds = this.estimateBackgroundKillSeconds(monsters);
+        let kills = Math.min(BACKGROUND_CATCHUP_MAX_KILLS, Math.floor(seconds / killSeconds));
+        if (kills <= 0) {
+            this.updateUI();
+            this.persistActiveTimestamp();
+            return { seconds, kills: 0 };
+        }
+
+        let expGain = 0;
+        let adenaGain = 0;
+        let dropCount = 0;
+        const bgPetBefore = this.getActivePetData();
+        let bgPetBeforeLevel = bgPetBefore ? Math.max(1, parseInt(bgPetBefore.data.level) || 1) : 0;
+        for (let i = 0; i < kills; i++) {
+            let m = this.pickBackgroundMonster(monsters);
+            if (!m) continue;
+            let exp = Math.max(0, m.exp || 0);
+            this.state.exp += exp;
+            expGain += exp;
+            this.gainPetExp(Math.max(1, Math.floor(exp * 0.35)), true);
+
+            let adena = this.rollBackgroundAdena(m);
+            this.state.adena += adena;
+            adenaGain += adena;
+
+            dropCount += this.rollBackgroundExtraDrops(m, 1);
+            if(m.drops) {
+                m.drops.forEach(d => {
+                    if (this.awardMonsterDrop(m, d, false, true)) dropCount++;
+                });
+            }
+        }
+
+        let leveled = this.checkLevelUp();
+        const bgPetAfter = this.getActivePetData();
+        if (bgPetAfter && bgPetBeforeLevel > 0 && bgPetAfter.data.level > bgPetBeforeLevel) {
+            this.logSystem(`${bgPetAfter.def.name} 在背景狩獵中成長到了 Lv.${bgPetAfter.data.level}。`, 'reward');
+        }
+        this.renderInventory();
+        this.renderPets();
+        this.updateUI();
+        let minutes = Math.floor(seconds / 60);
+        let timeText = minutes > 0 ? `${minutes} 分鐘` : `${seconds} 秒`;
+        let dropText = dropCount > 0 ? `、${dropCount} 件物品` : '';
+        let levelText = leveled > 0 ? `，升級 ${leveled} 次` : '';
+        let cappedText = elapsed > seconds ? `（最多補算 ${Math.floor(BACKGROUND_CATCHUP_MAX_SECONDS / 3600)} 小時）` : '';
+        this.logSystem(`${label}補算 ${timeText}：擊敗 ${kills} 隻，獲得 ${expGain.toLocaleString()} 經驗、${adenaGain.toLocaleString()} 金幣${dropText}${levelText}${cappedText}。`, 'reward');
+        this.persistActiveTimestamp();
+        return { seconds, kills, expGain, adenaGain, dropCount };
+    },
+
     startLoops: function() {
         clearInterval(this.state.regenLoop);
         clearInterval(this.state.tickLoop);
         this.state.regenLoop = setInterval(() => {
+            this.markActiveTimestamp();
             if(this.state.hp > 0 && this.state.hp < this.state.maxHp && !this.state.buffs.berserkers) {
                 let con = this.getEffStat('con');
                 let h = con<=13?1:con-12;
@@ -4928,6 +5207,7 @@ if(Math.random()*100 <= this.getER()) {
         }, 16000); 
         
         this.state.tickLoop = setInterval(() => {
+            this.markActiveTimestamp();
             if(!this.state.isPlaying || this.state.hp <= 0) return;
             
             let needUpdate = false;
