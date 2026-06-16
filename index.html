@@ -113,6 +113,19 @@
                     <div>智力: <span id="ui-int" class="font-bold">8</span></div><div>額外傷害: <span id="ui-dmg" class="font-bold">0</span></div>
                     <div>精神: <span id="ui-wis" class="font-bold">8</span></div><div>額外命中: <span id="ui-hit" class="font-bold">0</span></div>
                 </div>
+                <div id="bonus-stat-panel" class="mt-4 border-t border-gray-800 pt-4 hidden">
+                    <div class="flex items-center justify-between text-lg">
+                        <span class="c-warn">獎勵點數: <span id="ui-bonus-points" class="font-bold">0</span></span>
+                        <span class="text-xs c-sys">上限 35</span>
+                    </div>
+                    <div class="grid grid-cols-5 gap-2 mt-3">
+                        <button id="bonus-stat-str" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('str')">力量+</button>
+                        <button id="bonus-stat-dex" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('dex')">敏捷+</button>
+                        <button id="bonus-stat-con" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('con')">體質+</button>
+                        <button id="bonus-stat-int" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('int')">智力+</button>
+                        <button id="bonus-stat-wis" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('wis')">精神+</button>
+                    </div>
+                </div>
                 <div class="mt-4 border-t border-gray-800 pt-4 text-xl"><span class="c-warn">金幣: <span id="ui-adena" class="font-bold">0</span></span></div>
                 <div id="ui-buffs" class="mt-3 text-sm min-h-[28px] text-gray-400"></div>
                 <div id="ui-pet-status" class="mt-4 border-t border-gray-800 pt-3 text-sm"></div>
@@ -715,7 +728,7 @@ const GEM_EXCHANGES = {
         rewards: [
             { id: 'gem_high_diamond', count: 1, weight: 7.5 }, { id: 'gem_high_ruby', count: 1, weight: 7.5 }, { id: 'gem_high_sapphire', count: 1, weight: 7.5 }, { id: 'gem_high_emerald', count: 1, weight: 7.5 },
             { id: 'crystal_elf_soul_to_mind', count: 1, weight: 3.5 }, { id: 'crystal_elf_triple_arrow', count: 1, weight: 3.5 }, { id: 'crystal_elf_storm_shot', count: 1, weight: 3.5 }, { id: 'crystal_elf_iron_skin', count: 1, weight: 3.5 },
-            { id: 'crystal_elf_release_elemental', count: 1, weight: 3.5 }, { id: 'crystal_dark_uncanny_dodge', count: 1, weight: 3.5 }, { id: 'crystal_dark_double_break', count: 1, weight: 3.5 },
+            { id: 'crystal_elf_release_elemental', count: 1, weight: 3.5 }, { id: 'crystal_elf_dance_of_fire', count: 1, weight: 3.5 }, { id: 'crystal_dark_uncanny_dodge', count: 1, weight: 3.5 }, { id: 'crystal_dark_double_break', count: 1, weight: 3.5 },
             { id: 'crystal_dark_dress_mighty', count: 1, weight: 3.5 }, { id: 'book_knight_shock_stun', count: 1, weight: 3.5 }, { id: 'book_knight_counter_barrier', count: 1, weight: 3.5 },
             { id: 'kalip_high_weapon_fragment', count: 1, weight: 12 }, { id: 'kalip_high_weapon_fragment', count: 2, weight: 6 }, { id: 'kalip_sealed_weapon_core', count: 1, weight: 8 },
             { id: 'sealed_forgotten_sword', count: 1, weight: 1.2 }, { id: 'sealed_forgotten_great_sword', count: 1, weight: 1 }, { id: 'sealed_forgotten_crossbow', count: 1, weight: 1 }, { id: 'sealed_forgotten_dual_blade', count: 1, weight: 1 }, { id: 'sealed_forgotten_staff', count: 1, weight: 0.8 }, { id: 'ancient_scroll', count: 1, weight: 0.5 },
@@ -916,7 +929,7 @@ const MAPS = {
         { id: 'lava_golem', name: '熔岩高崙', level: 68, hp: 3200, ac: -58, exp: 4800, atkSpeed: 2200, dice: '7d12+22', hitBonus: 22, weight: 38, adena: [520,900], drops: [{id:'armor_metal', rate: 1}, {id:'fire_dragon_scale', rate: 0.5}, {id:'gem_quality_diamond', rate: 1}, {id:'gem_high_diamond', rate: 0.15}] },
         { id: 'ifrit', name: '伊弗利特', level: 75, hp: 9000, ac: -70, mr: 70, exp: 6500, atkSpeed: 1600, dice: '8d10+25', hitBonus: 26, isBoss: true, weight: 10, adena: [900,1800], drops: [{id:'crystal_elf_elemental_fire', rate: 0.5}, {id:'katana', rate: 1}, {id:'fire_dragon_scale', rate: 2}, {id:'book_fire_storm', rate: 0.5}, {id:'gem_high_ruby', rate: 0.8}] },
         { id: 'phoenix', name: '不死鳥', level: 80, hp: 18000, ac: -78, mr: 85, exp: 7600, atkSpeed: 1400, dice: '8d12+28', hitBonus: 30, isBoss: true, weight: 6, adena: [1200,2400], drops: [{id:'katana', rate: 2}, {id:'scroll_weapon_blessed', rate: 0.3}, {id:'fire_dragon_scale', rate: 3}, {id:'gem_high_ruby', rate: 1}, {id:'gem_high_diamond', rate: 0.4}] },
-        { id: 'valakas', name: '巴拉卡斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+24', hitBonus: 36, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'crystal_elf_elemental_fire', rate: 0.5}, {id:'book_fire_storm', rate: 0.5}, {id:'fire_dragon_scale', rate: 5}, {id:'fire_dragon_scale_armor', rate: 0.05}, {id:'valakas_heart', rate: 0.05}, {id:'katana', rate: 3}, {id:'scroll_weapon_blessed', rate: 0.5}, {id:'gem_high_ruby', rate: 2}, {id:'gem_high_diamond', rate: 1}] }
+        { id: 'valakas', name: '巴拉卡斯', level: 93, hp: 90000, ac: -99, mr: 100, exp: 8101, atkSpeed: 2000, dice: '8d10+24', hitBonus: 36, isBoss: true, weight: 1, adena: [1305,2054], drops: [{id:'crystal_elf_elemental_fire', rate: 0.5}, {id:'crystal_elf_dance_of_fire', rate: 0.8}, {id:'book_fire_storm', rate: 0.5}, {id:'fire_dragon_scale', rate: 5}, {id:'fire_dragon_scale_armor', rate: 0.05}, {id:'valakas_heart', rate: 0.05}, {id:'katana', rate: 3}, {id:'scroll_weapon_blessed', rate: 0.5}, {id:'gem_high_ruby', rate: 2}, {id:'gem_high_diamond', rate: 1}] }
     ]},
     oren_ivory: { name: '歐瑞與象牙塔', monsters: [
         { id: 'ice_man', name: '冰人', level: 58, hp: 1400, ac: -45, exp: 3300, atkSpeed: 2000, dice: '6d10+14', hitBonus: 17, weight: 70, adena: [330,580], drops: [{id:'gem_sapphire', rate: 2}, {id:'gem_quality_sapphire', rate: 0.8}, {id:'potion_blue', rate: 2}] },
@@ -978,6 +991,7 @@ Object.assign(ITEMS, {
     crystal_elf_storm_shot: { name: '精靈水晶(暴風神射)', type: 'book', spellId: 'elf_storm_shot' },
     crystal_elf_iron_skin: { name: '精靈水晶(鋼鐵防護)', type: 'book', spellId: 'elf_iron_skin' },
     crystal_elf_elemental_fire: { name: '精靈水晶(烈焰之魂)', type: 'book', spellId: 'elf_elemental_fire' },
+    crystal_elf_dance_of_fire: { name: '精靈水晶(舞躍之火)', type: 'book', spellId: 'elf_dance_of_fire', desc: '妖精四階魔法，40級可用。裝備近戰武器時提高攻擊速度。' },
     crystal_dark_enchant_venom: { name: '黑暗精靈水晶(附加劇毒)', type: 'book', spellId: 'de_enchant_venom', price: 20000 },
     crystal_dark_shadow_armor: { name: '黑暗精靈水晶(暗影防護)', type: 'book', spellId: 'de_shadow_armor', price: 30000 },
     crystal_dark_burning_spirit: { name: '黑暗精靈水晶(燃燒鬥志)', type: 'book', spellId: 'de_burning_spirit' },
@@ -1005,7 +1019,8 @@ Object.assign(SPELLS, {
     elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
     elf_storm_shot: { id: 'elf_storm_shot', name: '暴風神射', level: 4, type: 'buff', mp: 16, duration: 1200, classes: ['elf'] },
     elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
-    elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 5, type: 'buff', mp: 25, duration: 1200, classes: ['elf'] },
+    elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 4, type: 'buff', mp: 22, duration: 1200, classes: ['elf'], desc: '妖精四階魔法，40級可用。近戰命中時有機率追加火焰魔法傷害。' },
+    elf_dance_of_fire: { id: 'elf_dance_of_fire', name: '舞躍之火', level: 4, type: 'buff', mp: 18, duration: 900, classes: ['elf'], desc: '妖精四階魔法，40級可用。只在裝備近戰武器時提高攻擊速度。' },
     de_enchant_venom: { id: 'de_enchant_venom', name: '附加劇毒', level: 1, type: 'buff', mp: 8, duration: 1200, classes: ['dark_elf'] },
     de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 1, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'] },
     de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 2, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'] },
@@ -1042,19 +1057,19 @@ Object.assign(MAPS, {
     elven_grave: { name: '精靈墓穴', monsters: [
         { id: 'wind_spirit_grave', name: '風靈', level: 55, hp: 1600, ac: -46, mr: 70, exp: 3100, atkSpeed: 1500, dice: '6d10+16', hitBonus: 20, weight: 48, adena: [360,650], ranged: true, magicProfile: { text: '風靈捲起風刃切裂你', dice: '5d10+14', chance: 0.28 }, drops: [{id:'crystal_elf_wind_shot', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.08}, {id:'gem_emerald', rate:3}, {id:'gem_quality_emerald', rate:0.8}, {id:'potion_blue', rate:5}, {id:'scroll_weapon', rate:0.4}] },
         { id: 'water_spirit_grave', name: '水靈', level: 55, hp: 1650, ac: -47, mr: 80, exp: 3150, atkSpeed: 1650, dice: '6d10+14', hitBonus: 19, weight: 48, adena: [360,650], magicProfile: { text: '水靈凝成水錐刺向你', dice: '5d10+14', chance: 0.3 }, drops: [{id:'crystal_elf_resist_magic', rate:0.35}, {id:'crystal_elf_body_to_mind', rate:0.25}, {id:'crystal_elf_soul_to_mind', rate:0.08}, {id:'gem_sapphire', rate:3}, {id:'gem_quality_sapphire', rate:0.8}, {id:'potion_blue', rate:8}, {id:'scroll_armor', rate:0.4}] },
-        { id: 'fire_spirit_grave', name: '火靈', level: 56, hp: 1700, ac: -48, mr: 70, exp: 3250, atkSpeed: 1500, dice: '6d12+16', hitBonus: 21, weight: 46, adena: [380,680], magicProfile: { text: '火靈射出灼熱火箭', dice: '5d12+14', chance: 0.3 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.35}, {id:'crystal_elf_elemental_fire', rate:0.04}, {id:'gem_ruby', rate:3}, {id:'gem_quality_ruby', rate:0.8}, {id:'potion_haste', rate:4}, {id:'scroll_weapon', rate:0.5}] },
+        { id: 'fire_spirit_grave', name: '火靈', level: 56, hp: 1700, ac: -48, mr: 70, exp: 3250, atkSpeed: 1500, dice: '6d12+16', hitBonus: 21, weight: 46, adena: [380,680], magicProfile: { text: '火靈射出灼熱火箭', dice: '5d12+14', chance: 0.3 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.35}, {id:'crystal_elf_dance_of_fire', rate:0.1}, {id:'crystal_elf_elemental_fire', rate:0.04}, {id:'gem_ruby', rate:3}, {id:'gem_quality_ruby', rate:0.8}, {id:'potion_haste', rate:4}, {id:'scroll_weapon', rate:0.5}] },
         { id: 'earth_spirit_grave', name: '地靈', level: 56, hp: 1850, ac: -50, mr: 75, exp: 3300, atkSpeed: 1750, dice: '6d10+18', hitBonus: 20, weight: 46, adena: [380,680], magicProfile: { text: '地靈以地牙束縛你的腳步', dice: '5d10+16', chance: 0.28 }, drops: [{id:'crystal_elf_earth_skin', rate:0.35}, {id:'crystal_elf_iron_skin', rate:0.05}, {id:'gem_diamond', rate:3}, {id:'gem_quality_diamond', rate:0.8}, {id:'scroll_armor', rate:0.5}, {id:'potion_blue', rate:5}] },
         { id: 'wind_spirit_slave', name: '風靈奴隸', level: 62, hp: 2600, ac: -56, mr: 80, exp: 4200, atkSpeed: 1450, dice: '7d10+22', hitBonus: 24, weight: 34, adena: [520,900], ranged: true, magicProfile: { text: '風靈奴隸召下極道落雷', dice: '6d10+20', chance: 0.34 }, drops: [{id:'crystal_elf_wind_shot', rate:0.45}, {id:'crystal_elf_storm_shot', rate:0.18}, {id:'crystal_elf_triple_arrow', rate:0.08}, {id:'gem_quality_emerald', rate:1.2}, {id:'gem_high_emerald', rate:0.25}, {id:'scroll_weapon', rate:0.7}, {id:'scroll_armor', rate:0.5}] },
         { id: 'water_spirit_slave', name: '水靈奴隸', level: 62, hp: 2700, ac: -56, mr: 90, exp: 4250, atkSpeed: 1600, dice: '7d10+20', hitBonus: 23, weight: 34, adena: [520,900], magicProfile: { text: '水靈奴隸以水錐汲取生命', dice: '6d10+20', chance: 0.36 }, drops: [{id:'crystal_elf_body_to_mind', rate:0.45}, {id:'crystal_elf_soul_to_mind', rate:0.18}, {id:'crystal_elf_clear_mind', rate:0.25}, {id:'gem_quality_sapphire', rate:1.2}, {id:'gem_high_sapphire', rate:0.25}, {id:'potion_blue', rate:10}, {id:'scroll_armor', rate:0.7}] },
-        { id: 'fire_spirit_slave', name: '火靈奴隸', level: 63, hp: 2750, ac: -58, mr: 82, exp: 4400, atkSpeed: 1450, dice: '7d12+22', hitBonus: 25, weight: 32, adena: [550,950], magicProfile: { text: '火靈奴隸拋出燃燒火球', dice: '6d12+20', chance: 0.36 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.45}, {id:'crystal_elf_elemental_fire', rate:0.08}, {id:'crystal_elf_release_elemental', rate:0.08}, {id:'gem_quality_ruby', rate:1.2}, {id:'gem_high_ruby', rate:0.25}, {id:'scroll_weapon', rate:0.8}, {id:'potion_blue', rate:8}] },
+        { id: 'fire_spirit_slave', name: '火靈奴隸', level: 63, hp: 2750, ac: -58, mr: 82, exp: 4400, atkSpeed: 1450, dice: '7d12+22', hitBonus: 25, weight: 32, adena: [550,950], magicProfile: { text: '火靈奴隸拋出燃燒火球', dice: '6d12+20', chance: 0.36 }, drops: [{id:'crystal_elf_fire_weapon', rate:0.45}, {id:'crystal_elf_dance_of_fire', rate:0.16}, {id:'crystal_elf_elemental_fire', rate:0.08}, {id:'crystal_elf_release_elemental', rate:0.08}, {id:'gem_quality_ruby', rate:1.2}, {id:'gem_high_ruby', rate:0.25}, {id:'scroll_weapon', rate:0.8}, {id:'potion_blue', rate:8}] },
         { id: 'earth_spirit_slave', name: '地靈奴隸', level: 63, hp: 3100, ac: -60, mr: 85, exp: 4450, atkSpeed: 1700, dice: '7d10+24', hitBonus: 24, weight: 32, adena: [550,950], magicProfile: { text: '地靈奴隸震開地裂術', dice: '6d10+22', chance: 0.34 }, drops: [{id:'crystal_elf_earth_skin', rate:0.45}, {id:'crystal_elf_iron_skin', rate:0.12}, {id:'crystal_elf_release_elemental', rate:0.08}, {id:'gem_quality_diamond', rate:1.2}, {id:'gem_high_diamond', rate:0.25}, {id:'scroll_armor', rate:0.8}, {id:'scroll_weapon', rate:0.4}] },
         { id: 'wind_spirit_lord_grave', name: '風靈之主', level: 70, hp: 8500, ac: -70, mr: 95, exp: 6500, atkSpeed: 1350, dice: '8d12+26', hitBonus: 30, isBoss: true, weight: 6, adena: [1100,2200], ranged: true, magicProfile: { text: '風靈之主喚下極道落雷', dice: '7d10+28', chance: 0.38 }, drops: [{id:'crystal_elf_storm_shot', rate:0.45}, {id:'crystal_elf_triple_arrow', rate:0.25}, {id:'crystal_elf_wind_shot', rate:0.8}, {id:'gem_high_emerald', rate:1}, {id:'gem_quality_emerald', rate:5}, {id:'scroll_weapon_blessed', rate:0.15}, {id:'scroll_weapon', rate:1.5}] },
         { id: 'water_spirit_lord_grave', name: '水靈之主', level: 70, hp: 9000, ac: -70, mr: 100, exp: 6500, atkSpeed: 1500, dice: '8d10+28', hitBonus: 29, isBoss: true, weight: 6, adena: [1100,2200], magicProfile: { text: '水靈之主以水錐吸取生命', dice: '7d10+28', chance: 0.4 }, drops: [{id:'crystal_elf_soul_to_mind', rate:0.45}, {id:'crystal_elf_clear_mind', rate:0.6}, {id:'crystal_elf_body_to_mind', rate:0.8}, {id:'gem_high_sapphire', rate:1}, {id:'gem_quality_sapphire', rate:5}, {id:'potion_blue', rate:25}, {id:'scroll_armor_blessed', rate:0.15}, {id:'scroll_armor', rate:1.5}] },
-        { id: 'fire_spirit_lord_grave', name: '火靈之主', level: 71, hp: 8800, ac: -72, mr: 95, exp: 6700, atkSpeed: 1350, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 6, adena: [1150,2300], magicProfile: { text: '火靈之主燃起烈炎術', dice: '7d12+28', chance: 0.4 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.25}, {id:'crystal_elf_fire_weapon', rate:0.8}, {id:'crystal_elf_release_elemental', rate:0.2}, {id:'gem_high_ruby', rate:1}, {id:'gem_quality_ruby', rate:5}, {id:'scroll_weapon_blessed', rate:0.18}, {id:'scroll_weapon', rate:1.5}] },
+        { id: 'fire_spirit_lord_grave', name: '火靈之主', level: 71, hp: 8800, ac: -72, mr: 95, exp: 6700, atkSpeed: 1350, dice: '8d12+28', hitBonus: 31, isBoss: true, weight: 6, adena: [1150,2300], magicProfile: { text: '火靈之主燃起烈炎術', dice: '7d12+28', chance: 0.4 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.25}, {id:'crystal_elf_dance_of_fire', rate:0.35}, {id:'crystal_elf_fire_weapon', rate:0.8}, {id:'crystal_elf_release_elemental', rate:0.2}, {id:'gem_high_ruby', rate:1}, {id:'gem_quality_ruby', rate:5}, {id:'scroll_weapon_blessed', rate:0.18}, {id:'scroll_weapon', rate:1.5}] },
         { id: 'earth_spirit_lord_grave', name: '地靈之主', level: 71, hp: 9800, ac: -74, mr: 98, exp: 6700, atkSpeed: 1600, dice: '8d10+30', hitBonus: 30, isBoss: true, weight: 6, adena: [1150,2300], magicProfile: { text: '地靈之主撕開大地裂縫', dice: '7d10+30', chance: 0.38 }, drops: [{id:'crystal_elf_iron_skin', rate:0.35}, {id:'crystal_elf_release_elemental', rate:0.22}, {id:'crystal_elf_earth_skin', rate:0.8}, {id:'gem_high_diamond', rate:1}, {id:'gem_quality_diamond', rate:5}, {id:'scroll_armor_blessed', rate:0.18}, {id:'scroll_armor', rate:1.5}] },
         { id: 'mambo_rabbit_minion', name: '曼波兔手下', level: 68, hp: 5200, ac: -66, mr: 85, exp: 5600, atkSpeed: 1250, dice: '7d12+24', hitBonus: 29, weight: 10, adena: [900,1700], magicProfile: { text: '曼波兔手下掀起跳躍波動', dice: '6d10+24', chance: 0.32 }, drops: [{id:'crystal_elf_triple_arrow', rate:0.12}, {id:'crystal_elf_soul_to_mind', rate:0.12}, {id:'crystal_elf_storm_shot', rate:0.12}, {id:'crystal_elf_iron_skin', rate:0.08}, {id:'gem_quality_diamond', rate:1.2}, {id:'gem_quality_emerald', rate:1.2}, {id:'gem_quality_sapphire', rate:1.2}, {id:'gem_quality_ruby', rate:1.2}, {id:'potion_haste', rate:6}, {id:'potion_blue', rate:8}] },
         { id: 'mambo_king', name: '曼波王', level: 74, hp: 12000, ac: -76, mr: 95, exp: 7200, atkSpeed: 1250, dice: '8d12+30', hitBonus: 32, isBoss: true, weight: 5, adena: [1400,2800], magicProfile: { text: '曼波王震出巨大跳躍波動', dice: '7d12+30', chance: 0.42 }, drops: [{id:'crystal_elf_triple_arrow', rate:0.35}, {id:'crystal_elf_soul_to_mind', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.3}, {id:'crystal_elf_iron_skin', rate:0.25}, {id:'crystal_elf_release_elemental', rate:0.18}, {id:'gem_high_diamond', rate:1}, {id:'gem_high_emerald', rate:1}, {id:'gem_high_sapphire', rate:1}, {id:'gem_high_ruby', rate:1}, {id:'scroll_weapon_blessed', rate:0.25}, {id:'scroll_armor_blessed', rate:0.25}] },
-        { id: 'elf_supervisor', name: '精靈監督者', level: 78, hp: 18000, ac: -82, mr: 105, exp: 7800, atkSpeed: 1350, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 3, adena: [1800,3600], magicProfile: { text: '精靈監督者舞出紫色火焰', dice: '8d12+32', chance: 0.45 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.35}, {id:'crystal_elf_iron_skin', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.45}, {id:'crystal_elf_triple_arrow', rate:0.4}, {id:'crystal_elf_soul_to_mind', rate:0.4}, {id:'crystal_elf_release_elemental', rate:0.3}, {id:'book_knight_shock_stun', rate:0.2}, {id:'bow_moon', rate:0.12}, {id:'ring_harpy', rate:0.2}, {id:'gem_high_diamond', rate:2}, {id:'gem_high_emerald', rate:2}, {id:'gem_high_sapphire', rate:2}, {id:'gem_high_ruby', rate:2}, {id:'scroll_weapon_blessed', rate:0.5}, {id:'scroll_armor_blessed', rate:0.5}] }
+        { id: 'elf_supervisor', name: '精靈監督者', level: 78, hp: 18000, ac: -82, mr: 105, exp: 7800, atkSpeed: 1350, dice: '9d12+32', hitBonus: 34, isBoss: true, weight: 3, adena: [1800,3600], magicProfile: { text: '精靈監督者舞出紫色火焰', dice: '8d12+32', chance: 0.45 }, drops: [{id:'crystal_elf_elemental_fire', rate:0.35}, {id:'crystal_elf_dance_of_fire', rate:0.4}, {id:'crystal_elf_iron_skin', rate:0.35}, {id:'crystal_elf_storm_shot', rate:0.45}, {id:'crystal_elf_triple_arrow', rate:0.4}, {id:'crystal_elf_soul_to_mind', rate:0.4}, {id:'crystal_elf_release_elemental', rate:0.3}, {id:'book_knight_shock_stun', rate:0.2}, {id:'bow_moon', rate:0.12}, {id:'ring_harpy', rate:0.2}, {id:'gem_high_diamond', rate:2}, {id:'gem_high_emerald', rate:2}, {id:'gem_high_sapphire', rate:2}, {id:'gem_high_ruby', rate:2}, {id:'scroll_weapon_blessed', rate:0.5}, {id:'scroll_armor_blessed', rate:0.5}] }
     ]},
     shadow_temple: { name: '暗影神殿', monsters: [
         { id: 'shadow_beast', name: '影子魔獸', level: 58, hp: 1800, ac: -50, mr: 70, exp: 3600, atkSpeed: 1500, dice: '7d10+18', hitBonus: 22, weight: 48, adena: [420,760], drops: [{id:'cloak_shadow', rate: 0.18}, {id:'crystal_dark_shadow_armor', rate: 0.18}, {id:'gem_quality_diamond', rate: 0.8}] },
@@ -1249,6 +1264,7 @@ const BOOK_SELL_PRICE_OVERRIDES = {
     crystal_elf_storm_shot: 12000,
     crystal_elf_iron_skin: 10000,
     crystal_elf_elemental_fire: 16000,
+    crystal_elf_dance_of_fire: 14000,
     crystal_dark_enchant_venom: 2500,
     crystal_dark_shadow_armor: 3500,
     crystal_dark_burning_spirit: 5500,
@@ -1356,7 +1372,7 @@ const DICKLE_BALANCE_040 = (() => {
     ['crystal_dark_enchant_venom','crystal_dark_shadow_armor','crystal_dark_burning_spirit','crystal_dark_shadow_fang','crystal_dark_uncanny_dodge','crystal_dark_double_break','crystal_dark_armor_break','crystal_dark_dress_mighty'].forEach(id => addDrop(getM('oren_field', 'oren_nc48_husky'), id, 0.1));
     MAPS.oren_ivory.monsters.push(
         { id: 'ivory_death', name: '死神', level: 62, hp: 2600, ac: -56, mr: 85, exp: 4600, atkSpeed: 1600, dice: '7d12+20', hitBonus: 23, weight: 32, adena: [520,900], drops: [{id:'crystal_elf_storm_shot', rate:0.1}, {id:'bow_flame', rate:0.01}, {id:'bow_yumi', rate:0.1}, {id:'crossbow_lastabad_heavy', rate:0.1}, {id:'crystal_elf_triple_arrow', rate:0.01}] },
-        { id: 'ivory_ghost', name: '鬼魂', level: 60, hp: 2200, ac: -52, mr: 90, exp: 4300, atkSpeed: 1700, dice: '6d12+18', hitBonus: 21, isUndead: true, weight: 36, adena: [480,840], drops: [{id:'crystal_elf_elemental_fire', rate:0.1}, {id:'crystal_elf_fire_weapon', rate:1}, {id:'crystal_elf_release_elemental', rate:0.1}, {id:'crystal_dark_armor_break', rate:0.001}, {id:'crystal_dark_double_break', rate:0.1}, {id:'crystal_dark_uncanny_dodge', rate:0.1}] }
+        { id: 'ivory_ghost', name: '鬼魂', level: 60, hp: 2200, ac: -52, mr: 90, exp: 4300, atkSpeed: 1700, dice: '6d12+18', hitBonus: 21, isUndead: true, weight: 36, adena: [480,840], drops: [{id:'crystal_elf_elemental_fire', rate:0.1}, {id:'crystal_elf_dance_of_fire', rate:0.12}, {id:'crystal_elf_fire_weapon', rate:1}, {id:'crystal_elf_release_elemental', rate:0.1}, {id:'crystal_dark_armor_break', rate:0.001}, {id:'crystal_dark_double_break', rate:0.1}, {id:'crystal_dark_uncanny_dodge', rate:0.1}] }
     );
 
     // Forgotten Island remains hardest, but less spiky.
@@ -1424,7 +1440,7 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     getAll('werewolf').forEach(m => setDrops(m, [['boots_long', 0.6], ['potion_haste', 1]]));
     getAll('spartoi').forEach(m => setDrops(m, [['armor_bronze', 0.8], ['dagger_mithril', 0.8], ['scroll_armor', 0.3], ['gem_diamond', 0.5]]));
     getAll('ghoul').forEach(m => setDrops(m, [['gem_emerald', 0.5], ['potion_orange', 3]]));
-    getAll('hellhound').forEach(m => setDrops(m, [['crystal_elf_fire_weapon', 0.15], ['gem_ruby', 1], ['scroll_weapon', 0.2]]));
+    getAll('hellhound').forEach(m => setDrops(m, [['crystal_elf_fire_weapon', 0.15], ['crystal_elf_dance_of_fire', 0.04], ['gem_ruby', 1], ['scroll_weapon', 0.2]]));
     getAll('troll_king').forEach(m => setDrops(m, [['helm_str_magic', 0.4], ['dagger_ori', 0.15], ['gem_diamond', 1], ['scroll_armor', 0.5]]));
     getAll('skeleton').forEach(m => setDrops(m, [['dagger_mithril', 0.8], ['gem_sapphire', 0.5]]));
     getAll('orc_fighter').forEach(m => setDrops(m, [['arkai_shield', 6], ['scroll_armor', 0.3], ['gem_emerald', 0.5]]));
@@ -1523,14 +1539,14 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     tune('fire_dragon_cave', 'ifrit', { hp: 6800, ac: -60, hitBonus: Math.max(0, (getM('fire_dragon_cave', 'ifrit')?.hitBonus || 0) - 2) });
     tune('fire_dragon_cave', 'phoenix', { hp: 13500, ac: -68, hitBonus: Math.max(0, (getM('fire_dragon_cave', 'phoenix')?.hitBonus || 0) - 2) });
     ['ifrit', 'phoenix', 'fire_salamander'].forEach(id => { const m = getM('fire_dragon_cave', id); if (m?.magicProfile) m.magicProfile.chance = Math.max(0, m.magicProfile.chance - 0.1); });
-    setDrops(getM('fire_dragon_cave', 'dragon_fly'), [['fire_dragon_scale', 0.3], ['gem_ruby', 3], ['gem_quality_ruby', 0.8], ['book_sleep_mist', 0.1], ['book_vampire', 0.15], ['crystal_elf_fire_weapon', 0.35], ['scroll_armor_blessed', 0.05], ['scroll_weapon_blessed', 0.05]]);
-    setDrops(getM('fire_dragon_cave', 'fire_warrior'), [['scroll_weapon', 0.7], ['fire_dragon_scale', 0.4], ['gem_ruby', 3], ['gem_quality_ruby', 1], ['katana', 0.3], ['sword_tsurugi', 0.05], ['sword_damascus_two_handed', 1.5], ['claw_dark', 0.2], ['dual_blade_dark', 0.2], ['book_knight_reduction_armor', 0.15], ['book_knight_solid_carriage', 0.15], ['book_knight_shield_bash', 0.22], ['book_knight_sword_shield_mastery', 0.16]]);
+    setDrops(getM('fire_dragon_cave', 'dragon_fly'), [['fire_dragon_scale', 0.3], ['gem_ruby', 3], ['gem_quality_ruby', 0.8], ['book_sleep_mist', 0.1], ['book_vampire', 0.15], ['crystal_elf_fire_weapon', 0.35], ['crystal_elf_dance_of_fire', 0.12], ['crystal_elf_elemental_fire', 0.08], ['scroll_armor_blessed', 0.05], ['scroll_weapon_blessed', 0.05]]);
+    setDrops(getM('fire_dragon_cave', 'fire_warrior'), [['scroll_weapon', 0.7], ['fire_dragon_scale', 0.4], ['gem_ruby', 3], ['gem_quality_ruby', 1], ['katana', 0.3], ['sword_tsurugi', 0.05], ['sword_damascus_two_handed', 1.5], ['claw_dark', 0.2], ['dual_blade_dark', 0.2], ['book_knight_reduction_armor', 0.15], ['book_knight_solid_carriage', 0.15], ['book_knight_shield_bash', 0.22], ['book_knight_sword_shield_mastery', 0.16], ['crystal_elf_dance_of_fire', 0.14]]);
     setDrops(getM('fire_dragon_cave', 'fire_archer'), [['potion_haste', 5], ['fire_dragon_scale', 0.4], ['gem_ruby', 3], ['gem_quality_ruby', 1], ['crossbow_shadow', 0.2], ['crossbow_dark', 0.2], ['quiver_mithril', 0.3], ['crystal_elf_storm_shot', 0.08], ['crystal_elf_triple_arrow', 0.02]]);
-    setDrops(getM('fire_dragon_cave', 'fire_salamander'), [['book_fire_storm', 0.2], ['fire_dragon_scale', 0.5], ['gem_quality_ruby', 1.2], ['gem_high_ruby', 0.2], ['gem_quality_diamond', 0.3], ['potion_courage', 2]]);
+    setDrops(getM('fire_dragon_cave', 'fire_salamander'), [['book_fire_storm', 0.2], ['crystal_elf_dance_of_fire', 0.2], ['crystal_elf_elemental_fire', 0.16], ['fire_dragon_scale', 0.5], ['gem_quality_ruby', 1.2], ['gem_high_ruby', 0.2], ['gem_quality_diamond', 0.3], ['potion_courage', 2]]);
     setDrops(getM('fire_dragon_cave', 'fire_egg'), [['scroll_armor', 1.2], ['fire_dragon_scale', 0.7], ['gem_quality_ruby', 1.2], ['gem_high_ruby', 0.2], ['scroll_armor_blessed', 0.08]]);
     setDrops(getM('fire_dragon_cave', 'lava_golem'), [['armor_metal', 1.5], ['fire_dragon_scale', 0.6], ['gem_quality_diamond', 1.2], ['gem_high_diamond', 0.2], ['scroll_armor', 1], ['armor_crystal', 0.1]]);
-    setDrops(getM('fire_dragon_cave', 'ifrit'), [['crystal_elf_elemental_fire', 0.7], ['katana', 1.5], ['fire_dragon_scale', 2.5], ['book_fire_storm', 0.6], ['gem_high_ruby', 1], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.5], ['scroll_weapon_blessed', 0.15], ['scroll_armor_blessed', 0.15]]);
-    setDrops(getM('fire_dragon_cave', 'phoenix'), [['scroll_weapon_blessed', 0.5], ['scroll_armor_blessed', 0.5], ['fire_dragon_scale', 5], ['gem_high_ruby', 2], ['gem_high_diamond', 1], ['gem_quality_ruby', 10], ['gem_quality_diamond', 5], ['book_fire_storm', 1], ['crystal_elf_elemental_fire', 1]]);
+    setDrops(getM('fire_dragon_cave', 'ifrit'), [['crystal_elf_elemental_fire', 0.7], ['crystal_elf_dance_of_fire', 0.9], ['katana', 1.5], ['fire_dragon_scale', 2.5], ['book_fire_storm', 0.6], ['gem_high_ruby', 1], ['gem_quality_diamond', 1], ['gem_high_diamond', 0.5], ['scroll_weapon_blessed', 0.15], ['scroll_armor_blessed', 0.15]]);
+    setDrops(getM('fire_dragon_cave', 'phoenix'), [['scroll_weapon_blessed', 0.5], ['scroll_armor_blessed', 0.5], ['fire_dragon_scale', 5], ['gem_high_ruby', 2], ['gem_high_diamond', 1], ['gem_quality_ruby', 10], ['gem_quality_diamond', 5], ['book_fire_storm', 1], ['crystal_elf_elemental_fire', 1], ['crystal_elf_dance_of_fire', 1.2]]);
 
     function normalizeLowEquipmentDropRates() {
         const EQUIP_TYPES = new Set(['weapon','helmet','tshirt','armor','shield','cloak','leggings','gloves','boots','amulet','earring','belt','ring','quiver']);
@@ -1565,6 +1581,7 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
             crystal_elf_iron_skin: 0.08,
             crystal_elf_release_elemental: 0.08,
             crystal_elf_elemental_fire: 0.05,
+            crystal_elf_dance_of_fire: 0.08,
             crystal_dark_burning_spirit: 0.18,
             crystal_dark_shadow_fang: 0.15,
             crystal_dark_uncanny_dodge: 0.1,
@@ -1580,6 +1597,7 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
         };
         const BOSS_CLASS_SKILL_FLOORS = {
             crystal_elf_elemental_fire: 0.15,
+            crystal_elf_dance_of_fire: 0.16,
             crystal_elf_iron_skin: 0.15,
             crystal_dark_double_break: 0.2,
             crystal_dark_armor_break: 0.08,
@@ -1639,10 +1657,12 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     boostMidLateWeaponDropRates();
 })();
 
+const LEVEL_BONUS_STAT_CAP = 35;
+
 const game = {
     state: {
         isPlaying: false, classId: 'knight', level: 1, exp: 0, adena: 0, hp: 0, maxHp: 0, mp: 0, maxMp: 0,
-        baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0,
+        baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0, bonusPointsGrantedLevel: 49, bonusPointMigrationV1: false,
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
         pets: {}, activePet: null, petProtectMode: false,
@@ -1714,7 +1734,7 @@ const game = {
         return {
             classId: this.state.classId, level: this.state.level, exp: this.state.exp, adena: this.state.adena,
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
-            baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints,
+            baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints, bonusPointsGrantedLevel: this.state.bonusPointsGrantedLevel, bonusPointMigrationV1: this.state.bonusPointMigrationV1,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
             pets: this.state.pets, activePet: this.state.activePet,
             settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
@@ -1840,6 +1860,9 @@ const game = {
                 this.state.baseStats = savedData.baseStats || { str: 8, dex: 8, con: 8, int: 8, wis: 8 };
                 this.state.createPoints = parseInt(savedData.createPoints) || 0;
                 this.state.bonusPoints = parseInt(savedData.bonusPoints) || 0;
+                this.normalizeBaseStats();
+                this.state.bonusPointsGrantedLevel = parseInt(savedData.bonusPointsGrantedLevel) || (this.state.level >= 50 ? this.state.level : 49);
+                this.state.bonusPointMigrationV1 = !!savedData.bonusPointMigrationV1;
                 this.state.spells = Array.isArray(savedData.spells) ? savedData.spells.filter(id => SPELLS[id]) : [];
                 this.state.pets = {};
                 if (savedData.pets && typeof savedData.pets === 'object') {
@@ -1913,6 +1936,12 @@ const game = {
                 let mapSel = document.getElementById('map-select');
                 if (Array.from(mapSel.options).some(o => o.value === this.state.currentMap)) mapSel.value = this.state.currentMap;
                 else { this.state.currentMap = 'hidden_valley'; mapSel.value = 'hidden_valley'; }
+
+                this.migrateBonusPointsFromOldSave();
+                let loadedLevelUps = this.checkLevelUp();
+                if (loadedLevelUps > 0) this.logSystem(`讀檔時補升 ${loadedLevelUps} 級，已修正超過100%的經驗值。`, 'reward');
+                localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
+                this.updateUI();
                 
                 this.logSystem('讀取存檔成功！歡迎回來。', 'reward');
                 this.startLoops();
@@ -2356,6 +2385,38 @@ const game = {
             shieldAc: Math.max(1, Math.ceil(shieldValue / 2))
         };
     },
+    isElfMeleeWeaponStyle: function() {
+        if (this.state.classId !== 'elf') return false;
+        let wKey = this.state.equipment.weapon;
+        if (!wKey || !this.state.inventory[wKey]) return false;
+        return this.getWeaponClass(this.state.inventory[wKey].itemId) === 'melee';
+    },
+    getIntMagicProfile: function() {
+        let int = this.getEffStat('int');
+        if (int >= 20) return { tier: 20, penetration: 0.25, shield: 0.25, costReduction: 4 };
+        if (int >= 18) return { tier: 18, penetration: 0.18, shield: 0.18, costReduction: 3 };
+        if (int >= 16) return { tier: 16, penetration: 0.12, shield: 0.12, costReduction: 2 };
+        if (int >= 14) return { tier: 14, penetration: 0.06, shield: 0.06, costReduction: 1 };
+        return { tier: 0, penetration: 0, shield: 0, costReduction: 0 };
+    },
+    getMagicPenetrationRate: function() {
+        return this.getIntMagicProfile().penetration;
+    },
+    getEffectiveMonsterMR: function(monster) {
+        let rawMR = Math.max(0, Number(monster?.mr || 0));
+        let effectiveMR = Math.floor(rawMR * (1 - this.getMagicPenetrationRate()));
+        return Math.max(0, Math.min(100, effectiveMR));
+    },
+    getElfFireWeaponBonus: function() {
+        if (!this.isElfMeleeWeaponStyle()) return 0;
+        let intBonus = Math.max(0, Math.floor((this.getEffStat('int') - 12) / 4));
+        let magicBonus = Math.max(0, Math.floor(this.getMagicDmg() * 0.18));
+        return Math.max(1, intBonus + magicBonus);
+    },
+    getElfElementalFireChance: function() {
+        if (!this.isElfMeleeWeaponStyle()) return 0;
+        return Math.min(0.35, 0.18 + this.getMagicPenetrationRate() * 0.4);
+    },
     canUseSpellForClass: function(spellId) {
         let spell = SPELLS[spellId];
         return !!spell && (!spell.classes || spell.classes.includes(this.state.classId));
@@ -2398,6 +2459,99 @@ const game = {
         let idx = order.indexOf(this.state.classId);
         let btn = document.querySelectorAll('.class-btn')[idx];
         if (btn) btn.classList.add('c-success');
+    },
+    normalizeBaseStats: function() {
+        let defaults = this.getClassDef().baseStats || {};
+        ['str','dex','con','int','wis'].forEach(stat => {
+            let fallback = Number(defaults[stat] || 8);
+            let value = parseInt(this.state.baseStats?.[stat]);
+            if (!Number.isFinite(value)) value = fallback;
+            this.state.baseStats[stat] = Math.max(fallback, value);
+        });
+    },
+    getStatLabel: function(stat) {
+        return { str: '力量', dex: '敏捷', con: '體質', int: '智力', wis: '精神' }[stat] || stat;
+    },
+    getBonusStatCap: function() {
+        return LEVEL_BONUS_STAT_CAP;
+    },
+    getEarnedBonusPointsForLevel: function(level) {
+        return Math.max(0, Math.min(90, Number(level) || 1) - 49);
+    },
+    getSpentBonusStatPoints: function() {
+        let cls = this.getClassDef();
+        let baseExtra = ['str','dex','con','int','wis'].reduce((sum, stat) => {
+            return sum + Math.max(0, (parseInt(this.state.baseStats[stat]) || 0) - (cls.baseStats[stat] || 0));
+        }, 0);
+        let initialSpent = Math.max(0, (cls.createPoints || 0) - (parseInt(this.state.createPoints) || 0));
+        return Math.max(0, baseExtra - initialSpent);
+    },
+    migrateBonusPointsFromOldSave: function() {
+        if (this.state.bonusPointMigrationV1) return;
+        let earned = this.getEarnedBonusPointsForLevel(this.state.level);
+        let spent = this.getSpentBonusStatPoints();
+        let available = Math.max(0, parseInt(this.state.bonusPoints) || 0);
+        let missing = Math.max(0, earned - spent - available);
+        if (missing > 0) {
+            this.state.bonusPoints += missing;
+            this.logSystem(`補發舊存檔 ${missing} 點升級獎勵能力點數。`, 'reward');
+        }
+        this.state.bonusPointsGrantedLevel = Math.max(parseInt(this.state.bonusPointsGrantedLevel) || 49, this.state.level >= 50 ? this.state.level : 49);
+        this.state.bonusPointMigrationV1 = true;
+    },
+    grantBonusPointsThroughLevel: function(level) {
+        let currentGranted = Math.max(49, parseInt(this.state.bonusPointsGrantedLevel) || 49);
+        let targetGranted = Math.max(49, Math.min(90, Number(level) || 1));
+        let gained = Math.max(0, targetGranted - currentGranted);
+        if (gained > 0) {
+            this.state.bonusPoints += gained;
+            this.state.bonusPointsGrantedLevel = targetGranted;
+            this.logSystem(`獲得 ${gained} 點升級獎勵能力點數。`, 'reward');
+        }
+        return gained;
+    },
+    allocateBonusStat: function(stat) {
+        if (!['str','dex','con','int','wis'].includes(stat)) return;
+        this.normalizeBaseStats();
+        if ((parseInt(this.state.bonusPoints) || 0) <= 0) {
+            this.logSystem('目前沒有可分配的升級獎勵能力點數。', 'danger');
+            return;
+        }
+        let cap = this.getBonusStatCap();
+        if ((parseInt(this.state.baseStats[stat]) || 0) >= cap) {
+            this.logSystem(`${this.getStatLabel(stat)} 已達 ${cap} 點上限。`, 'danger');
+            return;
+        }
+        let hpRatio = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        let mpRatio = this.state.maxMp > 0 ? this.state.mp / this.state.maxMp : 1;
+        this.state.baseStats[stat]++;
+        this.state.bonusPoints--;
+        this.calculateMaxHpMp();
+        this.state.hp = Math.max(1, Math.min(this.state.maxHp, Math.floor(this.state.maxHp * hpRatio)));
+        this.state.mp = Math.max(0, Math.min(this.state.maxMp, Math.floor(this.state.maxMp * mpRatio)));
+        this.logSystem(`${this.getStatLabel(stat)} 提升至 ${this.state.baseStats[stat]}。`, 'reward');
+        this.updateUI();
+        this.updateSettingsUI();
+        localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
+    },
+    updateBonusStatUI: function() {
+        let panel = document.getElementById('bonus-stat-panel');
+        if (!panel) return;
+        let points = Math.max(0, parseInt(this.state.bonusPoints) || 0);
+        let shouldShow = this.state.level >= 50 || points > 0 || this.getSpentBonusStatPoints() > 0;
+        panel.classList.toggle('hidden', !shouldShow);
+        let pointEl = document.getElementById('ui-bonus-points');
+        if (pointEl) pointEl.innerText = points;
+        let cap = this.getBonusStatCap();
+        ['str','dex','con','int','wis'].forEach(stat => {
+            let btn = document.getElementById(`bonus-stat-${stat}`);
+            if (!btn) return;
+            let atCap = (parseInt(this.state.baseStats[stat]) || 0) >= cap;
+            btn.disabled = points <= 0 || atCap;
+            btn.classList.toggle('opacity-40', btn.disabled);
+            btn.classList.toggle('cursor-not-allowed', btn.disabled);
+            btn.title = atCap ? `${this.getStatLabel(stat)} 已達 ${cap}` : `${this.getStatLabel(stat)} +1`;
+        });
     },
     startGame: function() {
         document.getElementById('char-creation-modal').style.display = 'none';
@@ -2704,8 +2858,11 @@ const game = {
             if (qDef && qDef.arrowDmg) wpnDmg += qDef.arrowDmg;
         }
         if (this.state.buffs.enchant_weapon) wpnDmg += 2;
-        if (this.state.buffs.elf_fire_weapon) wpnDmg += 2;
-        if (this.state.buffs.elf_elemental_fire) wpnDmg += 4;
+        if (this.state.buffs.elf_fire_weapon) {
+            wpnDmg += 2;
+            if (this.isElfMeleeWeaponStyle()) wpnDmg += this.getElfFireWeaponBonus();
+        }
+        if (this.state.buffs.elf_elemental_fire && this.isElfMeleeWeaponStyle()) wpnDmg += 2;
         if (this.state.buffs.de_burning_spirit) wpnDmg += 3;
         if (this.state.buffs.de_shadow_fang) wpnDmg += 5;
         if (this.state.buffs.de_dress_mighty) wpnDmg += 2;
@@ -2731,13 +2888,13 @@ const game = {
     getMagicDmg: function() {
         let int = this.getEffStat('int');
         let m = 0;
-        if(int===8) m=-1; 
-        else if(int>=9&&int<=11) m=0; 
-        else if(int>=12&&int<=14) m=1; 
-        else if(int===15) m=1;
-        else if(int>=16&&int<=17) m=2; 
-        else if(int===18) m=3; 
-        else if(int>18) m=3+(int-18);
+        if(int<=8) m=-1; 
+        else if(int<=11) m=0; 
+        else if(int<=13) m=1; 
+        else if(int<=15) m=2;
+        else if(int<=17) m=3; 
+        else if(int<=19) m=4; 
+        else m=6 + Math.floor((int - 20) / 2);
         
         let wKey = this.state.equipment.weapon;
         if(wKey && this.state.inventory[wKey]) {
@@ -2808,10 +2965,15 @@ const game = {
         document.getElementById('ui-mp-text').innerText = `${Math.floor(this.state.mp)}/${this.state.maxMp}`;
         document.getElementById('ui-mp-bar').style.width = `${Math.max(0, (this.state.mp/this.state.maxMp)*100)}%`;
         
-        let reqExp = EXP_TABLE[this.state.level] || 36065092;
-        let expPct = ((this.state.exp/reqExp)*100).toFixed(2);
-        document.getElementById('ui-exp-bar').style.width = `${Math.min(100, expPct)}%`;
-        document.getElementById('ui-exp-text').innerText = `${expPct}%`;
+        if (this.state.level >= 90) {
+            document.getElementById('ui-exp-bar').style.width = '100%';
+            document.getElementById('ui-exp-text').innerText = 'MAX';
+        } else {
+            let reqExp = EXP_TABLE[this.state.level] || 36065092;
+            let expPct = ((this.state.exp/reqExp)*100).toFixed(2);
+            document.getElementById('ui-exp-bar').style.width = `${Math.min(100, expPct)}%`;
+            document.getElementById('ui-exp-text').innerText = `${expPct}%`;
+        }
         
         document.getElementById('ui-adena').innerText = this.state.adena.toLocaleString();
         document.getElementById('ui-str').innerText = this.getEffStat('str') + (this.state.buffs.str_buff ? ' (+5)' : '');
@@ -2824,6 +2986,7 @@ const game = {
         document.getElementById('ui-er').innerText = this.getER();
         document.getElementById('ui-dmg').innerText = this.getMeleeDmg() >= 0 ? `+${this.getMeleeDmg()}` : this.getMeleeDmg();
         document.getElementById('ui-hit').innerText = this.getMeleeHit() >= 0 ? `+${this.getMeleeHit()}` : this.getMeleeHit();
+        this.updateBonusStatUI();
 
         let buffHtml = '';
         let sets = this.getSetBonuses();
@@ -2845,6 +3008,8 @@ const game = {
         if(this.state.buffs.elf_clear_mind) buffHtml += '<span class="c-success mr-2">[淨化精神]</span>';
         if(this.state.buffs.elf_earth_skin) buffHtml += '<span class="c-success mr-2">[大地防護]</span>';
         if(this.state.buffs.elf_fire_weapon) buffHtml += '<span class="c-success mr-2">[火焰武器]</span>';
+        if(this.state.buffs.elf_elemental_fire) buffHtml += '<span class="c-skill-elf mr-2">[烈焰之魂]</span>';
+        if(this.state.buffs.elf_dance_of_fire) buffHtml += '<span class="c-skill-elf mr-2">[舞躍之火]</span>';
         if(this.state.buffs.elf_wind_shot) buffHtml += '<span class="c-success mr-2">[風之神射]</span>';
         if(this.state.buffs.elf_triple_arrow) buffHtml += '<span class="c-success mr-2">[三重矢]</span>';
         if(this.state.buffs.de_enchant_venom) buffHtml += '<span class="c-skill-dark mr-2">[附加劇毒]</span>';
@@ -3794,15 +3959,13 @@ const game = {
         else this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(id => id !== spellId);
     },
     getSpellCost: function(spell) {
-        let int = this.getEffStat('int');
-        let reduction = 0;
-        if(int>=13 && spell.level>=2) {
-            if(int===13) reduction = 1;
-            else if(int===14) reduction = spell.level>=3 ? 2 : 1;
-            else if(int===15) reduction = spell.level>=4 ? 3 : (spell.level===3?2:1);
-            else if(int>=16) reduction = spell.level; 
-        }
-        return Math.max(1, spell.mp - reduction);
+        let baseCost = Number(spell.mp || 0);
+        if (baseCost <= 0) return 0;
+        let profile = this.getIntMagicProfile();
+        let reduction = profile.costReduction;
+        if (spell.level >= 5 && profile.tier >= 18) reduction += 1;
+        if (spell.level >= 6 && profile.tier >= 20) reduction += 1;
+        return Math.max(1, baseCost - reduction);
     },
     castMpConvert: function(spellId) {
         let spell = SPELLS[spellId];
@@ -3869,13 +4032,23 @@ const game = {
     },
 
     calcMagicDmgToMonster: function(base) {
-        let targetMR = this.state.targetMonster.mr || 0;
+        let targetMR = this.getEffectiveMonsterMR(this.state.targetMonster);
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
         let tid = this.state.targetMonster.id;
         if (tid === 'antaras') d = Math.max(1, Math.floor(d * 0.5));
         if (tid === 'death_knight') d = Math.max(1, Math.floor(d * 0.8));
         if (tid === 'black_elder') d = Math.max(1, Math.floor(d * 0.7));
         return d;
+    },
+
+    applyMagicShieldReduction: function(dmg) {
+        let rate = this.getIntMagicProfile().shield;
+        if (rate <= 0 || dmg <= 1 || this.state.mp <= 0) return dmg;
+        let block = Math.min(Math.floor(dmg * rate), this.state.mp);
+        if (block <= 0) return dmg;
+        this.state.mp -= block;
+        this.logCombat(`【魔力護盾】消耗 ${block} MP 抵銷 ${block} 點魔法傷害。`, 'magic');
+        return Math.max(1, dmg - block);
     },
 
     getBossMagicDamageFloor: function(monster) {
@@ -3911,6 +4084,7 @@ const game = {
         if (this.state.buffs.elf_release_elemental) d = Math.max(1, Math.floor(d * 0.82));
         if (this.state.buffs.de_shadow_armor) d = Math.max(1, Math.floor(d * (this.state.targetMonster?.isBoss ? 0.88 : 0.94)));
         d = Math.max(d, this.getBossMagicDamageFloor(this.state.targetMonster));
+        d = this.applyMagicShieldReduction(d);
         this.state.hp -= d;
         return d;
     },
@@ -4119,6 +4293,12 @@ const game = {
                 this.state.hp = Math.min(this.state.maxHp, this.state.hp + leech);
                 this.state.targetMonster.hp -= backlash;
                 this.logCombat(`【燃燒鬥志】血氣回流 ${leech}，背水反噬再造成 ${backlash} 點傷害。`, 'skill-dark');
+            }
+            if (this.state.buffs.elf_elemental_fire && isHit && !isGraze && this.isElfMeleeWeaponStyle() && Math.random() < this.getElfElementalFireChance()) {
+                let fireBase = rollDice('2d6') + 6 + Math.floor(this.getMagicDmg() * 0.8);
+                let fireDmg = this.calcMagicDmgToMonster(fireBase);
+                this.state.targetMonster.hp -= fireDmg;
+                this.logCombat(`【烈焰之魂】近戰命中引燃火焰，追加 ${fireDmg} 點魔法傷害。`, 'skill-elf');
             }
             let actionText = weaponClass === 'bow' ? '射出一箭命中了' : (['claw','dual_blade'].includes(weaponClass) ? '迅速撕裂了' : '命中了');
             this.logCombat(`你${isGraze ? '擦傷了' : actionText} ${this.state.targetMonster.name} 造成 ${dmg} 點傷害${isCrit?' (爆擊！)':''}${doubleBreakTriggered?' (破防！)':''}${bonusUndead > 0 ? ` (弱點加成 +${bonusUndead})` : ''}。`, 'hit');
@@ -4672,25 +4852,26 @@ if(Math.random()*100 <= this.getER()) {
         }, 3000);
     },
     checkLevelUp: function() {
-        let req = EXP_TABLE[this.state.level] || 36065092;
-        if(this.state.exp >= req && this.state.level < 90) {
+        let leveled = 0;
+        while(this.state.level < 90) {
+            let req = EXP_TABLE[this.state.level] || 36065092;
+            if(this.state.exp < req) break;
             this.state.level++;
             this.state.exp -= req;
+            leveled++;
             this.calculateMaxHpMp();
             this.state.hp = this.state.maxHp;
             this.state.mp = this.state.maxMp;
-            
-            if(this.state.level >= 50) {
-                this.state.bonusPoints++;
-                this.logSystem(`獲得 1 點額外能力點數。(介面尚未實作)`, 'reward');
-            }
-            
+            this.grantBonusPointsThroughLevel(this.state.level);
             this.logSystem(`升級了！達到 等級 ${this.state.level}。`, 'reward');
+        }
+        if (leveled > 0) {
             this.updateSettingsUI();
-            this.renderSkills(); 
-            this.checkLevelUp();
+            this.renderSkills();
+            this.updateUI();
             if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) this.forceLeaveHiddenValley();
         }
+        return leveled;
     },
 
     startLoops: function() {
@@ -4930,7 +5111,7 @@ if(Math.random()*100 <= this.getER()) {
                 }
 
                 if (tm.isBoss && ['antaras','death_knight','black_elder','valakas','fafurion','ice_queen','demon'].includes(tmId) && st % 18 === 0 && Math.random() < 0.35) {
-                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','knight_solid_carriage','de_shadow_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
+                    ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','knight_solid_carriage','de_shadow_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
                     this.logCombat(`${tm.name} 施展魔法相消術，強制洗掉了你的主要增益狀態！`, 'danger');
                     needUpdate = true;
                 }
@@ -4987,6 +5168,7 @@ if(Math.random()*100 <= this.getER()) {
                             let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
                             if (!wDef || wDef.hands !== 2) shouldCast = false;
                         }
+                        if (sId === 'elf_dance_of_fire' && !this.isElfMeleeWeaponStyle()) shouldCast = false;
 
                         if (shouldCast && sId !== 'cancel') { 
                             let cost = this.getSpellCost(sp);
@@ -5151,6 +5333,7 @@ if(Math.random()*100 <= this.getER()) {
             if (this.state.buffs.haste || this.state.buffs.potion_haste || this.state.currentMap === 'hidden_valley') reduction += 0.2;
             if (this.state.buffs.second_haste) reduction += 0.15;
             if (this.state.buffs.greater_haste) reduction += 0.3;
+            if (this.state.buffs.elf_dance_of_fire && this.isElfMeleeWeaponStyle()) reduction += 0.15;
             speed = speed * (1 - reduction);
             
             this.state.battleLoop = setTimeout(playerLoopFn, speed);
@@ -5315,10 +5498,10 @@ game.renderSkills = function() {
                 let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
                 let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
                 let reqLevel = this.getSpellRequiredLevel(spell.id);
-                let alwaysShowReq = spell.id === 'de_armor_break' || spell.id === 'knight_shield_bash' || spell.id === 'knight_sword_shield_mastery';
+                let alwaysShowReq = ['de_armor_break','knight_shield_bash','knight_sword_shield_mastery','elf_elemental_fire','elf_dance_of_fire'].includes(spell.id);
                 let reqClass = canUse ? 'c-sys' : 'c-warn';
                 let reqText = (!canUse || alwaysShowReq) ? `<span class="text-xs ${reqClass} block">${reqLevel}級可用</span>` : '';
-                let stanceText = ['knight_shield_bash','knight_sword_shield_mastery'].includes(spell.id) ? '<span class="text-xs c-info block">單手武器＋盾牌</span>' : '';
+                let stanceText = ['knight_shield_bash','knight_sword_shield_mastery'].includes(spell.id) ? '<span class="text-xs c-info block">單手武器＋盾牌</span>' : (['elf_elemental_fire','elf_dance_of_fire'].includes(spell.id) ? '<span class="text-xs c-info block">妖精近戰武器</span>' : '');
                 let autoHtml = '';
                 if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
                 else if (isMpConvert) autoHtml = `<span class="c-sys text-xs mt-1 block">回魔技能</span>`;
