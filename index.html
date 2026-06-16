@@ -233,6 +233,8 @@
                         </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普寶石交換</div>
                         <div id="gem-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普碎片交換</div>
+                        <div id="kalip-fragment-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">龍鱗盔甲製作</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
                             <div class="list-item">
@@ -735,6 +737,33 @@ const GEM_EXCHANGES = {
             { id: 'sword_tsurugi', count: 1, weight: 0.5 }, { id: 'crossbow_shadow', count: 1, weight: 0.4 }, { id: 'claw_bloody', count: 1, weight: 0.2 },
             { id: 'quiver_black_mithril', count: 1, weight: 0.6 }
         ]
+    }
+};
+
+const KALIP_FRAGMENT_EXCHANGES = {
+    class_weapon: {
+        name: '職業武器補給',
+        type: 'weapon',
+        tier: 'mid',
+        adena: 50000,
+        materials: { kalip_weapon_fragment: 15, kalip_tempered_steel: 3 },
+        desc: '從目前職業可用的中階武器中取得一件。'
+    },
+    class_skill: {
+        name: '職業技能補給',
+        type: 'skill',
+        tier: 'mid',
+        adena: 30000,
+        materials: { kalip_weapon_fragment: 12, kalip_tempered_steel: 2 },
+        desc: '優先取得目前職業尚未學會的可用技能書或水晶。'
+    },
+    high_class_weapon: {
+        name: '高階職業武器核心',
+        type: 'weapon',
+        tier: 'high',
+        adena: 180000,
+        materials: { kalip_high_weapon_fragment: 8, kalip_sealed_weapon_core: 2 },
+        desc: '從目前職業可用的高階武器或封印武器材料中取得一件。'
     }
 };
 
@@ -1994,6 +2023,7 @@ const game = {
         if(tabId === 'inv') this.renderInventory();
         if(tabId === 'magic') this.renderSkills();
         if(tabId === 'pet') this.renderPets();
+        if(tabId === 'shop') { this.renderGemExchange(); this.renderKalipFragmentExchange(); }
         if(tabId === 'settings') this.updateSettingsUI();
     },
 
@@ -3044,6 +3074,7 @@ const game = {
         document.getElementById('ui-buffs').innerHTML = buffHtml || '無附加狀態';
         this.renderPetStatus();
         this.renderGemExchange();
+        this.renderKalipFragmentExchange();
     },
 
     getItemColorClass: function(item, def) {
@@ -3303,6 +3334,9 @@ const game = {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
             } else if (def.type === 'quest') {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
+                if (['kalip_weapon_fragment','kalip_tempered_steel','kalip_high_weapon_fragment','kalip_sealed_weapon_core'].includes(item.itemId)) {
+                    actions += `<button class="btn-ui c-info border-blue-800" onclick="game.switchTab('shop')">兌換</button> `;
+                }
             }
 
             let canSell = false;
@@ -3573,6 +3607,7 @@ const game = {
         this.updateUI();
         this.renderInventory();
         this.renderGemExchange();
+        this.renderKalipFragmentExchange();
     },
 
     sellAllNonAccessoryEquipment: function() {
@@ -3655,6 +3690,7 @@ const game = {
         this.updateUI();
         this.renderInventory();
         this.renderGemExchange();
+        this.renderKalipFragmentExchange();
     },
 
     discardItem: function(itemKey) {
@@ -3668,6 +3704,7 @@ const game = {
         this.updateUI();
         this.renderInventory();
         this.renderGemExchange();
+        this.renderKalipFragmentExchange();
     },
 
     openEnchantModal: function(itemKey) {
@@ -3865,6 +3902,136 @@ const game = {
         this.addInventory(selected.id, selected.count || 1, 0, false);
         this.logSystem(`${exchange.name} 扣除了 ${ITEMS[spendId].name}，開出了 ${ITEMS[selected.id].name} x${selected.count || 1}！`, 'reward');
         this.renderGemExchange();
+        this.renderKalipFragmentExchange();
+        this.renderInventory();
+        this.updateUI();
+    },
+    getKalipSealedClasses: function(itemId) {
+        const sealedClasses = {
+            sealed_forgotten_sword: ['knight','elf','dark_elf'],
+            sealed_forgotten_great_sword: ['knight'],
+            sealed_forgotten_crossbow: ['elf','dark_elf'],
+            sealed_forgotten_dual_blade: ['dark_elf'],
+            sealed_forgotten_staff: ['wizard']
+        };
+        return sealedClasses[itemId] || null;
+    },
+    isKalipRewardSuitableForClass: function(itemId) {
+        let def = ITEMS[itemId];
+        if (!def) return false;
+        let sealedClasses = this.getKalipSealedClasses(itemId);
+        if (sealedClasses) return sealedClasses.includes(this.state.classId);
+        if (def.type === 'weapon') {
+            if (def.classes && !def.classes.includes(this.state.classId)) return false;
+            let cls = this.getClassDef();
+            return !!cls.allowedWeaponClasses && cls.allowedWeaponClasses.includes(this.getWeaponClass(itemId));
+        }
+        if (def.type === 'book' && def.spellId && SPELLS[def.spellId]) {
+            let learnableMax = this.getLearnableSpellMaxLevelForClass ? this.getLearnableSpellMaxLevelForClass(def.spellId) : this.getSpellMaxLevelForClass(def.spellId);
+            return this.canUseSpellForClass(def.spellId) && SPELLS[def.spellId].level <= learnableMax;
+        }
+        return false;
+    },
+    getKalipClassWeaponPool: function(tier) {
+        const pools = {
+            mid: {
+                knight: ['katana','sword_tsurugi','sword_damascus','sword_two_handed','sword_damascus_two_handed'],
+                elf: ['bow_elven','bow_elven_dex','bow_lastabad','crossbow','crossbow_lastabad','sword_damascus'],
+                wizard: ['magic_staff','staff_mana','dagger_ori','sword_damascus'],
+                dark_elf: ['dual_steel','claw_steel','dual_blade_dark','claw_dark','dual_damascus','claw_damascus','crossbow_dark','sword_damascus']
+            },
+            high: {
+                knight: ['sealed_forgotten_sword','sealed_forgotten_great_sword','sword_tsurugi','sword_damascus_two_handed'],
+                elf: ['sealed_forgotten_crossbow','sealed_forgotten_sword','crossbow_shadow','crossbow_dark','bow_yumi'],
+                wizard: ['sealed_forgotten_staff','staff_mana'],
+                dark_elf: ['sealed_forgotten_dual_blade','sealed_forgotten_crossbow','dual_shadow_high','claw_shadow_high','crossbow_shadow']
+            }
+        };
+        return (pools[tier]?.[this.state.classId] || []).filter(id => this.isKalipRewardSuitableForClass(id));
+    },
+    getKalipClassSkillPool: function() {
+        const preferred = {
+            knight: ['book_knight_reduction_armor','book_knight_solid_carriage','book_knight_shield_bash','book_knight_sword_shield_mastery','book_knight_shock_stun','book_knight_counter_barrier'],
+            elf: ['crystal_elf_resist_magic','crystal_elf_body_to_mind','crystal_elf_clear_mind','crystal_elf_earth_skin','crystal_elf_fire_weapon','crystal_elf_wind_shot','crystal_elf_soul_to_mind','crystal_elf_triple_arrow','crystal_elf_storm_shot','crystal_elf_iron_skin','crystal_elf_release_elemental','crystal_elf_elemental_fire','crystal_elf_dance_of_fire'],
+            dark_elf: ['crystal_dark_enchant_venom','crystal_dark_shadow_armor','crystal_dark_burning_spirit','crystal_dark_shadow_fang','crystal_dark_uncanny_dodge','crystal_dark_double_break','crystal_dark_dress_mighty','crystal_dark_armor_break'],
+            wizard: []
+        };
+        let pool = preferred[this.state.classId] ? [...preferred[this.state.classId]] : [];
+        if (this.state.classId === 'wizard') {
+            pool = Object.keys(ITEMS).filter(id => {
+                let def = ITEMS[id];
+                let spell = def && def.type === 'book' && def.spellId ? SPELLS[def.spellId] : null;
+                return spell && (!spell.classes || spell.classes.length === 0);
+            });
+        }
+        pool = pool.filter(id => this.isKalipRewardSuitableForClass(id));
+        let unlearned = pool.filter(id => {
+            let def = ITEMS[id];
+            return def && def.spellId && !this.state.spells.includes(def.spellId);
+        });
+        return unlearned.length > 0 ? unlearned : pool;
+    },
+    getKalipFragmentRewardPool: function(recipe) {
+        if (!recipe) return [];
+        if (recipe.type === 'skill') return this.getKalipClassSkillPool();
+        return this.getKalipClassWeaponPool(recipe.tier || 'mid');
+    },
+    getKalipFragmentRecipeStatus: function(recipe) {
+        let materialRows = Object.entries(recipe.materials || {}).map(([itemId, required]) => {
+            return { itemId, required, owned: this.getItemCount(itemId), name: ITEMS[itemId]?.name || itemId };
+        });
+        let hasMaterials = materialRows.every(row => row.owned >= row.required);
+        let hasAdena = (this.state.adena || 0) >= (recipe.adena || 0);
+        return { materialRows, hasMaterials, hasAdena, canExchange: hasMaterials && hasAdena };
+    },
+    pickKalipFragmentReward: function(pool) {
+        if (!pool || pool.length === 0) return null;
+        return pool[Math.floor(Math.random() * pool.length)];
+    },
+    renderKalipFragmentExchange: function() {
+        const list = document.getElementById('kalip-fragment-exchange-list');
+        if (!list) return;
+        list.innerHTML = '';
+        Object.keys(KALIP_FRAGMENT_EXCHANGES).forEach(recipeId => {
+            let recipe = KALIP_FRAGMENT_EXCHANGES[recipeId];
+            let status = this.getKalipFragmentRecipeStatus(recipe);
+            let pool = this.getKalipFragmentRewardPool(recipe);
+            let materialText = status.materialRows.map(row => `${row.name} ${row.owned}/${row.required}`).join('、');
+            let rewardText = pool.length > 0 ? pool.slice(0, 8).map(id => ITEMS[id].name).join('、') + (pool.length > 8 ? ` 等 ${pool.length} 種` : '') : '目前職業沒有可用獎勵';
+            let disabled = status.canExchange && pool.length > 0 ? '' : 'disabled';
+            list.insertAdjacentHTML('beforeend', `
+                <div class="list-item">
+                    <div class="min-w-0 pr-3">
+                        <div class="c-enchant">${recipe.name}</div>
+                        <div class="text-xs c-sys mt-1">需求：${materialText}${recipe.adena ? `、金幣 ${this.state.adena.toLocaleString()}/${recipe.adena.toLocaleString()}` : ''}</div>
+                        <div class="text-xs c-warn mt-1">${recipe.desc}</div>
+                        <div class="text-xs c-sys mt-1 leading-relaxed">本職獎勵池：${rewardText}</div>
+                    </div>
+                    <button class="btn-ui !px-3 !py-1 shrink-0" ${disabled} onclick="game.exchangeKalipFragments('${recipeId}')">兌換</button>
+                </div>
+            `);
+        });
+    },
+    exchangeKalipFragments: function(recipeId) {
+        let recipe = KALIP_FRAGMENT_EXCHANGES[recipeId];
+        if (!recipe) return;
+        let status = this.getKalipFragmentRecipeStatus(recipe);
+        let pool = this.getKalipFragmentRewardPool(recipe);
+        if (!status.canExchange) {
+            this.logSystem(`${recipe.name} 材料或金幣不足。`, 'danger');
+            return;
+        }
+        if (pool.length === 0) {
+            this.logSystem(`${this.getClassDef().name} 目前沒有可用的卡立普獎勵池。`, 'danger');
+            return;
+        }
+        Object.entries(recipe.materials || {}).forEach(([itemId, count]) => this.removeItemById(itemId, count));
+        if (recipe.adena) this.state.adena -= recipe.adena;
+        let rewardId = this.pickKalipFragmentReward(pool);
+        this.addInventory(rewardId, 1, 0, false);
+        let rewardDef = ITEMS[rewardId];
+        this.logSystem(`${recipe.name} 兌換成功，取得 ${this.getClassDef().name}可用的 ${rewardDef.name}。`, 'reward');
+        this.renderKalipFragmentExchange();
         this.renderInventory();
         this.updateUI();
     },
