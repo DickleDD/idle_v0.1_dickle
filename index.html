@@ -14,7 +14,9 @@
         .c-potion-red { color: #ef4444; } .c-potion-orange { color: #f97316; } .c-potion-white { color: #ffffff; } .c-potion-blue { color: #60a5fa; } .c-potion-purple { color: #c084fc; } 
         .c-over-1 { color: #4ade80; text-shadow: 0 0 3px #14532d; font-weight: bold; } .c-over-2 { color: #c084fc; text-shadow: 0 0 4px #581c87; font-weight: bold; } .c-over-3 { color: #f472b6; text-shadow: 0 0 4px #be185d; font-weight: bold; } .c-over-4 { color: #ef4444; text-shadow: 0 0 6px #7f1d1d; font-weight: bold; } 
         .panel-border { border: 1px solid #3f3f46; background-color: #09090b; }
-        .log-area { overflow-y: auto; word-wrap: break-word; padding: 12px; font-size: 1rem; }
+        .log-area { overflow-y: auto; word-wrap: break-word; padding: 10px 12px; font-size: 1rem; line-height: 1.35rem; overscroll-behavior: contain; }
+        #combat-log { flex: 0 0 calc(20 * 1.35rem + 20px); max-height: calc(20 * 1.35rem + 20px); }
+        #system-log { flex: 0 0 calc(10 * 1.35rem + 20px); max-height: calc(10 * 1.35rem + 20px); }
         .custom-scroll::-webkit-scrollbar { width: 8px; } .custom-scroll::-webkit-scrollbar-track { background: transparent; } .custom-scroll::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; } .custom-scroll::-webkit-scrollbar-thumb:hover { background: #52525b; }
         .btn-ui { background-color: #1f2937; border: 1px solid #4b5563; color: #d1d5db; padding: 2px 10px; font-size: 0.95rem; border-radius: 4px; cursor: pointer; transition: all 0.2s; display: inline-block; text-align: center; }
         .btn-ui:hover:not(:disabled) { background-color: #374151; border-color: #6b7280; color: #f3f4f6; } .btn-ui:active:not(:disabled) { background-color: #111827; } .btn-ui:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -26,8 +28,15 @@
         .list-item { padding: 8px 4px; border-bottom: 1px dashed #27272a; display: flex; justify-content: space-between; align-items: center; } .list-item:hover { background-color: #18181b; }
         .set-active-row { background: linear-gradient(90deg, rgba(88,28,135,0.4) 0%, rgba(24,24,27,0) 100%); border-left: 3px solid #c084fc; }
         .modal-overlay { background-color: rgba(0, 0, 0, 0.9); backdrop-filter: blur(2px); }
-        .spell-grid-item { background-color: #1f2937; border: 1px solid #3f3f46; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; text-align: center; min-height: 80px; }
+        .spell-grid-item { background-color: #1f2937; border: 1px solid #3f3f46; border-radius: 4px; padding: 6px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; min-height: 128px; }
         .pet-card { background-color: #111827; border: 1px solid #374151; border-radius: 6px; padding: 12px; }
+        .companion-card { background-color: #111827; border: 1px solid #374151; border-radius: 6px; padding: 12px; }
+        .rarity-r { color: #60a5fa; }
+        .rarity-sr { color: #facc15; text-shadow: 0 0 5px rgba(250,204,21,.45); }
+        .rarity-ssr { background: linear-gradient(90deg,#ff7ad9,#ffd166,#8aff80,#70d6ff,#b388ff); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: 0 0 8px rgba(255,255,255,.35); animation: ssrNameGlow 2.4s ease-in-out infinite; }
+        @keyframes ssrNameGlow { 0%,100% { filter: drop-shadow(0 0 2px rgba(255,255,255,.25)); } 50% { filter: drop-shadow(0 0 8px rgba(255,215,0,.8)); } }
+        .panel-toggle { border: 1px solid #3f3f46; background: #111827; color: #d4d4d8; padding: 2px 8px; border-radius: 3px; font-size: .75rem; }
+        .compact-panel-hidden { display: none; }
         .achievement-card-done { border-color: rgba(250,204,21,.85); background: linear-gradient(135deg, rgba(113,63,18,.45), rgba(24,24,27,.92) 48%, rgba(202,138,4,.2)); box-shadow: 0 0 12px rgba(250,204,21,.35), inset 0 0 14px rgba(250,204,21,.12); animation: achievementGoldGlow 2.4s ease-in-out infinite alternate; }
         .achievement-card-done .achievement-star { color: #fde047; text-shadow: 0 0 8px rgba(250,204,21,.95), 0 0 18px rgba(245,158,11,.55); }
         @keyframes achievementGoldGlow { from { box-shadow: 0 0 8px rgba(250,204,21,.22), inset 0 0 10px rgba(250,204,21,.08); } to { box-shadow: 0 0 18px rgba(250,204,21,.5), inset 0 0 18px rgba(250,204,21,.18); } }
@@ -98,17 +107,21 @@
     </div>
 
     <!-- 主遊戲介面 -->
-    <div id="main-ui" class="flex-1 flex gap-3 hidden h-full">
+    <div id="main-ui" class="h-[calc(100vh-1rem)] min-h-0 flex gap-3 hidden overflow-hidden">
         <!-- 左側：角色狀態 -->
-        <div class="w-1/4 flex flex-col gap-3 h-full">
-            <div class="panel-border p-5 flex-shrink-0 rounded-md">
-                <div class="c-title text-2xl mb-3 border-b border-gray-800 pb-2">角色狀態</div>
+        <div class="w-1/4 flex flex-col gap-3 h-full min-h-0 overflow-hidden">
+            <div class="panel-border p-5 flex-shrink-0 max-h-[58%] overflow-y-auto custom-scroll rounded-md">
+                <div class="c-title text-2xl mb-3 border-b border-gray-800 pb-2 flex items-center justify-between">
+                    <span>角色狀態</span>
+                    <button id="btn-toggle-player-status" class="panel-toggle" onclick="game.togglePlayerStatus()">展開玩家</button>
+                </div>
                 <div class="text-xl mb-2">等級 <span id="ui-level" class="c-warn font-bold">1</span> <span id="ui-class" class="c-info text-base ml-2">騎士</span></div>
                 <div class="space-y-2 mb-4">
                     <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" id="ui-hp-bar" style="width: 100%;"></div><span class="bar-text" id="ui-hp-text">12/12</span></div></div>
                     <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" id="ui-mp-bar" style="width: 100%;"></div><span class="bar-text" id="ui-mp-text">10/10</span></div></div>
                     <div class="flex items-center">經驗:<div class="bar-container flex-1"><div class="bar-fill exp" id="ui-exp-bar" style="width: 0%;"></div><span class="bar-text" id="ui-exp-text">0.00%</span></div></div>
                 </div>
+                <div id="character-detail-body" class="compact-panel-hidden">
                 <div class="grid grid-cols-2 gap-x-4 gap-y-3 mt-4 border-t border-gray-800 pt-4">
                     <div>力量: <span id="ui-str" class="font-bold">8</span></div><div>防禦(AC): <span id="ui-ac" class="c-info font-bold">10</span></div>
                     <div>敏捷: <span id="ui-dex" class="font-bold">8</span></div><div>魔防(MR): <span id="ui-mr" class="c-magic font-bold">0%</span></div>
@@ -129,9 +142,27 @@
                         <button id="bonus-stat-wis" class="btn-ui !px-2 !py-1 text-sm" onclick="game.allocateBonusStat('wis')">精神+</button>
                     </div>
                 </div>
-                <div class="mt-4 border-t border-gray-800 pt-4 text-xl"><span class="c-warn">金幣: <span id="ui-adena" class="font-bold">0</span></span></div>
                 <div id="ui-buffs" class="mt-3 text-sm min-h-[28px] text-gray-400"></div>
-                <div id="ui-pet-status" class="mt-4 border-t border-gray-800 pt-3 text-sm"></div>
+                </div>
+                <div class="mt-4 border-t border-gray-800 pt-4 text-xl"><span class="c-warn">金幣: <span id="ui-adena" class="font-bold">0</span></span></div>
+                <div class="mt-4 border-t border-gray-800 pt-3">
+                    <div class="flex items-center justify-between c-title text-lg mb-2">
+                        <span>寵物狀態</span>
+                        <button id="btn-toggle-pet-status" class="panel-toggle" onclick="game.togglePetStatus()">展開寵物</button>
+                    </div>
+                    <div id="pet-status-body" class="compact-panel-hidden">
+                        <div id="ui-pet-status" class="text-sm"></div>
+                    </div>
+                </div>
+                <div class="mt-4 border-t border-gray-800 pt-3">
+                    <div class="flex items-center justify-between c-title text-lg mb-2">
+                        <span>隊友狀態</span>
+                        <button id="btn-toggle-companion-status" class="panel-toggle" onclick="game.toggleCompanionStatus()">展開隊友</button>
+                    </div>
+                    <div id="companion-status-body" class="compact-panel-hidden">
+                        <div id="ui-companion-status" class="text-sm"></div>
+                    </div>
+                </div>
             </div>
             <div class="panel-border p-3 flex-shrink-0 rounded-md bg-zinc-900 border-zinc-800 flex items-center justify-between gap-3 shadow-inner">
                 <span class="c-magic font-bold ml-1">自動施放攻擊魔法:</span>
@@ -139,27 +170,30 @@
                     <option value="none">無 (純物理攻擊)</option>
                 </select>
             </div>
-            <div class="panel-border p-4 flex-1 flex flex-col min-h-0 rounded-md">
+            <div class="panel-border p-4 flex-shrink-0 flex flex-col rounded-md">
                 <div class="c-title mb-2 text-xl border-b border-gray-800 pb-2"><span>系統與獲得資訊</span></div>
-                <div id="system-log" class="log-area flex-1 custom-scroll"></div>
+                <div id="system-log" class="log-area custom-scroll"></div>
             </div>
         </div>
 
         <!-- 中間：操作區 -->
-        <div class="w-2/4 flex flex-col h-full">
-            <div class="flex text-lg items-end gap-1 px-1">
+        <div class="w-2/4 flex flex-col h-full min-h-0 overflow-hidden">
+            <div class="flex flex-wrap text-lg items-end gap-1 px-1">
                 <button class="tab-btn active" onclick="game.switchTab('inv')">裝備與背包</button>
                 <button class="tab-btn" onclick="game.switchTab('magic')">已學習魔法</button>
                 <button class="tab-btn" onclick="game.switchTab('pet')">寵物</button>
+                <button class="tab-btn" onclick="game.switchTab('companion')">隊友</button>
                 <button class="tab-btn" onclick="game.switchTab('shop')">商店交換和製作</button>
                 <button class="tab-btn" onclick="game.switchTab('records')">冒險紀錄</button>
                 <button class="tab-btn" onclick="game.switchTab('settings')">設定</button>
             </div>
             <div class="panel-border p-5 flex-1 flex flex-col min-h-0 relative rounded-b-md rounded-tr-md">
                 <div id="tab-inv" class="flex-1 flex gap-3 h-full overflow-hidden">
-                    <div class="flex-1 flex flex-col h-full bg-slate-900 border border-slate-700 rounded-md p-3">
+                    <div class="flex-1 flex flex-col h-full min-h-0 bg-slate-900 border border-slate-700 rounded-md p-3">
                         <div class="c-title mb-2 text-lg border-b border-slate-700 pb-1">目前裝備</div>
-                        <div id="equip-list" class="flex-1 overflow-y-auto custom-scroll space-y-1 pr-1"></div>
+                        <div id="equip-list" class="max-h-[44%] overflow-y-auto custom-scroll space-y-1 pr-1"></div>
+                        <div class="c-title mt-4 mb-2 text-lg border-b border-slate-700 pb-1">隊友裝備</div>
+                        <div id="companion-equip-list" class="flex-1 min-h-[160px] overflow-y-auto custom-scroll space-y-1 pr-1"></div>
                     </div>
                     <div class="flex-1 flex flex-col h-full bg-zinc-900 border border-zinc-700 rounded-md p-3">
                         <div class="c-title mb-2 text-lg border-b border-zinc-700 pb-1"><span>背包清單</span></div>
@@ -190,9 +224,33 @@
                     </div>
                     <div id="pet-list" class="flex-1 overflow-y-auto custom-scroll pr-2 grid grid-cols-2 gap-3 content-start"></div>
                 </div>
+                <div id="tab-companion" class="flex-1 flex flex-col h-full overflow-hidden hidden">
+                    <div class="c-title mb-3 text-xl border-b border-gray-800 pb-2 flex justify-between">
+                        <span>隊友</span><span id="ui-active-companion" class="text-base c-sys font-normal">30 級後開放</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 mb-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
+                        <div>30 級後可用金幣尋找隊友；同時只能帶一名隊友與一隻寵物出戰。</div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button class="btn-ui c-info" onclick="game.drawCompanions(1)">抽取隊友 100,000</button>
+                            <button class="btn-ui c-warn" onclick="game.drawCompanions(10)">十連抽 1,000,000</button>
+                            <button class="btn-ui c-err border-red-800" onclick="game.dismissUnlockedCompanions()">解雇未鎖定隊友</button>
+                            <span id="companion-count" class="text-sm c-sys">0/80</span>
+                        </div>
+                    </div>
+                    <div id="companion-list" class="flex-1 overflow-y-auto custom-scroll pr-2 grid grid-cols-2 gap-3 content-start"></div>
+                </div>
                 <div id="tab-shop" class="flex-1 flex flex-col h-full overflow-hidden hidden">
                     <div class="flex-1 overflow-y-auto custom-scroll pr-2">
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">消耗品商店</div>
+                        <div class="mb-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
+                            <div class="flex flex-wrap items-center gap-3">
+                                <span class="c-info font-bold">指定數量購買</span>
+                                <select id="shop-bulk-item" class="bg-black border border-gray-600 text-white py-1 px-2 rounded min-w-[180px]"></select>
+                                <input type="number" id="shop-bulk-qty" min="1" value="100" class="w-24 bg-black border border-gray-600 text-center text-white py-1 rounded">
+                                <button class="btn-ui c-success" onclick="game.buySelectedItemQty()">購買指定數量</button>
+                                <span id="shop-bulk-price" class="text-sm c-warn"></span>
+                            </div>
+                        </div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
                             <div class="list-item"><span class="c-potion-red">治癒藥水</span> <div class="flex items-center gap-3"><span class="c-warn">37 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_red')">購買</button></div></div>
                             <div class="list-item"><span class="c-potion-orange">強力治癒藥水</span> <div class="flex items-center gap-3"><span class="c-warn">200 金幣</span> <button class="btn-ui !px-3 !py-1" onclick="game.buyItem('potion_orange')">購買</button></div></div>
@@ -239,6 +297,8 @@
                         <div id="gem-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普碎片交換</div>
                         <div id="kalip-fragment-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">傲慢之塔戰利品製作</div>
+                        <div id="tower-craft-list" class="grid grid-cols-1 gap-3 mb-8"></div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">龍鱗盔甲製作</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
                             <div class="list-item">
@@ -349,6 +409,9 @@
                             </div>
                         </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">系統存檔</div>
+                        <div class="mb-3 c-sys bg-gray-900 p-3 rounded border border-gray-800 text-sm">
+                            目前不會在強化、升級、換頁或離開頁面時自動覆寫存檔；需要保留進度時請手動按下儲存進度。
+                        </div>
                         <div class="flex gap-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
                              <button class="btn-ui flex-1 py-2 c-success border-green-800 hover:bg-green-900 !text-lg" onclick="game.saveGame()">儲存進度</button>
                              <button class="btn-ui flex-1 py-2 c-err border-red-800 hover:bg-red-900 !text-lg" onclick="game.deleteSave()">刪除存檔</button>
@@ -373,7 +436,7 @@
         </div>
 
         <!-- 右側：戰鬥區 -->
-        <div class="w-1/4 flex flex-col gap-3 h-full">
+        <div class="w-1/4 flex flex-col gap-3 h-full min-h-0 overflow-hidden">
             <div class="panel-border p-4 flex-shrink-0 flex justify-between items-center rounded-md">
                 <span class="c-title text-xl">目前位置:</span>
                 <select id="map-select" class="bg-black c-sys border border-gray-600 py-1 px-2 rounded outline-none cursor-pointer" onchange="game.changeMap(this.value)"></select>
@@ -385,9 +448,9 @@
                     <div class="bar-container w-full max-w-[200px] hidden" id="target-hp-container"><div class="bar-fill hp" id="target-hp-bar" style="width: 100%;"></div></div>
                 </div>
             </div>
-            <div class="panel-border p-4 flex-1 flex flex-col min-h-0 rounded-md">
+            <div class="panel-border p-4 flex-shrink-0 flex flex-col rounded-md">
                 <div class="c-title mb-2 text-xl border-b border-gray-800 pb-2">戰鬥資訊</div>
-                <div id="combat-log" class="log-area flex-1 custom-scroll"></div>
+                <div id="combat-log" class="log-area custom-scroll"></div>
             </div>
         </div>
     </div>
@@ -470,11 +533,22 @@ const EXP_TABLE = [0];
 const earlyExp = [125, 175, 200, 250, 546, 1105, 1695, 2465, 3439, 4641, 6095, 7825, 9855, 12209, 14911, 17985, 21455, 25345, 29679, 34481];
 EXP_TABLE.push(...earlyExp);
 const midExp = {21: 40000, 22: 45585, 23: 51935, 24: 58849, 25: 66351, 26: 74465, 27: 83215, 28: 92625, 29: 102719, 30: 113521, 31: 125055, 32: 137345, 33: 150415, 34: 164289, 35: 178991, 36: 194545, 37: 210975, 38: 228305, 39: 246559, 40: 265761, 41: 285935, 42: 307105, 44: 352529};
-const smoothLateExp = {45: 500000, 46: 690000, 47: 950000, 48: 1300000, 49: 1780000, 50: 2420000, 51: 3260000, 52: 4360000, 53: 5800000, 54: 7650000, 55: 10000000};
+const smoothLateExp = {
+    45: 500000, 46: 690000, 47: 950000, 48: 1300000, 49: 1780000,
+    50: 2000000, 51: 2500000, 52: 3100000, 53: 3800000, 54: 4500000,
+    55: 5200000, 56: 5900000, 57: 6600000, 58: 7300000, 59: 8000000,
+    60: 8700000, 61: 9400000, 62: 10100000, 63: 10800000, 64: 11600000,
+    65: 12400000, 66: 13200000, 67: 14100000, 68: 15000000, 69: 15900000,
+    70: 16800000, 71: 17800000, 72: 18800000, 73: 19800000, 74: 20800000,
+    75: 22000000
+};
 for(let i=21; i<=44; i++) EXP_TABLE[i] = midExp[i] || Math.floor(EXP_TABLE[i-1] * 1.1);
 Object.keys(smoothLateExp).forEach(level => EXP_TABLE[Number(level)] = smoothLateExp[level]);
-const LATE_EXP_CAP = 36065092;
-for(let i=56; i<=90; i++) EXP_TABLE[i] = Math.min(LATE_EXP_CAP, Math.floor(EXP_TABLE[i-1] * 1.23));
+const LATE_EXP_CAP = 85000000;
+for(let i=76; i<=90; i++) {
+    let growth = i <= 80 ? 1.09 : 1.12;
+    EXP_TABLE[i] = Math.min(LATE_EXP_CAP, Math.floor(EXP_TABLE[i-1] * growth));
+}
 
 const ITEMS = {
     dagger_orc: { name: '歐西斯匕首', type: 'weapon', hands: 1, speed: 800, safe: 6, dice: '1d3', hit: 2, dropRate: 1 },
@@ -776,6 +850,74 @@ const GEM_EXCHANGES = {
         ]
     }
 };
+
+const DICKLE_MAGIC_AND_COMPANION_DATA_090 = (() => {
+    Object.assign(ITEMS, {
+        crystal_elf_life_fountain: { name: '精靈水晶(生命之泉)', type: 'book', spellId: 'elf_life_fountain', sellPrice: 12000, desc: '妖精四階水系魔法：大幅提高生命恢復。' },
+        crystal_elf_aqua_protect: { name: '精靈水晶(水之防護)', type: 'book', spellId: 'elf_aqua_protect', sellPrice: 12000, desc: '妖精四階水系魔法：大幅提高迴避率。' },
+        crystal_elf_bless_of_life: { name: '精靈水晶(生命的祝福)', type: 'book', spellId: 'elf_bless_of_life', sellPrice: 16000, desc: '妖精四階水系魔法：回復玩家、寵物與隊友生命值。' },
+        book_ultimate_light_spear: { name: '魔法書(究極光裂術)', type: 'book', spellId: 'ultimate_light_spear', sellPrice: 120000, desc: '法師十階魔法：最強貫通攻擊魔法。' },
+        book_soul_ascension: { name: '魔法書(靈魂昇華)', type: 'book', spellId: 'soul_ascension', sellPrice: 100000, desc: '法師十階魔法：暫時提高 HP/MP 最大值。' }
+    });
+    Object.assign(SPELLS, {
+        elf_life_fountain: { id: 'elf_life_fountain', name: '生命之泉', level: 4, type: 'buff', mp: 35, duration: 1200, classes: ['elf'], element: 'water', desc: '妖精四階水系魔法。強力增加 HP 回復量，角色等級越高效果越好。' },
+        elf_aqua_protect: { id: 'elf_aqua_protect', name: '水之防護', level: 4, type: 'buff', mp: 35, duration: 900, classes: ['elf'], element: 'water', desc: '妖精四階水系魔法。大幅提高迴避率，適合高壓掛機與推進。' },
+        elf_bless_of_life: { id: 'elf_bless_of_life', name: '生命的祝福', level: 4, type: 'heal', mp: 45, healBase: 80, classes: ['elf'], element: 'water', partyHeal: true, desc: '妖精四階水系魔法。一次回復玩家、寵物與隊友生命值。' },
+        ultimate_light_spear: { id: 'ultimate_light_spear', name: '究極光裂術', level: 10, type: 'attack', mp: 120, dice: '12d18', baseDmg: 180, classes: ['wizard'], mrIgnoreRate: 0.75, intScale: 8, desc: '法師十階魔法。巨大的光矛貫穿目標，降低敵人有效 MR 75%，並受智力加值。' },
+        soul_ascension: { id: 'soul_ascension', name: '靈魂昇華', level: 10, type: 'buff', mp: 80, duration: 1800, classes: ['wizard'], desc: '法師十階魔法。1800 秒內 HP/MP 最大值提高 20%。' }
+    });
+    const desc = {
+        light_arrow: '低耗魔攻擊魔法，適合法師初期自動戰鬥。',
+        heal: '回復自身 HP，治癒量受魔法傷害加成影響。',
+        shield: '提升防禦力，降低被命中的壓力。',
+        vampire: '造成暗屬性魔法傷害，並吸收部分傷害回復 HP。',
+        dex_buff: '提升敏捷，增加命中、遠攻與迴避相關表現。',
+        slow: '降低怪物攻擊節奏，Boss 會受到弱化效果。',
+        earth: '土系攻擊魔法，適合打高防怪。',
+        darkness: '降低怪物命中，使掛機更穩。',
+        create_zombie: '保留系統用途的亡者系魔法，目前偏收藏與學習進度。',
+        sleep_mist: '使怪物短暫沉睡，減少受到攻擊的頻率。',
+        disease: '降低怪物防禦與戰鬥能力。',
+        immune_to_harm: '短時間降低受到的傷害，是法師保命核心。',
+        berserkers: '提升輸出但犧牲部分防禦，適合想加快擊殺時使用。',
+        weapon_break: '降低怪物物理攻擊威脅。',
+        fire_arrow: '高階單體火焰攻擊魔法。',
+        fireball: '中階火焰攻擊魔法。',
+        summon_ogre: '召喚系魔法定位，提供學習進度與部分事件支援。',
+        tame_monster: '迷魅系魔法定位，提供學習進度與部分事件支援。',
+        lightning_storm: '高階雷電攻擊魔法。',
+        resurrection: '返生系魔法定位，未來隊伍玩法可延伸。',
+        full_heal: '大量回復自身 HP，治癒量受魔法傷害加成影響。',
+        high_heal: '高級治癒術，妖精與高智流派的重要續戰手段。',
+        mid_heal: '中量回復自身 HP，治癒量受魔法傷害加成影響。',
+        call_lightning: '強力單體雷電攻擊魔法。',
+        str_buff: '提升力量，增加近戰輸出與負重感。',
+        detection: '偵測隱匿目標，主要用於挖出史巴托等隱藏怪。',
+        enchant_weapon: '提升武器魔法威力，使普攻更穩。',
+        tornado: '高階風系攻擊魔法。',
+        blizzard: '高階冰系攻擊魔法，對低血 Boss 有爆發機會。',
+        greater_haste: '大幅提升攻擊速度。',
+        earth_prison: '土系控制攻擊魔法。',
+        quake: '高階土系攻擊魔法。',
+        cancel: '解除自身石化、昏迷、毒霧、武器破壞等部分異常狀態。',
+        haste: '提升攻擊速度。',
+        fire_storm: '高階火系攻擊魔法，適合清高血量目標。'
+    };
+    Object.keys(desc).forEach(id => { if (SPELLS[id] && !SPELLS[id].desc) SPELLS[id].desc = desc[id]; });
+    GEM_EXCHANGES.kalip_high.rewards.push(
+        { id: 'crystal_elf_life_fountain', count: 1, weight: 0.8 },
+        { id: 'crystal_elf_aqua_protect', count: 1, weight: 0.8 },
+        { id: 'crystal_elf_bless_of_life', count: 1, weight: 0.45 }
+    );
+    GEM_EXCHANGES.kalip_rare.rewards.push(
+        { id: 'crystal_elf_life_fountain', count: 1, weight: 1.2 },
+        { id: 'crystal_elf_aqua_protect', count: 1, weight: 1.2 },
+        { id: 'crystal_elf_bless_of_life', count: 1, weight: 0.8 },
+        { id: 'book_soul_ascension', count: 1, weight: 0.18 },
+        { id: 'book_ultimate_light_spear', count: 1, weight: 0.08 }
+    );
+    return true;
+})();
 
 const KALIP_FRAGMENT_EXCHANGES = {
     class_weapon: {
@@ -1108,27 +1250,27 @@ Object.assign(ITEMS, {
 });
 
 Object.assign(SPELLS, {
-    elf_resist_magic: { id: 'elf_resist_magic', name: '魔法防禦', level: 1, type: 'buff', mp: 5, duration: 1200, classes: ['elf'] },
-    elf_body_to_mind: { id: 'elf_body_to_mind', name: '心靈轉換', level: 2, type: 'mp_convert', mp: 0, hpCost: 8, mpGain: 2, classes: ['elf'] },
-    elf_soul_to_mind: { id: 'elf_soul_to_mind', name: '魂體轉換', level: 3, type: 'mp_convert', mp: 0, hpCost: 50, mpGain: 15, classes: ['elf'] },
-    elf_triple_arrow: { id: 'elf_triple_arrow', name: '三重矢', level: 3, type: 'buff', mp: 10, duration: 600, classes: ['elf'] },
-    elf_clear_mind: { id: 'elf_clear_mind', name: '淨化精神', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'] },
-    elf_fire_weapon: { id: 'elf_fire_weapon', name: '火焰武器', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
-    elf_wind_shot: { id: 'elf_wind_shot', name: '風之神射', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
-    elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'] },
-    elf_storm_shot: { id: 'elf_storm_shot', name: '暴風神射', level: 4, type: 'buff', mp: 16, duration: 1200, classes: ['elf'] },
-    elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
+    elf_resist_magic: { id: 'elf_resist_magic', name: '魔法防禦', level: 1, type: 'buff', mp: 5, duration: 1200, classes: ['elf'], desc: '提高 MR +10，受到魔法傷害時再小幅減傷；Boss 魔法也有效。' },
+    elf_body_to_mind: { id: 'elf_body_to_mind', name: '心靈轉換', level: 2, type: 'mp_convert', mp: 0, hpCost: 8, mpGain: 2, classes: ['elf'], desc: '消耗 8 HP 轉換 2 MP，可在設定中作為自動回魔技能。' },
+    elf_soul_to_mind: { id: 'elf_soul_to_mind', name: '魂體轉換', level: 3, type: 'mp_convert', mp: 0, hpCost: 50, mpGain: 15, classes: ['elf'], desc: '消耗 50 HP 轉換 15 MP，回魔效率較高但需注意血量安全。' },
+    elf_triple_arrow: { id: 'elf_triple_arrow', name: '三重矢', level: 3, type: 'buff', mp: 10, duration: 600, classes: ['elf'], desc: '弓系強化。裝備弓時大幅提高命中，普攻增傷並追加三段魔力箭傷害。' },
+    elf_clear_mind: { id: 'elf_clear_mind', name: '淨化精神', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['elf'], desc: '提高精神 +3，增加最大 MP、回魔與抗魔表現。' },
+    elf_fire_weapon: { id: 'elf_fire_weapon', name: '火焰武器', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'], desc: '提高武器傷害 +2；裝備近戰武器時依 INT/魔攻追加火焰傷害。' },
+    elf_wind_shot: { id: 'elf_wind_shot', name: '風之神射', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'], desc: '弓系強化。裝備弓時命中 +5、傷害 +3，提升遠距掛機效率。' },
+    elf_earth_skin: { id: 'elf_earth_skin', name: '大地防護', level: 3, type: 'buff', mp: 12, duration: 1200, classes: ['elf'], desc: '提高防禦力 AC -6，適合承受物理攻擊與穩定掛機。' },
+    elf_storm_shot: { id: 'elf_storm_shot', name: '暴風神射', level: 4, type: 'buff', mp: 16, duration: 1200, classes: ['elf'], desc: '高階弓系強化。裝備弓時命中 +8、傷害 +6，並穿透少量減傷。' },
+    elf_iron_skin: { id: 'elf_iron_skin', name: '鋼鐵防護', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'], desc: '提高傷害減免 +2；面對 Boss 魔法時也會額外降低受到的魔法傷害。' },
     elf_elemental_fire: { id: 'elf_elemental_fire', name: '烈焰之魂', level: 4, type: 'buff', mp: 22, duration: 1200, classes: ['elf'], desc: '妖精四階魔法，40級可用。近戰命中時有機率追加火焰魔法傷害。' },
     elf_dance_of_fire: { id: 'elf_dance_of_fire', name: '舞躍之火', level: 4, type: 'buff', mp: 18, duration: 900, classes: ['elf'], desc: '妖精四階魔法，40級可用。只在裝備近戰武器時提高攻擊速度。' },
-    de_enchant_venom: { id: 'de_enchant_venom', name: '附加劇毒', level: 1, type: 'buff', mp: 8, duration: 1200, classes: ['dark_elf'] },
-    de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 1, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'] },
-    de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 2, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'] },
-    de_shadow_fang: { id: 'de_shadow_fang', name: '暗影之牙', level: 2, type: 'buff', mp: 20, duration: 1200, classes: ['dark_elf'] },
-    de_uncanny_dodge: { id: 'de_uncanny_dodge', name: '暗影閃避', level: 3, type: 'buff', mp: 25, duration: 600, classes: ['dark_elf'] },
-    de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 3, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'] },
-    de_armor_break: { id: 'de_armor_break', name: '破壞盔甲', level: 4, type: 'buff', mp: 45, duration: 600, classes: ['dark_elf'] },
-    de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 3, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'] },
-    knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'] },
+    de_enchant_venom: { id: 'de_enchant_venom', name: '附加劇毒', level: 1, type: 'buff', mp: 8, duration: 1200, classes: ['dark_elf'], desc: '黑妖近戰命中時有機率追加毒傷與爆裂傷害，血量越低觸發收益越高。' },
+    de_shadow_armor: { id: 'de_shadow_armor', name: '暗影防護', level: 1, type: 'buff', mp: 10, duration: 1200, classes: ['dark_elf'], desc: '提高防禦 AC -2、DR +1，並小幅降低受到的魔法傷害。' },
+    de_burning_spirit: { id: 'de_burning_spirit', name: '燃燒鬥志', level: 2, type: 'buff', mp: 20, duration: 600, classes: ['dark_elf'], desc: '傷害 +3；近戰爆擊或高擲骰時吸血並追加反噬傷害，低血時更強。' },
+    de_shadow_fang: { id: 'de_shadow_fang', name: '暗影之牙', level: 2, type: 'buff', mp: 20, duration: 1200, classes: ['dark_elf'], desc: '提高武器傷害 +5，是黑妖穩定普攻輸出的核心增益。' },
+    de_uncanny_dodge: { id: 'de_uncanny_dodge', name: '暗影閃避', level: 3, type: 'buff', mp: 25, duration: 600, classes: ['dark_elf'], desc: '提高迴避 ER +10，並有機率完全閃避魔法傷害；低血時機率上升。' },
+    de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 3, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'], desc: '雙刀限定爆發核心。命中時有機率傷害翻倍，對 Boss 近戰還追加命中與破防收益。' },
+    de_armor_break: { id: 'de_armor_break', name: '破壞盔甲', level: 4, type: 'buff', mp: 45, duration: 600, classes: ['dark_elf'], desc: '40級可用。爪/雙刀對 Boss 近戰時可觸發破甲、追加傷害；閃避時也會反擊。' },
+    de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 3, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'], desc: '提高力量 +2 並增加傷害 +2，強化黑妖近戰輸出。' },
+    knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'], desc: '雙手武器限定攻擊技。一般怪會被震暈；Boss 改為短暫打斷並破甲。' },
     knight_reduction_armor: { id: 'knight_reduction_armor', name: '增幅防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['knight'], desc: '裝備盾牌時追加 AC 與減傷。' },
     knight_solid_carriage: { id: 'knight_solid_carriage', name: '堅固防護', level: 3, type: 'buff', mp: 15, duration: 600, classes: ['knight'], desc: '單手武器加盾牌時追加 DR 與 MR。' },
     knight_counter_barrier: { id: 'knight_counter_barrier', name: '反擊屏障', level: 3, type: 'buff', mp: 20, duration: 600, classes: ['knight'], desc: '雙手武器限定，受擊時有機率反擊。' },
@@ -1250,8 +1392,8 @@ Object.assign(ITEMS, {
 });
 
 Object.assign(SPELLS, {
-    elf_release_elemental: { id: 'elf_release_elemental', name: '釋放元素', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'] },
-    invisibility: { id: 'invisibility', name: '隱身術', level: 6, type: 'buff', mp: 15, duration: 600, classes: ['wizard'] }
+    elf_release_elemental: { id: 'elf_release_elemental', name: '釋放元素', level: 4, type: 'buff', mp: 20, duration: 1200, classes: ['elf'], desc: '四階妖精魔法。釋放元素力量，大幅降低受到的魔法傷害。' },
+    invisibility: { id: 'invisibility', name: '隱身術', level: 6, type: 'buff', mp: 15, duration: 600, classes: ['wizard'], desc: '目前不提供掛機戰鬥數值效果，主要作為學習收藏與未來潛行玩法預留。' }
 });
 Object.assign(ITEMS, {
     crystal_elf_release_elemental: { name: '精靈水晶(釋放元素)', type: 'book', spellId: 'elf_release_elemental' },
@@ -1756,10 +1898,218 @@ const DICKLE_MONSTER_DROP_TUNE_042 = (() => {
     boostMidLateWeaponDropRates();
 })();
 
+const TOWER_BOSS_IDS = [
+    null,
+    'toi_zenith_queen',
+    'toi_seer',
+    'toi_vampire',
+    'toi_zombie_lord',
+    'toi_cougar',
+    'toi_mummy_lord',
+    'toi_iris',
+    'toi_knight_vald',
+    'toi_lich',
+    'toi_grim_reaper'
+];
+
+const TOWER_OF_INSOLENCE_CRAFTS = [
+    { id: 'zenith_ring', result: 'ring_zenith', adena: 600000, materials: { toi_fragment: 140, toi_boss_soul: 6 } },
+    { id: 'seer_amulet', result: 'amulet_seer', adena: 650000, materials: { toi_fragment: 160, toi_boss_soul: 7 } },
+    { id: 'vampire_cloak', result: 'cloak_vampire', adena: 700000, materials: { toi_fragment: 180, toi_boss_soul: 8 } },
+    { id: 'zombie_belt', result: 'belt_zombie_lord', adena: 750000, materials: { toi_fragment: 200, toi_boss_soul: 9 } },
+    { id: 'cougar_boots', result: 'boots_cougar', adena: 800000, materials: { toi_fragment: 220, toi_high_fragment: 35, toi_boss_soul: 10 } },
+    { id: 'mummy_crown', result: 'crown_mummy_lord', adena: 900000, materials: { toi_fragment: 240, toi_high_fragment: 45, toi_boss_soul: 12 } },
+    { id: 'iris_amulet', result: 'amulet_iris', adena: 1000000, materials: { toi_fragment: 280, toi_high_fragment: 55, toi_boss_soul: 14 } },
+    { id: 'vald_sword', result: 'sword_knight_vald', adena: 1200000, materials: { toi_fragment: 320, toi_high_fragment: 70, toi_boss_soul: 18 } },
+    { id: 'lich_staff', result: 'staff_lich', adena: 1300000, materials: { toi_fragment: 340, toi_high_fragment: 80, toi_boss_soul: 20 } },
+    { id: 'lich_robe', result: 'robe_lich', adena: 1400000, materials: { toi_fragment: 360, toi_high_fragment: 90, toi_boss_soul: 22 } },
+    { id: 'reaper_scythe', result: 'scythe_reaper', adena: 2200000, materials: { toi_fragment: 520, toi_high_fragment: 140, toi_boss_soul: 32, toi_reaper_core: 2 } }
+];
+
+const DICKLE_TOWER_OF_INSOLENCE_090 = (() => {
+    Object.assign(ITEMS, {
+        toi_fragment: { name: '傲慢之塔碎片', type: 'quest', dropRate: 1, sellPrice: 2000, desc: '傲慢之塔怪物掉落的材料，可用於製作塔內 Boss 裝備。' },
+        toi_high_fragment: { name: '傲慢之塔高階碎片', type: 'quest', dropRate: 0.35, sellPrice: 8000, desc: '傲慢之塔上層與 Boss 掉落的高階材料。' },
+        toi_boss_soul: { name: '傲慢支配者精粹', type: 'quest', dropRate: 0.1, sellPrice: 25000, desc: '傲慢之塔 Boss 殘留的精粹，是製作塔內畢業裝的核心素材。' },
+        toi_reaper_core: { name: '死神核心', type: 'quest', dropRate: 0.02, sellPrice: 120000, desc: '死神掉落的最上級素材，可用於製作死神鐮刀。' },
+        ring_zenith: { name: '潔尼斯戒指', type: 'ring', safe: 0, ac: -1, mr: 10, hp: 40, dr: 1, dropRate: 0.04, legendary: true, desc: '抗魔、體力與減傷兼具的塔之戒指。' },
+        amulet_seer: { name: '幻象眼魔項鍊', type: 'amulet', safe: 0, ac: -1, int: 1, wis: 1, mp: 50, mr: 8, dropRate: 0.04, legendary: true, desc: '讓高智流派更容易突破高 MR 怪物。' },
+        cloak_vampire: { name: '吸血鬼斗篷', type: 'cloak', safe: 4, ac: -4, hp: 80, hpRegen: 6, mr: 5, dropRate: 0.035, legendary: true, desc: '提供穩定回血與生命上限，適合長時間掛機。' },
+        belt_zombie_lord: { name: '殭屍王腰帶', type: 'belt', safe: 0, ac: -1, hp: 120, dr: 1, dropRate: 0.035, legendary: true, desc: '厚重而可靠的耐久型腰帶。' },
+        boots_cougar: { name: '庫格長靴', type: 'boots', safe: 4, ac: -4, dex: 1, hit: 2, dropRate: 0.03, legendary: true, desc: '增加敏捷與命中，讓追擊更加穩定。' },
+        crown_mummy_lord: { name: '木乃伊王冠', type: 'helmet', safe: 4, ac: -5, mr: 8, dr: 1, dropRate: 0.028, legendary: true, desc: '兼具防禦、抗魔與減傷的高階頭盔。' },
+        amulet_iris: { name: '艾莉絲項鍊', type: 'amulet', safe: 0, ac: -1, int: 2, mp: 80, mpRegen: 4, mr: 10, dropRate: 0.025, legendary: true, desc: '適合法師與高智火妖的魔力項鍊。' },
+        sword_knight_vald: { name: '騎士范德之劍', type: 'weapon', hands: 2, speed: 1050, safe: 6, dice: '1d24', hit: 5, dmg: 6, dropRate: 0.022, legendary: true, classes: ['knight'], desc: '雙手騎士的高階武器，重視命中與反擊爆發。' },
+        staff_lich: { name: '巫妖魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d6', hit: 1, mDmg: 5, mp: 60, mpRegen: 6, dropRate: 0.018, legendary: true, classes: ['wizard'], desc: '強化魔法傷害與續戰力的頂級魔杖。' },
+        robe_lich: { name: '巫妖長袍', type: 'armor', safe: 4, ac: -10, int: 2, mp: 120, mpRegen: 14, mDmg: 3, mr: 12, dropRate: 0.018, legendary: true, classes: ['wizard'], desc: '高智法師的畢業長袍，提供魔攻、魔力與回魔。' },
+        scythe_reaper: { name: '死神鐮刀', type: 'weapon', hands: 2, speed: 1100, safe: 6, dice: '1d28', hit: 6, dmg: 8, dropRate: 0.012, legendary: true, classes: ['knight','dark_elf'], desc: '死神持有的最上級近戰武器。' }
+    });
+
+    const mobDrops = (floor, extras = []) => [
+        { id: 'toi_fragment', rate: Math.min(7, 1.2 + floor * 0.35), count: Math.max(1, Math.floor((floor + 1) / 3)) },
+        { id: 'toi_high_fragment', rate: floor >= 5 ? 0.18 + floor * 0.04 : 0.03 + floor * 0.02 },
+        { id: 'scroll_armor', rate: 0.45 + floor * 0.06 },
+        { id: 'scroll_weapon', rate: 0.28 + floor * 0.04 },
+        { id: ['gem_quality_diamond','gem_quality_ruby','gem_quality_sapphire','gem_quality_emerald'][floor % 4], rate: 0.65 + floor * 0.06 },
+        ...extras
+    ];
+    const bossDrops = (floor, uniqueId, uniqueRate, extras = []) => [
+        { id: 'toi_fragment', rate: 100, count: 10 + floor * 5 },
+        { id: 'toi_high_fragment', rate: 70, count: Math.max(1, Math.ceil(floor / 2)) },
+        { id: 'toi_boss_soul', rate: 45, count: 1 },
+        { id: 'scroll_weapon_blessed', rate: 0.35 + floor * 0.07 },
+        { id: 'scroll_armor_blessed', rate: 0.45 + floor * 0.08 },
+        { id: 'ancient_scroll', rate: 0.6 + floor * 0.18 },
+        { id: 'gem_high_diamond', rate: 1.2 + floor * 0.12 },
+        { id: uniqueId, rate: uniqueRate },
+        ...extras
+    ];
+    const mob = (floor, id, name, level, hp, ac, mr, exp, atkSpeed, dice, hitBonus, weight, extras = [], flags = {}) => ({
+        id, name, level, hp, ac, mr, exp, atkSpeed, dice, hitBonus, weight,
+        adena: [480 + floor * 120, 880 + floor * 220],
+        drops: mobDrops(floor, extras),
+        ...flags
+    });
+    const boss = (floor, id, name, level, hp, ac, mr, exp, atkSpeed, dice, hitBonus, weight, special, uniqueId, uniqueRate, extras = [], flags = {}) => ({
+        id, name, level, hp, ac, mr, exp, atkSpeed, dice, hitBonus, isBoss: true, weight,
+        adena: [3200 + floor * 950, 6200 + floor * 1700],
+        towerSpecial: special,
+        drops: bossDrops(floor, uniqueId, uniqueRate, extras),
+        ...flags
+    });
+
+    MAPS.toi_1f = { name: '傲慢之塔1F', monsters: [
+        mob(1, 'toi_1_medusa', '扭曲的梅杜莎', 58, 2600, -54, 65, 6200, 1700, '7d10+20', 22, 44, [{id:'book_disease', rate:0.18}], { magicProfile: { text: '張開蛇眼凝視你', dice: '5d10+18', chance: 0.28 } }),
+        mob(1, 'toi_1_succubus', '扭曲的魅魔', 59, 2400, -52, 85, 6400, 1650, '6d12+18', 22, 42, [{id:'book_cancel', rate:0.08}, {id:'potion_blue', rate:3}], { magicProfile: { text: '低聲吟唱精神衝擊', dice: '5d10+20', chance: 0.35 } }),
+        mob(1, 'toi_1_living_armor', '扭曲的活鎧甲', 60, 3100, -60, 55, 6800, 1500, '7d12+22', 24, 38, [{id:'armor_metal', rate:0.8}, {id:'shield_large', rate:0.8}], { breaksWeapon: true }),
+        mob(1, 'toi_1_ghoul', '扭曲的食屍鬼', 58, 2800, -53, 45, 6100, 1550, '7d10+19', 21, 40, [{id:'potion_clear', rate:3}], { isUndead: true }),
+        boss(1, 'toi_zenith_queen', '潔尼斯女王', 64, 15000, -70, 85, 18000, 1450, '8d12+28', 30, 8, 'zenith', 'ring_zenith', 0.45, [{id:'ring_earth', rate:0.35}, {id:'gem_high_emerald', rate:1.8}], { magicProfile: { text: '撒下致命毒霧', dice: '7d10+28', chance: 0.34 } })
+    ]};
+    MAPS.toi_2f = { name: '傲慢之塔2F', monsters: [
+        mob(2, 'toi_2_beholder', '恐怖的多眼怪', 61, 3200, -58, 90, 7200, 1750, '7d12+21', 24, 42, [{id:'book_slow', rate:0.2}], { magicProfile: { text: '釋放多重凝視', dice: '6d10+22', chance: 0.36 } }),
+        mob(2, 'toi_2_eye', '恐怖的眼魔', 62, 3000, -57, 95, 7400, 1800, '7d10+23', 24, 42, [{id:'book_dark', rate:0.12}], { magicProfile: { text: '凝成黑暗光束', dice: '6d10+24', chance: 0.38 } }),
+        mob(2, 'toi_2_spider', '恐怖的巨蜘蛛', 61, 3400, -59, 55, 7100, 1450, '8d10+22', 25, 38, [{id:'potion_clear', rate:3}]),
+        mob(2, 'toi_2_cyclops', '恐怖的獨眼巨人', 63, 4300, -62, 60, 7900, 1600, '8d12+26', 27, 34, [{id:'belt_ogre', rate:0.12}, {id:'giant_axe', rate:1.5}]),
+        boss(2, 'toi_seer', '幻象眼魔', 67, 19000, -74, 100, 20500, 1550, '8d12+30', 32, 8, 'seer', 'amulet_seer', 0.4, [{id:'book_cancel', rate:0.35}, {id:'book_lightning_storm', rate:0.25}], { magicProfile: { text: '扭曲視線並灼燒魔力', dice: '7d12+30', chance: 0.42 } })
+    ]};
+    MAPS.toi_3f = { name: '傲慢之塔3F', monsters: [
+        mob(3, 'toi_3_bat', '死亡的吸血蝙蝠', 64, 3300, -60, 55, 8200, 1250, '7d12+24', 27, 44, [{id:'potion_orange', rate:6}], { isUndead: true }),
+        mob(3, 'toi_3_vampire_servant', '死亡的吸血鬼僕役', 65, 3800, -63, 80, 8600, 1450, '8d10+25', 28, 40, [{id:'book_vampire', rate:0.35}], { isUndead: true, magicProfile: { text: '咬開血之傷口', dice: '5d12+24', chance: 0.32 } }),
+        mob(3, 'toi_3_skeleton_guard', '死亡的骷髏近衛', 66, 4200, -66, 60, 9000, 1500, '8d12+24', 29, 38, [{id:'dagger_ori', rate:0.35}, {id:'armor_skeleton', rate:1.2}], { isUndead: true }),
+        mob(3, 'toi_3_dark_elf', '死亡的黑暗妖精', 65, 3600, -64, 78, 8500, 1250, '8d10+24', 31, 36, [{id:'crystal_dark_burning_spirit', rate:0.1}, {id:'dual_steel', rate:0.8}]),
+        boss(3, 'toi_vampire', '吸血鬼', 70, 24000, -78, 90, 23500, 1350, '9d12+30', 34, 8, 'vampire', 'cloak_vampire', 0.35, [{id:'book_vampire', rate:1.2}, {id:'ancient_leather_armor', rate:0.04}], { isUndead: true })
+    ]};
+    MAPS.toi_4f = { name: '傲慢之塔4F', monsters: [
+        mob(4, 'toi_4_ghoul', '不死的食屍鬼', 67, 4400, -66, 45, 9200, 1500, '8d12+25', 30, 42, [{id:'potion_clear', rate:5}], { isUndead: true }),
+        mob(4, 'toi_4_rotten_corpse', '不死的腐屍', 68, 5000, -68, 50, 9600, 1700, '8d12+27', 31, 40, [{id:'demon_blood', rate:0.18}], { isUndead: true }),
+        mob(4, 'toi_4_skeleton_general', '不死的骷髏將軍', 69, 5200, -70, 65, 10100, 1450, '9d10+29', 33, 36, [{id:'sword_two_handed', rate:1.2}, {id:'book_knight_shock_stun', rate:0.08}], { isUndead: true }),
+        mob(4, 'toi_4_corpse_wizard', '不死的屍巫', 69, 4200, -65, 95, 9900, 1900, '7d12+27', 29, 36, [{id:'book_full_heal', rate:0.12}, {id:'book_tornado', rate:0.12}], { isUndead: true, magicProfile: { text: '喚出腐敗靈火', dice: '7d10+28', chance: 0.42 } }),
+        boss(4, 'toi_zombie_lord', '殭屍王', 73, 30000, -82, 75, 26500, 1550, '9d12+34', 36, 8, 'zombie_lord', 'belt_zombie_lord', 0.34, [{id:'ancient_metal_armor', rate:0.04}, {id:'demon_blood', rate:1.5}], { isUndead: true })
+    ]};
+    MAPS.toi_5f = { name: '傲慢之塔5F', monsters: [
+        mob(5, 'toi_5_young_cougar', '地獄的庫格幼獸', 70, 5200, -70, 55, 10600, 1150, '8d12+30', 35, 42, [{id:'boots_cougar', rate:0.02}]),
+        mob(5, 'toi_5_black_panther', '地獄的黑豹', 71, 5000, -72, 60, 11000, 1100, '9d10+29', 36, 40, [{id:'potion_haste', rate:4}]),
+        mob(5, 'toi_5_dire_wolf', '地獄的魔狼', 72, 5400, -73, 58, 11400, 1200, '9d10+31', 36, 38, [{id:'pet_fang_divine', rate:0.035}]),
+        mob(5, 'toi_5_tiger_man', '地獄的虎男', 72, 6200, -75, 62, 11800, 1350, '9d12+32', 37, 36, [{id:'gloves_str', rate:0.12}, {id:'giant_axe', rate:1.4}]),
+        boss(5, 'toi_cougar', '庫格', 76, 37000, -86, 80, 30000, 1050, '10d12+36', 40, 7, 'cougar', 'boots_cougar', 0.3, [{id:'gloves_str', rate:0.35}, {id:'belt_ogre', rate:0.3}])
+    ]};
+    MAPS.toi_6f = { name: '傲慢之塔6F', monsters: [
+        mob(6, 'toi_6_mummy', '不滅的木乃伊', 73, 6200, -76, 70, 12300, 1550, '9d12+34', 38, 42, [{id:'scroll_pet_resurrection_blessed', rate:0.08}], { isUndead: true }),
+        mob(6, 'toi_6_dry_corpse', '不滅的乾屍', 74, 6600, -77, 65, 12700, 1650, '10d10+34', 39, 40, [{id:'potion_clear', rate:6}], { isUndead: true }),
+        mob(6, 'toi_6_curse_mage', '不滅的詛咒法師', 75, 5400, -73, 105, 13100, 1900, '8d12+32', 35, 36, [{id:'book_cancel', rate:0.18}, {id:'book_immune', rate:0.08}], { isUndead: true, magicProfile: { text: '釋放乾枯詛咒', dice: '8d10+32', chance: 0.45 } }),
+        mob(6, 'toi_6_tomb_guard', '不滅的守墓者', 75, 7000, -79, 75, 13300, 1500, '10d12+34', 40, 36, [{id:'helm_antic_magic', rate:0.35}], { isUndead: true }),
+        boss(6, 'toi_mummy_lord', '木乃伊王', 79, 45000, -90, 95, 34000, 1500, '10d12+40', 42, 7, 'mummy_lord', 'crown_mummy_lord', 0.28, [{id:'scroll_pet_resurrection_blessed', rate:0.5}, {id:'ancient_scroll', rate:2}], { isUndead: true })
+    ]};
+    MAPS.toi_7f = { name: '傲慢之塔7F', monsters: [
+        mob(7, 'toi_7_iris_guard', '殘酷的艾莉絲近衛', 76, 7200, -80, 85, 13700, 1350, '10d12+36', 41, 40, [{id:'sword_tsurugi', rate:0.65}]),
+        mob(7, 'toi_7_succubus_queen', '殘酷的魅魔女王', 77, 6200, -77, 115, 14100, 1650, '8d12+35', 38, 38, [{id:'book_immune', rate:0.1}, {id:'potion_blue', rate:5}], { magicProfile: { text: '施放精神束縛', dice: '8d12+34', chance: 0.45 } }),
+        mob(7, 'toi_7_cruel_mage', '殘酷的魔法師', 78, 6000, -76, 120, 14600, 1900, '8d12+36', 37, 36, [{id:'book_fire_storm', rate:0.1}, {id:'book_blizzard', rate:0.1}], { magicProfile: { text: '連續施放元素爆發', dice: '9d10+36', chance: 0.48 } }),
+        mob(7, 'toi_7_summoned_beast', '殘酷的召喚獸', 78, 7800, -82, 70, 14800, 1300, '10d12+38', 42, 36, [{id:'pet_evolution_fruit', rate:0.08}]),
+        boss(7, 'toi_iris', '艾莉絲', 82, 55000, -94, 120, 39000, 1450, '10d12+42', 43, 7, 'iris', 'amulet_iris', 0.25, [{id:'staff_lich', rate:0.05}, {id:'book_immune', rate:0.45}], { magicProfile: { text: '展開魅惑魔法陣', dice: '9d12+40', chance: 0.5 }, companionProfile: { text: '艾莉絲召喚的近衛突刺', dice: '6d12+24', chance: 0.38 } })
+    ]};
+    MAPS.toi_8f = { name: '傲慢之塔8F', monsters: [
+        mob(8, 'toi_8_dark_knight', '黑暗的騎士', 79, 8200, -84, 85, 15300, 1300, '10d12+40', 44, 40, [{id:'book_knight_counter_barrier', rate:0.08}, {id:'armor_dk', rate:0.1}]),
+        mob(8, 'toi_8_dark_swordman', '黑暗的劍士', 80, 7800, -85, 80, 15700, 1200, '10d12+39', 46, 38, [{id:'katana', rate:1.8}, {id:'sword_dk_fire', rate:0.08}]),
+        mob(8, 'toi_8_dark_lancer', '黑暗的槍兵', 81, 8600, -86, 82, 16200, 1400, '11d10+42', 45, 36, [{id:'sword_two_handed', rate:1.5}, {id:'book_knight_shock_stun', rate:0.12}]),
+        mob(8, 'toi_8_dark_captain', '黑暗的副官', 81, 9000, -88, 90, 16600, 1350, '10d12+44', 47, 34, [{id:'helm_dk', rate:0.1}, {id:'gloves_dk', rate:0.1}]),
+        boss(8, 'toi_knight_vald', '騎士范德', 85, 68000, -98, 105, 45000, 1250, '11d12+46', 48, 6, 'knight_vald', 'sword_knight_vald', 0.22, [{id:'sword_dk_fire', rate:0.25}, {id:'helm_dk', rate:0.4}, {id:'armor_dk', rate:0.4}, {id:'gloves_dk', rate:0.4}, {id:'boots_dk', rate:0.4}], { breaksWeapon: true })
+    ]};
+    MAPS.toi_9f = { name: '傲慢之塔9F', monsters: [
+        mob(9, 'toi_9_lich_servant', '不朽的巫妖僕從', 82, 9000, -88, 115, 17100, 1550, '10d12+44', 45, 38, [{id:'book_immune', rate:0.1}], { isUndead: true, magicProfile: { text: '抽取靈魂魔力', dice: '9d10+38', chance: 0.48 } }),
+        mob(9, 'toi_9_bone_dragon', '不朽的骨龍', 83, 11000, -92, 105, 18100, 1500, '11d12+48', 48, 34, [{id:'wyrm_claw', rate:0.5}, {id:'ancient_scroll', rate:0.2}], { isUndead: true, magicProfile: { text: '吐出幽冥龍息', dice: '9d12+42', chance: 0.45 } }),
+        mob(9, 'toi_9_death_mage', '不朽的死亡法師', 84, 8200, -86, 125, 17800, 1900, '9d12+42', 42, 36, [{id:'book_blizzard', rate:0.18}, {id:'book_fire_storm', rate:0.18}], { isUndead: true, magicProfile: { text: '吟唱死亡法術', dice: '10d10+42', chance: 0.52 } }),
+        mob(9, 'toi_9_wraith', '不朽的幽魂', 84, 8600, -90, 120, 17600, 1300, '10d12+43', 45, 36, [{id:'ring_abyss', rate:0.08}], { isUndead: true, magicProfile: { text: '穿透你的精神', dice: '8d12+40', chance: 0.42 } }),
+        boss(9, 'toi_lich', '巫妖', 88, 82000, -102, 130, 52000, 1600, '11d12+50', 48, 6, 'lich', 'robe_lich', 0.18, [{id:'staff_lich', rate:0.18}, {id:'robe_black_elder', rate:0.35}, {id:'ice_queen_staff', rate:0.25}, {id:'ancient_robe_armor', rate:0.08}], { isUndead: true, magicProfile: { text: '展開末日魔法', dice: '11d12+48', chance: 0.55 } })
+    ]};
+    MAPS.toi_10f = { name: '傲慢之塔10F', monsters: [
+        mob(10, 'toi_10_reaper_shadow', '死神的影子', 85, 9800, -92, 120, 18600, 1250, '11d12+46', 47, 38, [{id:'toi_boss_soul', rate:0.05}], { isUndead: true, magicProfile: { text: '拖出黑色殘影', dice: '9d12+42', chance: 0.42 } }),
+        mob(10, 'toi_10_reaper_envoy', '死神的使者', 86, 10500, -94, 125, 19300, 1450, '11d12+48', 48, 36, [{id:'ancient_scroll', rate:0.25}], { isUndead: true, magicProfile: { text: '宣告死亡預兆', dice: '10d10+44', chance: 0.45 } }),
+        mob(10, 'toi_10_scytheman', '死神的鐮刀手', 87, 11200, -96, 105, 19800, 1200, '12d10+50', 50, 34, [{id:'sword_knight_vald', rate:0.035}], { isUndead: true }),
+        mob(10, 'toi_10_judicator', '死神的審判者', 88, 12000, -98, 130, 20500, 1650, '11d12+52', 49, 32, [{id:'staff_lich', rate:0.035}, {id:'robe_lich', rate:0.035}], { isUndead: true, magicProfile: { text: '落下靈魂審判', dice: '10d12+48', chance: 0.5 } }),
+        boss(10, 'toi_grim_reaper', '死神', 92, 105000, -108, 140, 65000, 1350, '12d12+58', 54, 5, 'grim_reaper', 'scythe_reaper', 0.12, [{id:'toi_reaper_core', rate:0.55}, {id:'water_dragon_scale_armor', rate:0.04}, {id:'fire_dragon_scale_armor', rate:0.04}, {id:'ancient_great_sword', rate:0.08}, {id:'ancient_staff', rate:0.08}, {id:'ancient_dual_blade', rate:0.08}, {id:'sword_dk_fire', rate:0.35}], { isUndead: true, magicProfile: { text: '揮出死亡鐮影', dice: '12d12+54', chance: 0.55 }, companionProfile: { text: '死神分身同步斬落', dice: '7d12+36', chance: 0.42 } })
+    ]};
+
+    if (!ACHIEVEMENTS.some(a => a.id === 'toi_first_gate')) {
+        ACHIEVEMENTS.push(
+            { id: 'toi_first_gate', name: '傲慢之塔開門', desc: '擊敗潔尼斯女王。', reward: { passive: { hp: 25, mr: 3 }, items: [{ id: 'toi_high_fragment', count: 5 }] }, check: g => g.getMonsterKillCount('toi_zenith_queen') >= 1, progress: g => [g.getMonsterKillCount('toi_zenith_queen'), 1] },
+            { id: 'toi_middle_climber', name: '塔腰的風變冷了', desc: '擊敗庫格。', reward: { passive: { dr: 1, hit: 1 }, items: [{ id: 'toi_boss_soul', count: 1 }] }, check: g => g.getMonsterKillCount('toi_cougar') >= 1, progress: g => [g.getMonsterKillCount('toi_cougar'), 1] },
+            { id: 'toi_conqueror', name: '俯瞰傲慢', desc: '擊敗死神。', reward: { passive: { hp: 60, mp: 30, dr: 2, mDmg: 1, dropRate: 0.02 }, items: [{ id: 'toi_reaper_core', count: 1 }] }, check: g => g.getMonsterKillCount('toi_grim_reaper') >= 1, progress: g => [g.getMonsterKillCount('toi_grim_reaper'), 1] }
+        );
+    }
+})();
+
+const DICKLE_WATER_WIZARD_DROP_TUNE_090 = (() => {
+    const addDrop = (monster, id, rate) => {
+        if (!monster || !ITEMS[id]) return;
+        if (!Array.isArray(monster.drops)) monster.drops = [];
+        const existing = monster.drops.find(d => d.id === id);
+        if (existing) existing.rate = Math.max(Number(existing.rate) || 0, rate);
+        else monster.drops.push({ id, rate });
+    };
+    const addToMap = (mapId, drops, bossBonus = 2.5) => {
+        const map = MAPS[mapId];
+        if (!map || !Array.isArray(map.monsters)) return;
+        map.monsters.forEach(monster => drops.forEach(([id, rate]) => addDrop(monster, id, monster.isBoss ? rate * bossBonus : rate)));
+    };
+    addToMap('heine_lake', [
+        ['crystal_elf_life_fountain', 0.16],
+        ['crystal_elf_aqua_protect', 0.14],
+        ['crystal_elf_bless_of_life', 0.08]
+    ], 3);
+    addToMap('eva_kingdom', [
+        ['crystal_elf_life_fountain', 0.28],
+        ['crystal_elf_aqua_protect', 0.24],
+        ['crystal_elf_bless_of_life', 0.14]
+    ], 3.5);
+    addToMap('elven_grave', [
+        ['crystal_elf_life_fountain', 0.3],
+        ['crystal_elf_aqua_protect', 0.28],
+        ['crystal_elf_bless_of_life', 0.18]
+    ], 3);
+    addToMap('forgotten_island', [
+        ['book_soul_ascension', 0.04],
+        ['book_ultimate_light_spear', 0.02]
+    ], 3.5);
+    ['lastavard', 'demon_temple', 'shadow_temple', 'fafurion_lair', 'lindvior_lair', 'valakas_lair', 'antaras_lair'].forEach(mapId => {
+        addToMap(mapId, [
+            ['book_soul_ascension', 0.05],
+            ['book_ultimate_light_spear', 0.025]
+        ], 4);
+    });
+    Object.keys(MAPS).filter(id => /^toi_\d+f$/.test(id)).forEach(mapId => {
+        const floor = parseInt(mapId.match(/\d+/)?.[0] || '1');
+        addToMap(mapId, [
+            ['book_soul_ascension', 0.025 + floor * 0.008],
+            ['book_ultimate_light_spear', 0.01 + floor * 0.004]
+        ], 5);
+    });
+    return true;
+})();
+
 const LEVEL_BONUS_STAT_CAP = 35;
 const BACKGROUND_CATCHUP_MIN_SECONDS = 10;
-const BACKGROUND_CATCHUP_MAX_SECONDS = 6 * 60 * 60;
-const BACKGROUND_CATCHUP_MAX_KILLS = 600;
+const BACKGROUND_CATCHUP_MAX_SECONDS = 12 * 60 * 60;
+const BACKGROUND_CATCHUP_MAX_KILLS = 3600;
 
 const game = {
     state: {
@@ -1768,10 +2118,11 @@ const game = {
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
         pets: {}, activePet: null, petProtectMode: false,
+        companions: {}, activeCompanion: null, companionSeq: 0,
         adventure: { obtainedItems: {}, mapStats: {}, achievements: {} },
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoPetHpThreshold: 30, autoPetHpType: 'potion_red', autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
-        battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
+        battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, companionLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
         potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false,
         lastActiveAt: Date.now()
     },
@@ -1791,7 +2142,8 @@ const game = {
             { id: 'valakas_lair', color: '#f87171' },
             { id: 'antaras_lair', color: '#facc15' }
         ];
-        const specialBottom = new Set(['crystal_palace', ...dragonMaps.map(m => m.id), 'forgotten_island']);
+        const towerMaps = Array.from({ length: 10 }, (_, i) => `toi_${i + 1}f`);
+        const specialBottom = new Set(['crystal_palace', ...dragonMaps.map(m => m.id), 'forgotten_island', ...towerMaps]);
         let keys = Object.keys(MAPS).filter(k => !specialBottom.has(k));
         keys.sort((a, b) => MAPS[a].name.localeCompare(MAPS[b].name, 'zh-TW'));
         select.innerHTML = '';
@@ -1801,7 +2153,46 @@ const game = {
             if (MAPS[id]) select.innerHTML += `<option value="${id}" style="color:${color};font-weight:700;">${MAPS[id].name}</option>`;
         });
         if (MAPS.forgotten_island) select.innerHTML += `<option value="forgotten_island" style="color:#c084fc;font-weight:700;">${MAPS.forgotten_island.name}</option>`;
+        towerMaps.forEach(id => {
+            if (!MAPS[id]) return;
+            const floor = this.getTowerFloorFromMap(id);
+            const locked = !this.isTowerMapUnlocked(id);
+            const label = locked ? `${MAPS[id].name}（擊敗${this.getTowerPreviousBossName(floor)}後開放）` : MAPS[id].name;
+            select.innerHTML += `<option value="${id}" ${locked ? 'disabled' : ''} style="color:#facc15;font-weight:700;">${label}</option>`;
+        });
         select.value = this.state.currentMap;
+    },
+
+    getTowerFloorFromMap: function(mapId) {
+        const match = String(mapId || '').match(/^toi_(\d+)f$/);
+        if (!match) return 0;
+        return Math.max(0, Math.min(10, parseInt(match[1], 10) || 0));
+    },
+    getTowerBossIdForFloor: function(floor) {
+        return TOWER_BOSS_IDS[Math.max(1, Math.min(10, parseInt(floor, 10) || 1))] || null;
+    },
+    getTowerPreviousBossName: function(floor) {
+        if (floor <= 1) return '';
+        const bossId = this.getTowerBossIdForFloor(floor - 1);
+        for (let mapId of Object.keys(MAPS)) {
+            let boss = MAPS[mapId]?.monsters?.find(m => m.id === bossId);
+            if (boss) return boss.name;
+        }
+        return `傲慢之塔${floor - 1}F Boss`;
+    },
+    getUnlockedTowerFloor: function() {
+        let floor = 1;
+        while (floor < 10 && this.getMonsterKillCount(this.getTowerBossIdForFloor(floor)) >= 1) floor++;
+        return floor;
+    },
+    isTowerMapUnlocked: function(mapId) {
+        const floor = this.getTowerFloorFromMap(mapId);
+        return !floor || floor <= this.getUnlockedTowerFloor();
+    },
+    getTowerLockMessage: function(mapId) {
+        const floor = this.getTowerFloorFromMap(mapId);
+        if (!floor || floor <= 1) return '';
+        return `傲慢之塔${floor}F 尚未開放。請先擊敗 ${this.getTowerPreviousBossName(floor)}。`;
     },
 
     isRemovedSystemItem: function(itemId) {
@@ -1845,6 +2236,7 @@ const game = {
             baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints, bonusPointsGrantedLevel: this.state.bonusPointsGrantedLevel, bonusPointMigrationV1: this.state.bonusPointMigrationV1,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
             pets: this.state.pets, activePet: this.state.activePet,
+            companions: this.state.companions || {}, activeCompanion: this.state.activeCompanion || null, companionSeq: this.state.companionSeq || 0,
             adventure: this.state.adventure,
             settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
         };
@@ -1995,6 +2387,16 @@ const game = {
                     });
                 }
                 this.state.activePet = PETS[savedData.activePet] && this.state.pets[savedData.activePet] ? savedData.activePet : null;
+                this.state.companions = {};
+                this.state.companionSeq = Math.max(0, parseInt(savedData.companionSeq) || 0);
+                if (savedData.companions && typeof savedData.companions === 'object') {
+                    Object.keys(savedData.companions).forEach(cid => {
+                        const normalized = this.normalizeCompanion(savedData.companions[cid], cid);
+                        if (normalized) this.state.companions[cid] = normalized;
+                    });
+                }
+                this.state.activeCompanion = savedData.activeCompanion && this.state.companions[savedData.activeCompanion] ? savedData.activeCompanion : null;
+                this.ensureCompanionState();
                 this.state.adventure = savedData.adventure || {};
                 this.ensureAdventureState();
                 this.state.currentMap = savedData.currentMap || 'hidden_valley';
@@ -2032,6 +2434,7 @@ const game = {
                 this.renderInventory();
                 this.renderSkills();
                 this.renderPets();
+                this.renderCompanions();
                 this.updateSettingsUI();
                 
                 document.getElementById('cfg-hp-threshold').value = this.state.settings.autoHpThreshold;
@@ -2055,7 +2458,6 @@ const game = {
                 if (loadedLevelUps > 0) this.logSystem(`讀檔時補升 ${loadedLevelUps} 級，已修正超過100%的經驗值。`, 'reward');
                 this.migrateAdventureRecordsFromCurrentState();
                 this.applyBackgroundCatchup('離線進度');
-                localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
                 this.updateUI();
                 
                 this.logSystem('讀取存檔成功！歡迎回來。', 'reward');
@@ -2071,25 +2473,30 @@ const game = {
 
     logCombat: function(msg, type='normal') {
         const el = document.getElementById('combat-log');
+        if (!el) return;
         let color = 'c-sys';
         if (type === 'danger') color = 'c-err'; else if (type === 'hit') color = 'c-info'; else if (type === 'success') color = 'c-success'; else if (type === 'magic') color = 'c-magic'; else if (type === 'skill-elf') color = 'c-skill-elf'; else if (type === 'skill-dark') color = 'c-skill-dark'; else if (type === 'skill-knight') color = 'c-skill-knight'; else if (type === 'skill-wizard') color = 'c-skill-wizard'; 
+        const shouldStick = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
         el.insertAdjacentHTML('beforeend', `<div class="${color}">> ${msg}</div>`);
-        el.scrollTop = el.scrollHeight;
-        if(el.children.length > 50) el.firstChild.remove();
+        while(el.children.length > 40) el.firstChild.remove();
+        if (shouldStick) el.scrollTop = el.scrollHeight;
     },
     logSystem: function(msg, type='normal') {
         const el = document.getElementById('system-log');
+        if (!el) return;
         let color = 'c-sys';
         if (type === 'danger') color = 'c-err'; else if (type === 'reward') color = 'c-success'; else if (type === 'blessed') color = 'c-blessed'; else if (type === 'enchant-success') color = 'c-enchant-success';
+        const shouldStick = el.scrollTop + el.clientHeight >= el.scrollHeight - 8;
         el.insertAdjacentHTML('beforeend', `<div class="${color}">> ${msg}</div>`);
-        el.scrollTop = el.scrollHeight;
-        if(el.children.length > 50) el.firstChild.remove();
+        while(el.children.length > 10) el.firstChild.remove();
+        if (shouldStick) el.scrollTop = el.scrollHeight;
     },
 
     switchTab: function(tabId, evt = null) {
         document.getElementById('tab-inv').classList.add('hidden');
         document.getElementById('tab-magic').classList.add('hidden');
         document.getElementById('tab-pet').classList.add('hidden');
+        document.getElementById('tab-companion').classList.add('hidden');
         document.getElementById('tab-shop').classList.add('hidden');
         document.getElementById('tab-records').classList.add('hidden');
         document.getElementById('tab-settings').classList.add('hidden');
@@ -2100,7 +2507,8 @@ const game = {
         if(tabId === 'inv') this.renderInventory();
         if(tabId === 'magic') this.renderSkills();
         if(tabId === 'pet') this.renderPets();
-        if(tabId === 'shop') { this.renderGemExchange(); this.renderKalipFragmentExchange(); this.renderShopPrices(); }
+        if(tabId === 'companion') this.renderCompanions();
+        if(tabId === 'shop') { this.renderGemExchange(); this.renderKalipFragmentExchange(); this.renderTowerCrafts(); this.renderShopPrices(); this.renderShopBulkBuy(); }
         if(tabId === 'records') this.renderAdventureRecords();
         if(tabId === 'settings') this.updateSettingsUI();
     },
@@ -2344,6 +2752,7 @@ const game = {
             let priceEl = btn.parentElement.querySelector('.c-warn');
             if (priceEl) priceEl.innerText = `${this.getShopPrice(def.price).toLocaleString()} 金幣`;
         });
+        this.renderShopBulkBuy();
     },
     getAchievementRewardText: function(reward) {
         if (!reward) return '情緒價值 +1';
@@ -3277,7 +3686,6 @@ const game = {
         this.logSystem(`${this.getStatLabel(stat)} 提升至 ${this.state.baseStats[stat]}。`, 'reward');
         this.updateUI();
         this.updateSettingsUI();
-        localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
     },
     updateBonusStatUI: function() {
         let panel = document.getElementById('bonus-stat-panel');
@@ -3303,6 +3711,10 @@ const game = {
         document.getElementById('main-ui').classList.remove('hidden');
         this.state.adventure = { obtainedItems: {}, mapStats: {}, achievements: {} };
         this.ensureAdventureState();
+        this.state.companions = {};
+        this.state.activeCompanion = null;
+        this.state.companionSeq = 0;
+        this.ensureCompanionState();
         this.state.currentMap = 'hidden_valley';
         this.state.hiddenValleyArubaDefeated = false;
         this.state.hiddenValleyArubaSummoned = false;
@@ -3331,6 +3743,7 @@ const game = {
         this.renderInventory();
         this.renderSkills();
         this.renderPets();
+        this.renderCompanions();
         this.logSystem('歡迎來到天堂放置版。你的冒險開始了！', 'reward');
         this.checkAchievements();
         this.startLoops();
@@ -3414,6 +3827,7 @@ const game = {
         }
         let achievementBonus = this.getAchievementPassiveBonuses();
         calcMaxHp += achievementBonus.hp || 0;
+        if (this.state.buffs.soul_ascension) calcMaxHp = Math.floor(calcMaxHp * 1.2);
         this.state.maxHp = calcMaxHp;
         
         let effWis = this.getEffStat('wis');
@@ -3445,6 +3859,7 @@ const game = {
         }
         calcMaxMp += sets.mp || 0;
         calcMaxMp += achievementBonus.mp || 0;
+        if (this.state.buffs.soul_ascension) calcMaxMp = Math.floor(calcMaxMp * 1.2);
         this.state.maxMp = calcMaxMp;
         if(this.state.hp > this.state.maxHp) this.state.hp = this.state.maxHp;
         if(this.state.mp > this.state.maxMp) this.state.mp = this.state.maxMp;
@@ -3699,6 +4114,7 @@ const game = {
         let er = this.getDexBonus().er;
         if (this.state.buffs.knight_solid_carriage) er += this.isKnightOneHandShieldStyle() ? 20 : 15;
         if (this.state.buffs.de_uncanny_dodge) er += 10;
+        if (this.state.buffs.elf_aqua_protect) er += 18 + Math.floor(this.state.level / 20);
         return er;
     },
     
@@ -3727,7 +4143,7 @@ const game = {
             document.getElementById('ui-exp-bar').style.width = '100%';
             document.getElementById('ui-exp-text').innerText = 'MAX';
         } else {
-            let reqExp = EXP_TABLE[this.state.level] || 36065092;
+            let reqExp = EXP_TABLE[this.state.level] || LATE_EXP_CAP;
             let expPct = ((this.state.exp/reqExp)*100).toFixed(2);
             document.getElementById('ui-exp-bar').style.width = `${Math.min(100, expPct)}%`;
             document.getElementById('ui-exp-text').innerText = `${expPct}%`;
@@ -3750,6 +4166,8 @@ const game = {
         let sets = this.getSetBonuses();
         if (sets.active.length > 0) sets.active.forEach(sName => { buffHtml += `<span class="c-legendary mr-2">[${sName}]</span>`; });
         if(this.state.activePet && PETS[this.state.activePet]) buffHtml += `<span class="${PETS[this.state.activePet].color} mr-2">[同行:${this.getPetDisplayName(this.state.activePet)}]</span>`;
+        const activeCompanion = this.getActiveCompanion();
+        if(activeCompanion) buffHtml += `<span class="${this.getCompanionRarityClass(activeCompanion.rarity)} mr-2">[隊友:${activeCompanion.name}]</span>`;
         if(this.state.buffs.dex_buff) buffHtml += '<span class="c-success mr-2">[通暢氣脈]</span>';
         if(this.state.buffs.str_buff) buffHtml += '<span class="c-success mr-2">[體魄強健]</span>';
         if(this.state.buffs.enchant_weapon) buffHtml += '<span class="c-success mr-2">[擬似魔武]</span>';
@@ -3768,6 +4186,8 @@ const game = {
         if(this.state.buffs.elf_fire_weapon) buffHtml += '<span class="c-success mr-2">[火焰武器]</span>';
         if(this.state.buffs.elf_elemental_fire) buffHtml += '<span class="c-skill-elf mr-2">[烈焰之魂]</span>';
         if(this.state.buffs.elf_dance_of_fire) buffHtml += '<span class="c-skill-elf mr-2">[舞躍之火]</span>';
+        if(this.state.buffs.elf_life_fountain) buffHtml += '<span class="c-skill-elf mr-2">[生命之泉]</span>';
+        if(this.state.buffs.elf_aqua_protect) buffHtml += '<span class="c-skill-elf mr-2">[水之防護]</span>';
         if(this.state.buffs.elf_wind_shot) buffHtml += '<span class="c-success mr-2">[風之神射]</span>';
         if(this.state.buffs.elf_triple_arrow) buffHtml += '<span class="c-success mr-2">[三重矢]</span>';
         if(this.state.buffs.de_enchant_venom) buffHtml += '<span class="c-skill-dark mr-2">[附加劇毒]</span>';
@@ -3788,17 +4208,20 @@ const game = {
         if(this.state.buffs.petrified) buffHtml += '<span class="c-err mr-2">[石化]</span>';
         if(this.state.buffs.heal_erosion) buffHtml += '<span class="c-err mr-2">[治癒侵蝕]</span>';
         if(this.state.buffs.stun) buffHtml += '<span class="c-err mr-2">[衝暈]</span>';
+        if(this.state.buffs.soul_ascension) buffHtml += '<span class="c-skill-wizard mr-2">[靈魂昇華]</span>';
         document.getElementById('ui-buffs').innerHTML = buffHtml || '無附加狀態';
         this.renderPetStatus();
+        this.renderCompanionStatus();
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
         this.renderShopPrices();
     },
 
     getItemColorClass: function(item, def) {
         if (!item || !def) return 'c-item';
-        if (def.legendary && Number(item.enchant) < 4) return 'c-legendary';
         if (item.isBlessed || def.isBlessed) return 'c-blessed';
+        if (def.legendary && Number(item.enchant) < 4) return 'c-legendary';
         if (def.type === 'pet_weapon') return def.petMDmg ? 'c-magic' : 'c-warn';
         if (def.type === 'pet_armor') return 'c-info';
         if (def.type === 'pet_fruit') return 'c-magic';
@@ -3953,9 +4376,15 @@ const game = {
                     if (peq?.weapon === itemKey) peq.weapon = null;
                     if (peq?.armor === itemKey) peq.armor = null;
                 }
+                Object.values(this.state.companions || {}).forEach(c => {
+                    Object.keys(c.equipment || {}).forEach(slot => {
+                        if (c.equipment[slot] === itemKey) c.equipment[slot] = null;
+                    });
+                });
                 delete this.state.inventory[itemKey];
             }
             this.renderInventory();
+            this.renderCompanions();
             this.updateUI();
         }
     },
@@ -3963,8 +4392,10 @@ const game = {
     renderInventory: function() {
         const invList = document.getElementById('inventory-list');
         const eqList = document.getElementById('equip-list');
+        const compEqList = document.getElementById('companion-equip-list');
         if(!invList || !eqList) return;
         invList.innerHTML = ''; eqList.innerHTML = '';
+        if (compEqList) compEqList.innerHTML = '';
         
         let slotNames = { 'weapon': '武器', 'shield': '盾牌', 'quiver': '箭桶', 'helmet': '頭盔', 'tshirt': 'T恤', 'armor': '盔甲', 'cloak': '斗篷', 'leggings': '脛甲', 'boots': '靴子', 'belt': '腰帶', 'amulet': '項鍊', 'earring1': '耳環1', 'earring2': '耳環2', 'ring1': '戒指1', 'ring2': '戒指2', 'gloves': '手套' };
         let activeSetItemKeys = [];
@@ -4009,6 +4440,7 @@ const game = {
         });
 
         if(!hasEquip) eqList.innerHTML = '<div class="c-sys italic p-2 text-sm">目前無任何裝備。</div>';
+        if (compEqList && this.renderCompanionEquipmentList) this.renderCompanionEquipmentList(compEqList);
 
         let itemKeys = Object.keys(this.state.inventory);
         if(itemKeys.length === 0) { invList.innerHTML = '<div class="c-sys italic p-2 text-sm">背包是空的。</div>'; return; }
@@ -4025,6 +4457,7 @@ const game = {
                 if (peq?.weapon === key) equippedCount++;
                 if (peq?.armor === key) equippedCount++;
             }
+            equippedCount += this.getCompanionEquippedCount ? this.getCompanionEquippedCount(key) : 0;
             let displayCount = item.count - equippedCount;
             if(displayCount <= 0) return;
 
@@ -4035,12 +4468,14 @@ const game = {
             if(['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','belt','amulet','earring','ring','gloves','quiver'].includes(def.type)) {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
                 actions += `<button class="btn-ui border-yellow-700 text-yellow-300" onclick="game.equip('${key}')">裝備</button> `;
+                if (this.getActiveCompanion && this.getActiveCompanion()) actions += `<button class="btn-ui c-info border-blue-800" onclick="game.equipActiveCompanionItem('${key}')">隊友裝備</button> `;
                 if(!['belt','amulet','ring'].includes(def.type)) actions += `<button class="btn-ui" onclick="game.openEnchantModal('${key}')">強化</button> `;
             } else if(['pet_weapon','pet_armor'].includes(def.type)) {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
                 actions += `<button class="btn-ui border-yellow-700 text-yellow-300" onclick="game.equipPetItem('${key}')">寵物裝備</button> `;
             } else if(def.type === 'book') {
                 actions += `<button class="btn-ui c-success border-green-800" onclick="game.learnSpell('${key}')">學習</button> `;
+                if (this.getActiveCompanion && this.getActiveCompanion()) actions += `<button class="btn-ui c-info border-blue-800" onclick="game.teachActiveCompanion('${key}')">隊友學習</button> `;
             } else if(def.type.startsWith('potion')) {
                 actions += `<button class="btn-ui c-info border-blue-800" onclick="game.usePotion('${key}')">使用</button> `;
             } else if(def.type === 'pet_scroll') {
@@ -4295,6 +4730,7 @@ const game = {
             if (peq?.weapon === itemKey) equippedCount++;
             if (peq?.armor === itemKey) equippedCount++;
         }
+        equippedCount += this.getCompanionEquippedCount ? this.getCompanionEquippedCount(itemKey) : 0;
         return Math.max(0, item.count - equippedCount);
     },
 
@@ -4328,6 +4764,7 @@ const game = {
         this.renderInventory();
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
     },
 
     sellAllNonAccessoryEquipment: function() {
@@ -4411,6 +4848,7 @@ const game = {
         this.renderInventory();
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
     },
 
     discardItem: function(itemKey) {
@@ -4425,6 +4863,7 @@ const game = {
         this.renderInventory();
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
     },
 
     openEnchantModal: function(itemKey) {
@@ -4528,6 +4967,7 @@ const game = {
 
     buyItem: function(itemId) {
         let def = ITEMS[itemId];
+        if (!def || !def.price) return;
         let price = this.getShopPrice(def.price);
         if(this.state.adena >= price) {
             this.state.adena -= price;
@@ -4535,6 +4975,46 @@ const game = {
             this.logSystem(`購買了 ${def.name}${this.getShopDiscountRate() > 0 ? `（優惠價 ${price.toLocaleString()} 金幣）` : ''}。`);
             this.updateUI();
         } else this.logSystem(`金幣不足，無法購買 ${def.name}。`, 'danger');
+    },
+    buyItemQty: function(itemId, qty) {
+        let def = ITEMS[itemId];
+        let count = Math.max(1, Math.min(9999, parseInt(qty) || 1));
+        if (!def || !def.price) return;
+        let price = this.getShopPrice(def.price) * count;
+        if (this.state.adena < price) {
+            this.logSystem(`金幣不足，無法購買 ${def.name} x${count}。`, 'danger');
+            return;
+        }
+        this.state.adena -= price;
+        this.addInventory(itemId, count, 0, false);
+        this.logSystem(`購買了 ${def.name} x${count}，花費 ${price.toLocaleString()} 金幣。`, 'reward');
+        this.updateUI();
+        this.renderShopBulkBuy();
+    },
+    getShopBulkItems: function() {
+        return ['potion_red','potion_orange','potion_clear','potion_blue','potion_wisdom','potion_haste','potion_courage','elven_wafer','scroll_pet_resurrection','scroll_pet_resurrection_blessed','scroll_weapon','scroll_armor'].filter(id => ITEMS[id]?.price);
+    },
+    renderShopBulkBuy: function() {
+        const select = document.getElementById('shop-bulk-item');
+        const qtyInput = document.getElementById('shop-bulk-qty');
+        const priceEl = document.getElementById('shop-bulk-price');
+        if (!select || !qtyInput) return;
+        const current = select.value;
+        const options = this.getShopBulkItems();
+        select.innerHTML = options.map(id => `<option value="${id}">${ITEMS[id].name} (${this.getShopPrice(ITEMS[id].price).toLocaleString()})</option>`).join('');
+        if (options.includes(current)) select.value = current;
+        select.onchange = () => this.renderShopBulkBuy();
+        qtyInput.oninput = () => this.renderShopBulkBuy();
+        if (priceEl && select.value && ITEMS[select.value]) {
+            const qty = Math.max(1, Math.min(9999, parseInt(qtyInput.value) || 1));
+            priceEl.innerText = `總價 ${(this.getShopPrice(ITEMS[select.value].price) * qty).toLocaleString()} 金幣`;
+        }
+    },
+    buySelectedItemQty: function() {
+        const select = document.getElementById('shop-bulk-item');
+        const qtyInput = document.getElementById('shop-bulk-qty');
+        if (!select || !qtyInput) return;
+        this.buyItemQty(select.value, qtyInput.value);
     },
     getItemCount: function(itemId) {
         let count = 0;
@@ -4601,10 +5081,23 @@ const game = {
                         <div class="text-xs c-warn mt-1">${spendText}</div>
                         <div class="text-xs c-sys mt-1 leading-relaxed" title="${oddsText}">${oddsHtml}</div>
                     </div>
-                    <button class="btn-ui !px-3 !py-1 shrink-0" ${disabled} onclick="game.exchangeGems('${exchangeId}')">交換</button>
+                    <div class="flex flex-col gap-2 shrink-0">
+                        <button class="btn-ui !px-3 !py-1" ${disabled} onclick="game.exchangeGems('${exchangeId}')">交換</button>
+                        <button class="btn-ui !px-3 !py-1 c-warn border-yellow-800" ${disabled} onclick="game.exchangeGemsAll('${exchangeId}')">全部兌換</button>
+                    </div>
                 </div>
             `);
         });
+    },
+    rollGemExchangeReward: function(exchange) {
+        let total = exchange.rewards.reduce((sum, reward) => sum + reward.weight, 0);
+        let roll = Math.random() * total;
+        let selected = exchange.rewards[0];
+        for (let reward of exchange.rewards) {
+            roll -= reward.weight;
+            if (roll <= 0) { selected = reward; break; }
+        }
+        return selected;
     },
     exchangeGems: function(exchangeId) {
         let exchange = GEM_EXCHANGES[exchangeId];
@@ -4614,17 +5107,40 @@ const game = {
             return;
         }
         this.removeItemById(spendId, 1);
-        let total = exchange.rewards.reduce((sum, reward) => sum + reward.weight, 0);
-        let roll = Math.random() * total;
-        let selected = exchange.rewards[0];
-        for (let reward of exchange.rewards) {
-            roll -= reward.weight;
-            if (roll <= 0) { selected = reward; break; }
-        }
+        let selected = this.rollGemExchangeReward(exchange);
         this.addInventory(selected.id, selected.count || 1, 0, false);
         this.logSystem(`${exchange.name} 扣除了 ${ITEMS[spendId].name}，開出了 ${ITEMS[selected.id].name} x${selected.count || 1}！`, 'reward');
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
+        this.renderInventory();
+        this.updateUI();
+    },
+    exchangeGemsAll: function(exchangeId) {
+        let exchange = GEM_EXCHANGES[exchangeId];
+        if (!exchange) return;
+        let totalSpend = exchange.gems.reduce((sum, id) => sum + this.getItemCount(id), 0);
+        if (totalSpend <= 0) {
+            this.logSystem(`寶石不足，無法交換。`, 'danger');
+            return;
+        }
+        let rewards = {};
+        let spent = 0;
+        while (spent < totalSpend) {
+            let spendId = this.getExchangeGemToSpend(exchangeId);
+            if (!spendId || !this.removeItemByIdQuiet(spendId, 1)) break;
+            let selected = this.rollGemExchangeReward(exchange);
+            rewards[selected.id] = (rewards[selected.id] || 0) + (selected.count || 1);
+            spent++;
+        }
+        Object.keys(rewards).forEach(id => this.addInventory(id, rewards[id], 0, false, true));
+        let names = Object.keys(rewards).sort((a,b) => (ITEMS[a]?.name || a).localeCompare(ITEMS[b]?.name || b, 'zh-Hant'));
+        let summary = names.slice(0, 8).map(id => `${ITEMS[id]?.name || id} x${rewards[id]}`).join('、');
+        if (names.length > 8) summary += '...';
+        this.logSystem(`${exchange.name} 已全部兌換 ${spent} 次，獲得：${summary || '無'}。`, 'reward');
+        this.renderGemExchange();
+        this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
         this.renderInventory();
         this.updateUI();
     },
@@ -4654,6 +5170,19 @@ const game = {
         }
         return false;
     },
+    removeItemByIdQuiet: function(itemId, count) {
+        let remain = count;
+        for (let key of Object.keys(this.state.inventory)) {
+            let item = this.state.inventory[key];
+            if (!item || item.itemId !== itemId) continue;
+            let take = Math.min(item.count, remain);
+            item.count -= take;
+            remain -= take;
+            if (item.count <= 0) delete this.state.inventory[key];
+            if (remain <= 0) return true;
+        }
+        return false;
+    },
     getKalipClassWeaponPool: function(tier) {
         const pools = {
             mid: {
@@ -4674,17 +5203,17 @@ const game = {
     getKalipClassSkillPool: function() {
         const preferred = {
             knight: ['book_knight_reduction_armor','book_knight_solid_carriage','book_knight_shield_bash','book_knight_sword_shield_mastery','book_knight_shock_stun','book_knight_counter_barrier'],
-            elf: ['crystal_elf_resist_magic','crystal_elf_body_to_mind','crystal_elf_clear_mind','crystal_elf_earth_skin','crystal_elf_fire_weapon','crystal_elf_wind_shot','crystal_elf_soul_to_mind','crystal_elf_triple_arrow','crystal_elf_storm_shot','crystal_elf_iron_skin','crystal_elf_release_elemental','crystal_elf_elemental_fire','crystal_elf_dance_of_fire'],
+            elf: ['crystal_elf_resist_magic','crystal_elf_body_to_mind','crystal_elf_clear_mind','crystal_elf_earth_skin','crystal_elf_fire_weapon','crystal_elf_wind_shot','crystal_elf_soul_to_mind','crystal_elf_triple_arrow','crystal_elf_storm_shot','crystal_elf_iron_skin','crystal_elf_release_elemental','crystal_elf_elemental_fire','crystal_elf_dance_of_fire','crystal_elf_life_fountain','crystal_elf_aqua_protect','crystal_elf_bless_of_life'],
             dark_elf: ['crystal_dark_enchant_venom','crystal_dark_shadow_armor','crystal_dark_burning_spirit','crystal_dark_shadow_fang','crystal_dark_uncanny_dodge','crystal_dark_double_break','crystal_dark_dress_mighty','crystal_dark_armor_break'],
-            wizard: []
+            wizard: ['book_soul_ascension','book_ultimate_light_spear']
         };
         let pool = preferred[this.state.classId] ? [...preferred[this.state.classId]] : [];
         if (this.state.classId === 'wizard') {
-            pool = Object.keys(ITEMS).filter(id => {
+            pool = pool.concat(Object.keys(ITEMS).filter(id => {
                 let def = ITEMS[id];
                 let spell = def && def.type === 'book' && def.spellId ? SPELLS[def.spellId] : null;
                 return spell && (!spell.classes || spell.classes.length === 0);
-            });
+            }));
         }
         pool = pool.filter(id => this.isKalipRewardSuitableForClass(id));
         let unlearned = pool.filter(id => {
@@ -4754,6 +5283,75 @@ const game = {
         let rewardDef = ITEMS[rewardId];
         this.logSystem(`${recipe.name} 兌換成功，取得 ${this.getClassDef().name}可用的 ${rewardDef.name}。`, 'reward');
         this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
+        this.renderInventory();
+        this.updateUI();
+    },
+    isTowerCraftSuitableForClass: function(itemId) {
+        let def = ITEMS[itemId];
+        if (!def) return false;
+        if (def.classes && !def.classes.includes(this.state.classId)) return false;
+        if (def.type === 'weapon') {
+            let cls = this.getClassDef();
+            return !cls.allowedWeaponClasses || cls.allowedWeaponClasses.includes(this.getWeaponClass(itemId));
+        }
+        return true;
+    },
+    getTowerCraftStatus: function(recipe) {
+        let materialRows = Object.entries(recipe.materials || {}).map(([itemId, required]) => ({
+            itemId,
+            required,
+            owned: this.getItemCount(itemId),
+            name: ITEMS[itemId]?.name || itemId
+        }));
+        let hasMaterials = materialRows.every(row => row.owned >= row.required);
+        let hasAdena = (this.state.adena || 0) >= (recipe.adena || 0);
+        return { materialRows, hasMaterials, hasAdena, canCraft: hasMaterials && hasAdena };
+    },
+    renderTowerCrafts: function() {
+        const list = document.getElementById('tower-craft-list');
+        if (!list) return;
+        list.innerHTML = '';
+        const recipes = TOWER_OF_INSOLENCE_CRAFTS.filter(recipe => this.isTowerCraftSuitableForClass(recipe.result));
+        if (recipes.length === 0) {
+            list.innerHTML = '<div class="c-sys italic p-2 text-sm">目前職業沒有可製作的傲慢之塔裝備。</div>';
+            return;
+        }
+        recipes.forEach(recipe => {
+            let result = ITEMS[recipe.result];
+            let status = this.getTowerCraftStatus(recipe);
+            let materialText = status.materialRows.map(row => `${row.name} ${row.owned}/${row.required}`).join('、');
+            let adenaText = recipe.adena ? `、金幣 ${this.state.adena.toLocaleString()}/${recipe.adena.toLocaleString()}` : '';
+            let disabled = status.canCraft ? '' : 'disabled';
+            list.insertAdjacentHTML('beforeend', `
+                <div class="list-item">
+                    <div class="min-w-0 pr-3">
+                        <div class="c-legendary">${result.name}</div>
+                        <div class="text-xs c-sys mt-1">需求：${materialText}${adenaText}</div>
+                        <div class="text-xs c-warn mt-1">${result.desc || '傲慢之塔 Boss 裝備。'}</div>
+                    </div>
+                    <button class="btn-ui !px-3 !py-1 shrink-0" ${disabled} onclick="game.craftTowerItem('${recipe.id}')">製作</button>
+                </div>
+            `);
+        });
+    },
+    craftTowerItem: function(recipeId) {
+        let recipe = TOWER_OF_INSOLENCE_CRAFTS.find(row => row.id === recipeId);
+        if (!recipe || !ITEMS[recipe.result]) return;
+        if (!this.isTowerCraftSuitableForClass(recipe.result)) {
+            this.logSystem(`${this.getClassDef().name} 無法使用 ${ITEMS[recipe.result].name}。`, 'danger');
+            return;
+        }
+        let status = this.getTowerCraftStatus(recipe);
+        if (!status.canCraft) {
+            this.logSystem(`${ITEMS[recipe.result].name} 的材料或金幣不足。`, 'danger');
+            return;
+        }
+        Object.entries(recipe.materials || {}).forEach(([itemId, count]) => this.removeItemById(itemId, count));
+        if (recipe.adena) this.state.adena -= recipe.adena;
+        this.addInventory(recipe.result, 1, 0, false);
+        this.logSystem(`傲慢之塔戰利品製作完成：${ITEMS[recipe.result].name}。`, 'reward');
+        this.renderTowerCrafts();
         this.renderInventory();
         this.updateUI();
     },
@@ -4931,8 +5529,9 @@ const game = {
         if (this.state.targetMonster.hp <= 0) this.monsterDied();
     },
 
-    calcMagicDmgToMonster: function(base) {
+    calcMagicDmgToMonster: function(base, mrIgnoreRate = 0) {
         let targetMR = this.getEffectiveMonsterMR(this.state.targetMonster);
+        if (mrIgnoreRate > 0) targetMR = Math.floor(targetMR * (1 - Math.min(0.95, Math.max(0, mrIgnoreRate))));
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
         let tid = this.state.targetMonster.id;
         if (tid === 'antaras') d = Math.max(1, Math.floor(d * 0.5));
@@ -5020,6 +5619,12 @@ const game = {
             this.state.mapChangeLoop = setTimeout(() => { if(this.state.isPlaying && this.state.currentMap === 'antaras_lair') this.spawnMonster(); }, 5000);
             return;
         }
+        if (!this.isTowerMapUnlocked(mapId)) {
+            let mapSel = document.getElementById('map-select');
+            if (mapSel) mapSel.value = this.state.currentMap;
+            this.logSystem(this.getTowerLockMessage(mapId), 'danger');
+            return;
+        }
 
         this.state.currentMap = mapId;
         this.logSystem(`移動到了 ${MAPS[mapId].name}。`);
@@ -5044,6 +5649,13 @@ const game = {
             document.getElementById('target-hp-container').classList.add('hidden');
             setTimeout(() => { if(this.state.isPlaying && this.state.currentMap === 'antaras_lair') this.spawnMonster(); }, 5000);
             return;
+        }
+        if (!this.isTowerMapUnlocked(this.state.currentMap)) {
+            const unlocked = this.getUnlockedTowerFloor();
+            this.state.currentMap = `toi_${unlocked}f`;
+            let mapSel = document.getElementById('map-select');
+            if (mapSel) mapSel.value = this.state.currentMap;
+            this.logSystem(`傲慢之塔樓層進度重新同步，移動到目前最高可挑戰的 ${MAPS[this.state.currentMap].name}。`, 'warn');
         }
 
         const map = MAPS[this.state.currentMap];
@@ -5358,8 +5970,9 @@ const game = {
                      d = rollDice(diceExp) + baseDmg;
                      if (i === hits - 1) d += lastHitBonus;
                 }
+                if (spell.intScale) d += Math.max(0, this.getEffStat('int') - 12) * spell.intScale;
                 
-                let finalDmg = this.calcMagicDmgToMonster(d);
+                let finalDmg = this.calcMagicDmgToMonster(d, spell.mrIgnoreRate || 0);
                 if (this.state.targetMonster.isBoss && ['fire_storm','blizzard'].includes(spell.id) && this.state.targetMonster.hp <= this.state.targetMonster.maxHp * 0.2 && Math.random() < 0.1) {
                     finalDmg *= 4;
                     this.logCombat(`法術暴擊！${spell.name} 觸發核爆斬殺。`, 'magic');
@@ -5379,6 +5992,28 @@ const game = {
             this.updateMonsterHpBar();
             if(this.state.targetMonster.hp <= 0) this.monsterDied();
         }
+    },
+    castHealSpell: function(spell, magicDmg = null, sourceName = '') {
+        if (!spell || !spell.healBase) return 0;
+        let h = spell.healBase + (magicDmg === null ? this.getMagicDmg() : magicDmg);
+        if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
+        h = Math.max(1, Math.floor(h));
+        this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
+        let extra = [];
+        if (spell.partyHeal) {
+            const activePet = this.getActivePetData();
+            if (activePet && this.isPetAlive(this.state.activePet)) {
+                activePet.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), activePet.data.hp + h);
+                extra.push('寵物');
+            }
+            const companion = this.getActiveCompanion();
+            if (companion) {
+                companion.hp = Math.min(this.getCompanionMaxHp(companion), (companion.hp || 0) + h);
+                extra.push('隊友');
+            }
+        }
+        if (sourceName) this.logCombat(`${sourceName}施放了 ${spell.name}，回復 ${h} 點生命${extra.length ? `，並照護 ${extra.join('、')}` : ''}。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
+        return h;
     },
     chooseMonsterTarget: function() {
         const active = this.getActivePetData();
@@ -5410,6 +6045,97 @@ const game = {
         if (data.hp <= 0) this.killPet(petId, '被魔法擊倒。');
         else this.renderPets();
         return dmg;
+    },
+    takeTowerPhysicalDmg: function(base, label) {
+        let dmg = Math.max(1, Math.floor((Number(base) || 1) - this.getDamageReduction()));
+        if (this.state.buffs.immune_to_harm) dmg = Math.max(1, Math.floor(dmg * 0.7));
+        const guardPetName = this.state.activePet ? this.getPetDisplayName(this.state.activePet) : '';
+        let petGuard = this.getPetGuardReduction(dmg);
+        if (petGuard > 0) {
+            dmg -= petGuard;
+            this.logCombat(`${guardPetName} 擋下了 ${petGuard} 點傷害。`, 'success');
+        }
+        this.state.hp -= dmg;
+        this.logCombat(`${label}，造成 ${dmg} 點物理傷害。`, 'danger');
+        this.updateUI();
+        this.checkPlayerDeath();
+        return dmg;
+    },
+    applyTowerBossSpecialTick: function(tm, st) {
+        if (!tm || !tm.towerSpecial || tm.debuffs?.sleep > 0) return false;
+        let needUpdate = false;
+        if (tm.towerSpecial === 'zenith' && st % 10 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('6d10') + 28);
+            this.state.buffs.poison_storm = Math.max(this.state.buffs.poison_storm || 0, 12);
+            if (Math.random() * 100 < Math.max(12, 72 - this.getMR())) this.state.buffs.petrified = Math.max(this.state.buffs.petrified || 0, 3);
+            this.logCombat(`潔尼斯女王釋放蛇毒石化，造成 ${dmg} 點魔法傷害並留下毒霧。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'seer' && st % 11 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('7d10') + 32);
+            let mpLoss = Math.min(this.state.mp, 18 + Math.floor(this.getEffStat('int') / 2));
+            this.state.mp -= mpLoss;
+            if (Math.random() * 100 < Math.max(10, 65 - this.getMR())) this.state.buffs.stun = Math.max(this.state.buffs.stun || 0, 2);
+            this.logCombat(`幻象眼魔的凝視燒穿精神，造成 ${dmg} 點魔法傷害並燃燒 ${mpLoss} MP。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'vampire' && st % 9 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('7d12') + 30);
+            let heal = Math.floor(dmg * 1.2);
+            tm.hp = Math.min(tm.maxHp, tm.hp + heal);
+            this.logCombat(`吸血鬼抽取生命，造成 ${dmg} 點傷害並恢復 ${heal} 體力。`, 'danger');
+            this.updateMonsterHpBar();
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'zombie_lord' && st % 12 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('7d10') + 36);
+            this.state.buffs.heal_erosion = Math.max(this.state.buffs.heal_erosion || 0, 18);
+            this.logCombat(`殭屍王散布腐敗瘟疫，造成 ${dmg} 點魔法傷害並侵蝕治癒效果。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'cougar' && st % 7 === 0) {
+            this.takeTowerPhysicalDmg(rollDice('8d12') + 46, '庫格高速撕裂你的防線');
+            needUpdate = true;
+        }
+        if (tm.towerSpecial === 'mummy_lord' && st % 11 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('8d10') + 38);
+            if (Math.random() * 100 < Math.max(12, 70 - this.getMR())) this.state.buffs.stun = Math.max(this.state.buffs.stun || 0, 3);
+            this.logCombat(`木乃伊王的裹屍詛咒纏住身體，造成 ${dmg} 點魔法傷害。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'iris' && st % 10 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('9d10') + 44);
+            let mpLoss = Math.min(this.state.mp, 20 + Math.floor(this.state.maxMp * 0.04));
+            this.state.mp -= mpLoss;
+            this.logCombat(`艾莉絲展開魅惑魔法陣，造成 ${dmg} 點魔法傷害並奪走 ${mpLoss} MP。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'knight_vald' && st % 9 === 0) {
+            this.takeTowerPhysicalDmg(rollDice('9d12') + 52, '騎士范德以衝擊斬壓制你');
+            this.state.buffs.stun = Math.max(this.state.buffs.stun || 0, 2);
+            if (this.canCurrentWeaponBeDamaged()) this.state.buffs.player_weapon_break = Math.max(this.state.buffs.player_weapon_break || 0, 14);
+            needUpdate = true;
+        }
+        if (tm.towerSpecial === 'lich' && st % 8 === 0) {
+            let dmg = this.takeMagicDmg(rollDice('10d12') + 48);
+            let mpLoss = Math.min(this.state.mp, 25 + Math.floor(this.state.maxMp * 0.05));
+            this.state.mp -= mpLoss;
+            if (st % 16 === 0) this.state.buffs.heal_erosion = Math.max(this.state.buffs.heal_erosion || 0, 16);
+            this.logCombat(`巫妖施放靈魂崩解，造成 ${dmg} 點魔法傷害並燃燒 ${mpLoss} MP。`, 'danger');
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        if (tm.towerSpecial === 'grim_reaper' && st % 8 === 0) {
+            let base = rollDice('11d12') + 54;
+            if (this.state.hp <= this.state.maxHp * 0.35) base += rollDice('6d12') + 30;
+            let dmg = this.takeMagicDmg(base);
+            this.logCombat(`死神宣告死亡刻印，造成 ${dmg} 點魔法傷害。`, 'danger');
+            if (st % 24 === 0) {
+                ['immune_to_harm','shield','dex_buff','str_buff','enchant_weapon','berserkers','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_storm_shot','elf_iron_skin','knight_counter_barrier','knight_reduction_armor','knight_solid_carriage','de_shadow_armor','de_double_break','de_uncanny_dodge','de_burning_spirit','de_armor_break'].forEach(b => delete this.state.buffs[b]);
+                this.logCombat(`死神的審判鐘聲洗去了你的主要增益狀態。`, 'danger');
+            }
+            needUpdate = true; this.checkPlayerDeath();
+        }
+        return needUpdate;
     },
     monsterAttackPet: function() {
         const petId = this.state.activePet;
@@ -5631,10 +6357,12 @@ if(Math.random()*100 <= this.getER()) {
     },
     monsterDied: function() {
         let m = this.state.targetMonster;
+        let towerUnlockBefore = this.getUnlockedTowerFloor();
         this.recordMonsterKill(this.state.currentMap, m);
         let expGain = Math.floor(Math.max(0, m.exp || 0) * this.getAchievementExpMultiplier());
         this.state.exp += expGain;
         this.gainPetExp(Math.max(1, Math.floor(expGain * (m.isBoss ? 0.18 : 0.35))));
+        this.gainCompanionExp(Math.max(1, Math.floor(expGain * (m.isBoss ? 0.22 : 0.40))));
         
         let multi = m.isBoss ? 10 : 1;
         let goldMsg = '';
@@ -5701,6 +6429,11 @@ if(Math.random()*100 <= this.getER()) {
         
         if (m.id === 'antaras') this.state.antarasDeadUntil = Date.now() + 600000;
         if (m.id === 'hv_cursed_aruba') this.state.hiddenValleyArubaDefeated = true;
+        let towerUnlockAfter = this.getUnlockedTowerFloor();
+        if (towerUnlockAfter > towerUnlockBefore) {
+            this.renderMapSelect();
+            this.logSystem(`傲慢之塔${towerUnlockAfter}F 的封印解除，可以繼續往上挑戰。`, 'reward');
+        }
 
         document.getElementById('target-name').innerText = '尋找目標中...';
         document.getElementById('target-name').className = 'c-err font-bold text-2xl mb-4';
@@ -5735,7 +6468,7 @@ if(Math.random()*100 <= this.getER()) {
         this.state.zombieTick = 0;
         this.state.monsterSpecialTick = 0;
         if (this.state.currentMap !== 'hidden_valley') {
-            let req = EXP_TABLE[this.state.level] || 36065092;
+            let req = EXP_TABLE[this.state.level] || LATE_EXP_CAP;
             let pen = Math.floor(req * 0.1);
             this.state.exp = Math.max(0, this.state.exp - pen);
         }
@@ -5757,7 +6490,7 @@ if(Math.random()*100 <= this.getER()) {
     checkLevelUp: function() {
         let leveled = 0;
         while(this.state.level < 90) {
-            let req = EXP_TABLE[this.state.level] || 36065092;
+            let req = EXP_TABLE[this.state.level] || LATE_EXP_CAP;
             if(this.state.exp < req) break;
             this.state.level++;
             this.state.exp -= req;
@@ -5803,13 +6536,11 @@ if(Math.random()*100 <= this.getER()) {
     persistActiveTimestamp: function() {
         if (!this.isGameLoaded()) return;
         this.markActiveTimestamp(true);
-        try {
-            localStorage.setItem('lineageIdleSave', JSON.stringify(this.getSaveData()));
-        } catch (e) {}
     },
     getBackgroundMonsters: function() {
         if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) return [];
         if (this.state.currentMap === 'antaras_lair' && this.state.antarasDeadUntil > Date.now()) return [];
+        if (!this.isTowerMapUnlocked(this.state.currentMap)) return [];
         let map = MAPS[this.state.currentMap];
         if (!map || !Array.isArray(map.monsters)) return [];
         let normal = map.monsters.filter(m => m && !m.isBoss && (m.weight || 0) > 0);
@@ -5892,6 +6623,7 @@ if(Math.random()*100 <= this.getER()) {
                     if(def && def.hpRegen) h += def.hpRegen;
                 }
             }
+            if (this.state.buffs.elf_life_fountain) h += 8 + Math.floor(this.state.level / 10);
             h += this.getAchievementPassiveBonuses().hpRegen || 0;
             this.state.hp = Math.min(this.state.maxHp, this.state.hp + Math.max(0, h) * ticks);
         }
@@ -5988,6 +6720,12 @@ if(Math.random()*100 <= this.getER()) {
             this.persistActiveTimestamp();
             return { seconds, kills: 0 };
         }
+        if (!this.isTowerMapUnlocked(this.state.currentMap)) {
+            const unlocked = this.getUnlockedTowerFloor();
+            this.state.currentMap = `toi_${unlocked}f`;
+            this.renderMapSelect();
+            this.logSystem(`傲慢之塔樓層進度重新同步，背景狩獵改以 ${MAPS[this.state.currentMap].name} 結算。`, 'warn');
+        }
 
         let monsters = this.getBackgroundMonsters();
         if (!monsters.length || this.state.hp <= 0) {
@@ -6017,6 +6755,7 @@ if(Math.random()*100 <= this.getER()) {
             this.state.exp += exp;
             expGain += exp;
             this.gainPetExp(Math.max(1, Math.floor(exp * 0.35)), true);
+            this.gainCompanionExp(Math.max(1, Math.floor(exp * 0.40)), true);
 
             let adena = this.rollBackgroundAdena(m);
             this.state.adena += adena;
@@ -6066,6 +6805,7 @@ if(Math.random()*100 <= this.getER()) {
                         if(def && def.hpRegen) h += def.hpRegen;
                     }
                 }
+                if (this.state.buffs.elf_life_fountain) h += 8 + Math.floor(this.state.level / 10);
                 h += this.getAchievementPassiveBonuses().hpRegen || 0;
                 this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
             }
@@ -6146,6 +6886,7 @@ if(Math.random()*100 <= this.getER()) {
                         if (key === 'heal_erosion') bName = '治癒侵蝕';
                         if (key === 'stun') bName = '衝暈';
                         this.logSystem(`${bName} 狀態消失。`);
+                        if (key === 'soul_ascension') this.calculateMaxHpMp();
                     }
                 }
             }
@@ -6169,7 +6910,9 @@ if(Math.random()*100 <= this.getER()) {
                 this.state.monsterSpecialTick++;
                 let st = this.state.monsterSpecialTick;
                 let tm = this.state.targetMonster;
-                let tmId = tm.id;                if (tmId === 'ice_queen' && st % 8 === 0) {
+                let tmId = tm.id;
+                if (this.applyTowerBossSpecialTick(tm, st)) needUpdate = true;
+                if (tmId === 'ice_queen' && st % 8 === 0) {
                     this.logCombat(`冰之女王在你腳下立起冰錐圍籬，寒氣封住退路！`, 'danger');
                     this.takeMagicDmg(rollDice('6d10') + 24); needUpdate = true; this.checkPlayerDeath();
                 }
@@ -6355,10 +7098,11 @@ if(Math.random()*100 <= this.getER()) {
                             if(this.state.mp >= cost) {
                                 this.state.mp -= cost;
                                 if(sp.healBase) {
-                                    let h = sp.healBase + this.getMagicDmg();
-                                    if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
-                                    this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
-                                } else this.state.buffs[sId] = sp.duration;
+                                    this.castHealSpell(sp);
+                                } else {
+                                    this.state.buffs[sId] = sp.duration;
+                                    if (sId === 'soul_ascension') this.calculateMaxHpMp();
+                                }
                                 let skillType = sp.classes?.includes('elf') ? 'skill-elf' : (sp.classes?.includes('dark_elf') ? 'skill-dark' : (sp.classes?.includes('knight') ? 'skill-knight' : (sp.classes?.includes('wizard') ? 'skill-wizard' : 'info')));
                                 this.logCombat(`自動施放了 ${sp.name}。`, skillType);
                                 needUpdate = true;
@@ -6389,9 +7133,7 @@ if(Math.random()*100 <= this.getER()) {
                             let cost = this.getSpellCost(sp);
                             if(this.state.mp >= cost) {
                                 this.state.mp -= cost;
-                                let h = sp.healBase + this.getMagicDmg();
-                                if (this.state.buffs.heal_erosion) h = Math.floor(h / 2);
-                                this.state.hp = Math.min(this.state.maxHp, this.state.hp + h);
+                                this.castHealSpell(sp);
                                 let skillType = sp.classes?.includes('elf') ? 'skill-elf' : (sp.classes?.includes('dark_elf') ? 'skill-dark' : (sp.classes?.includes('knight') ? 'skill-knight' : (sp.classes?.includes('wizard') ? 'skill-wizard' : 'info')));
                                 this.logCombat(`自動施放了 ${sp.name}。`, skillType);
                                 this.state.autoHealCd = 3;
@@ -6569,6 +7311,812 @@ if(Math.random()*100 <= this.getER()) {
     }
 };
 
+const COMPANION_DRAW_COST = 100000;
+const COMPANION_MAX_COUNT = 80;
+const COMPANION_DISMISS_ADENA = { R: 50000, SR: 150000, SSR: 300000 };
+const COMPANION_DEFAULT_CONSUMABLE_SETTINGS = {
+    autoHpThreshold: 35,
+    autoHpType: 'potion_red',
+    autoBuyHp: false,
+    autoBuyMp: false,
+    autoBuyWis: false,
+    autoBuyHaste: false,
+    autoBuySecondHaste: false
+};
+const COMPANION_NAMES = ['艾德里克','賽德里克','羅蘭','加雷斯','崔斯坦','艾德溫','波林','達里安','路坎','哈德里安','奧斯溫','帕西瓦爾','羅德里克','亞拉里克','科溫','席恩','巴德里克','艾爾德里克','梅瑞克','羅文','瑟蕾娜','萊拉','艾蕾娜','米菈','伊索德','艾莉亞','瑟琳','莉安儂','瑟莉亞','瑪麗安','伊蓮','泰莎','娜蒂亞','薇薇安','伊芙琳','達芙妮','芙蕾雅','布莉娜','卡菈','艾芙琳'];
+const COMPANION_PREFIX_BY_STAT = { str: '強力的', dex: '迅捷的', con: '厚實的', int: '聰慧的', wis: '強念的' };
+const COMPANION_STATS = ['str','dex','con','int','wis'];
+const COMPANION_EQUIP_SLOTS = ['weapon','shield','quiver','helmet','tshirt','armor','cloak','leggings','gloves','boots','amulet','earring1','earring2','belt','ring1','ring2'];
+const COMPANION_SSR_TEMPLATES = [
+    { name: '吉倫', classId: 'wizard', stats: { str: 8, dex: 10, con: 12, int: 20, wis: 20 }, spellPreset: 'giran' },
+    { name: '傑瑞德', classId: 'knight', stats: { str: 18, dex: 12, con: 20, int: 8, wis: 9 }, spellPreset: 'all_knight' },
+    { name: '光', classId: 'elf', stats: { str: 11, dex: 12, con: 12, int: 20, wis: 20 }, spellPreset: 'water_elf_light' },
+    { name: '索諾菈', classId: 'elf', stats: { str: 11, dex: 20, con: 18, int: 12, wis: 12 }, spellPreset: 'wind_elf' },
+    { name: '霞月漆', classId: 'elf', stats: { str: 20, dex: 12, con: 18, int: 12, wis: 12 }, spellPreset: 'fire_elf' },
+    { name: '柯蘭朵菈', classId: 'elf', stats: { str: 11, dex: 12, con: 20, int: 12, wis: 18 }, spellPreset: 'kolandora', supplyPotions: true },
+    { name: '萊拉斯', classId: 'wizard', stats: { str: 18, dex: 7, con: 12, int: 20, wis: 18 }, spellPreset: 'all_magic' },
+    { name: '崔斯特', classId: 'dark_elf', stats: { str: 18, dex: 18, con: 12, int: 18, wis: 18 }, spellPreset: 'all_dark_elf', starterItem: 'dual_shadow_high' },
+    { name: '伊爾明斯特', classId: 'wizard', stats: { str: 8, dex: 10, con: 12, int: 20, wis: 20 }, spellPreset: 'all_magic' },
+    { name: '明斯克&布布', classId: 'knight', stats: { str: 16, dex: 12, con: 24, int: 8, wis: 9 }, spellPreset: 'all_knight' }
+];
+
+Object.assign(game, {
+    togglePanelBody: function(bodyId, buttonId, openText, closeText) {
+        const body = document.getElementById(bodyId);
+        const btn = document.getElementById(buttonId);
+        if (!body) return;
+        body.classList.toggle('compact-panel-hidden');
+        if (btn) btn.innerText = body.classList.contains('compact-panel-hidden') ? openText : closeText;
+    },
+    togglePlayerStatus: function() {
+        this.togglePanelBody('character-detail-body', 'btn-toggle-player-status', '展開玩家', '收合玩家');
+    },
+    togglePetStatus: function() {
+        this.togglePanelBody('pet-status-body', 'btn-toggle-pet-status', '展開寵物', '收合寵物');
+    },
+    toggleCompanionStatus: function() {
+        this.togglePanelBody('companion-status-body', 'btn-toggle-companion-status', '展開隊友', '收合隊友');
+    },
+    toggleCharacterDetails: function() {
+        this.togglePlayerStatus();
+    },
+    ensureCompanionState: function() {
+        if (!this.state.companions || typeof this.state.companions !== 'object') this.state.companions = {};
+        this.state.companionSeq = Math.max(0, parseInt(this.state.companionSeq) || 0);
+        Object.keys(this.state.companions).forEach(cid => {
+            const normalized = this.normalizeCompanion(this.state.companions[cid], cid);
+            if (normalized) this.state.companions[cid] = normalized;
+            else delete this.state.companions[cid];
+        });
+        if (this.state.activeCompanion && !this.state.companions[this.state.activeCompanion]) this.state.activeCompanion = null;
+    },
+    normalizeCompanion: function(raw, fallbackId = '') {
+        if (!raw || typeof raw !== 'object') return null;
+        const classId = CLASSES[raw.classId] ? raw.classId : 'knight';
+        const stats = { ...CLASSES[classId].baseStats, ...(raw.stats || {}) };
+        COMPANION_STATS.forEach(stat => stats[stat] = Math.max(6, Math.min(35, parseInt(stats[stat]) || CLASSES[classId].baseStats[stat] || 8)));
+        let equipment = {};
+        COMPANION_EQUIP_SLOTS.forEach(slot => {
+            let key = raw.equipment?.[slot] || null;
+            equipment[slot] = key && this.state.inventory?.[key] ? key : null;
+        });
+        const spells = Array.isArray(raw.spells) ? raw.spells.filter(id => SPELLS[id] && this.canCompanionUseSpell({ classId, stats }, id)) : [];
+        const settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(raw.settings || {}) };
+        settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
+        if (!ITEMS[settings.autoHpType] || ITEMS[settings.autoHpType].type !== 'potion_hp') settings.autoHpType = 'potion_red';
+        return {
+            id: raw.id || fallbackId || `comp_${Date.now()}`,
+            name: raw.name || '無名隊友',
+            rarity: ['R','SR','SSR'].includes(raw.rarity) ? raw.rarity : 'R',
+            classId,
+            stats,
+            level: Math.max(1, Math.min(90, parseInt(raw.level) || parseInt(this.state.level) || 1)),
+            exp: Math.max(0, parseInt(raw.exp) || 0),
+            spells,
+            equipment,
+            locked: !!raw.locked,
+            behavior: ['attack','burst','support'].includes(raw.behavior) ? raw.behavior : 'attack',
+            autoSkill: raw.autoSkill && SPELLS[raw.autoSkill] ? raw.autoSkill : 'none',
+            hp: Math.max(1, parseInt(raw.hp) || 1),
+            mp: Math.max(0, parseInt(raw.mp) || 0),
+            buffs: raw.buffs && typeof raw.buffs === 'object' ? raw.buffs : {},
+            potionCooldown: Math.max(0, parseInt(raw.potionCooldown) || 0),
+            settings,
+            supplyPotions: !!raw.supplyPotions,
+            nextSupplyAt: Math.max(0, parseInt(raw.nextSupplyAt) || 0)
+        };
+    },
+    getCompanionRarityClass: function(rarity) {
+        return rarity === 'SSR' ? 'rarity-ssr' : (rarity === 'SR' ? 'rarity-sr' : 'rarity-r');
+    },
+    getCompanionList: function() {
+        this.ensureCompanionState();
+        return Object.values(this.state.companions).sort((a,b) => {
+            const rank = { SSR: 0, SR: 1, R: 2 };
+            return (rank[a.rarity] - rank[b.rarity]) || a.name.localeCompare(b.name, 'zh-Hant');
+        });
+    },
+    getActiveCompanion: function() {
+        this.ensureCompanionState();
+        return this.state.activeCompanion ? this.state.companions[this.state.activeCompanion] || null : null;
+    },
+    canCompanionUseSpell: function(companion, spellId) {
+        const spell = SPELLS[spellId];
+        const cls = CLASSES[companion?.classId];
+        if (!spell || !cls) return false;
+        if (spell.classes && spell.classes.length > 0) return spell.classes.includes(companion.classId);
+        if (companion.classId === 'knight') return spell.level <= 1;
+        if (companion.classId === 'dark_elf') return spell.level <= 2;
+        if (companion.classId === 'elf') return spell.level <= 6;
+        if (companion.classId === 'wizard') return spell.level <= 10;
+        return spell.level <= (cls.spellMaxLevel || 1);
+    },
+    getCompanionSpellPreset: function(preset) {
+        const normal = max => Object.keys(SPELLS).filter(id => {
+            const sp = SPELLS[id];
+            return sp && (!sp.classes || sp.classes.length === 0) && sp.level <= max;
+        });
+        const classSpells = classId => Object.keys(SPELLS).filter(id => SPELLS[id]?.classes?.includes(classId));
+        const water = ['elf_life_fountain','elf_aqua_protect','elf_bless_of_life'];
+        const fire = ['elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire'];
+        const wind = ['elf_wind_shot','elf_triple_arrow','elf_storm_shot'];
+        const wizardOnly = Object.keys(SPELLS).filter(id => SPELLS[id]?.classes?.includes('wizard'));
+        if (preset === 'giran') return [...normal(9), 'soul_ascension'].filter(id => id !== 'ultimate_light_spear');
+        if (preset === 'all_magic') return [...normal(10), ...wizardOnly];
+        if (preset === 'all_knight') return classSpells('knight');
+        if (preset === 'all_dark_elf') return classSpells('dark_elf');
+        if (preset === 'water_elf_light') return [...water, 'dex_buff', 'str_buff'].filter(id => SPELLS[id]);
+        if (preset === 'wind_elf') return wind.filter(id => SPELLS[id]);
+        if (preset === 'fire_elf') return fire.filter(id => SPELLS[id]);
+        if (preset === 'kolandora') return [...water, 'high_heal'].filter(id => SPELLS[id]);
+        return [];
+    },
+    rollCompanionRarity: function() {
+        const roll = Math.random();
+        if (roll < 0.02) return 'SSR';
+        if (roll < 0.18) return 'SR';
+        return 'R';
+    },
+    rollCompanionClass: function() {
+        const classes = ['knight','elf','wizard','dark_elf'];
+        return classes[Math.floor(Math.random() * classes.length)];
+    },
+    makeCompanionId: function() {
+        this.state.companionSeq = (parseInt(this.state.companionSeq) || 0) + 1;
+        return `comp_${Date.now()}_${this.state.companionSeq}`;
+    },
+    generateCompanion: function(rarity = null) {
+        const rolledRarity = rarity || this.rollCompanionRarity();
+        if (rolledRarity === 'SSR') {
+            const tpl = COMPANION_SSR_TEMPLATES[Math.floor(Math.random() * COMPANION_SSR_TEMPLATES.length)];
+            return this.createCompanionFromTemplate(tpl);
+        }
+        const classId = this.rollCompanionClass();
+        const base = CLASSES[classId].baseStats;
+        let stats = {};
+        COMPANION_STATS.forEach(stat => {
+            stats[stat] = Math.max(6, base[stat] + Math.floor(Math.random() * 3) - (rolledRarity === 'R' ? Math.floor(Math.random() * 4) : 0));
+        });
+        let name = COMPANION_NAMES[Math.floor(Math.random() * COMPANION_NAMES.length)];
+        if (rolledRarity === 'SR') {
+            const stat = COMPANION_STATS[Math.floor(Math.random() * COMPANION_STATS.length)];
+            stats[stat] = 18 + Math.floor(Math.random() * 3);
+            name = `${COMPANION_PREFIX_BY_STAT[stat]}${name}`;
+        }
+        return this.normalizeCompanion({
+            id: this.makeCompanionId(),
+            name,
+            rarity: rolledRarity,
+            classId,
+            stats,
+            spells: [],
+            equipment: {},
+            hp: 1,
+            mp: 0
+        });
+    },
+    createCompanionFromTemplate: function(tpl) {
+        const companion = this.normalizeCompanion({
+            id: this.makeCompanionId(),
+            name: tpl.name,
+            rarity: 'SSR',
+            classId: tpl.classId,
+            stats: tpl.stats,
+            spells: this.getCompanionSpellPreset(tpl.spellPreset),
+            equipment: {},
+            hp: 1,
+            mp: 0,
+            supplyPotions: !!tpl.supplyPotions,
+            nextSupplyAt: Date.now() + 1800 * 1000
+        });
+        if (tpl.starterItem && ITEMS[tpl.starterItem]) {
+            this.addInventory(tpl.starterItem, 1, 0, false, true);
+            companion.equipment.weapon = this.getItemKey(tpl.starterItem, 0, false);
+        }
+        return companion;
+    },
+    drawCompanions: function(count) {
+        this.ensureCompanionState();
+        if (this.state.level < 30) {
+            this.logSystem('隊友系統 30 級後開放。', 'danger');
+            return;
+        }
+        const owned = Object.keys(this.state.companions).length;
+        const drawCount = Math.max(1, Math.min(count || 1, COMPANION_MAX_COUNT - owned));
+        if (drawCount <= 0) {
+            this.logSystem(`隊友欄位已滿，最多 ${COMPANION_MAX_COUNT} 名。`, 'danger');
+            return;
+        }
+        const cost = drawCount * COMPANION_DRAW_COST;
+        if (this.state.adena < cost) {
+            this.logSystem(`金幣不足，無法抽取隊友。`, 'danger');
+            return;
+        }
+        this.state.adena -= cost;
+        let gained = [];
+        for (let i = 0; i < drawCount; i++) {
+            const companion = this.generateCompanion();
+            companion.hp = this.getCompanionMaxHp(companion);
+            companion.mp = this.getCompanionMaxMp(companion);
+            this.state.companions[companion.id] = companion;
+            gained.push(companion);
+        }
+        const summary = gained.map(c => `<span class="${this.getCompanionRarityClass(c.rarity)}">${c.name}</span>`).join('、');
+        this.logSystem(`尋找到隊友：${summary}。`, 'reward');
+        this.updateUI();
+        this.renderInventory();
+        this.renderCompanions();
+    },
+    getCompanionLevel: function(companion) {
+        return Math.max(1, Math.min(90, parseInt(companion?.level) || parseInt(this.state.level) || 1));
+    },
+    getCompanionNextExp: function(companion) {
+        const lvl = this.getCompanionLevel(companion);
+        return lvl >= 90 ? 0 : (EXP_TABLE[lvl] || LATE_EXP_CAP);
+    },
+    gainCompanionExp: function(exp, silent = false) {
+        const c = this.getActiveCompanion();
+        if (!c) return;
+        c.level = this.getCompanionLevel(c);
+        c.exp = Math.max(0, (parseInt(c.exp) || 0) + Math.max(1, Math.floor(exp)));
+        let leveled = 0;
+        while (c.level < 90) {
+            const req = this.getCompanionNextExp(c);
+            if (!req || c.exp < req) break;
+            c.exp -= req;
+            c.level++;
+            leveled++;
+        }
+        if (leveled > 0) {
+            c.hp = this.getCompanionMaxHp(c);
+            c.mp = this.getCompanionMaxMp(c);
+            if (!silent) this.logSystem(`${c.name} 成長到了 Lv.${c.level}。`, 'reward');
+        }
+        this.renderCompanionStatus();
+    },
+    getCompanionMaxHp: function(companion) {
+        if (!companion) return 1;
+        const cls = CLASSES[companion.classId] || CLASSES.knight;
+        const con = companion.stats?.con || cls.baseStats.con || 10;
+        const conBonus = con <= 15 ? 0 : con - 15;
+        let hp = cls.hpBase + this.getCompanionLevel(companion) * (cls.hpPerLevel + conBonus);
+        Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) hp += ITEMS[this.state.inventory[key].itemId]?.hp || 0; });
+        return Math.max(1, Math.floor(hp * (companion.rarity === 'SSR' ? 1.12 : companion.rarity === 'SR' ? 1.06 : 1)));
+    },
+    getCompanionMaxMp: function(companion) {
+        if (!companion) return 0;
+        const cls = CLASSES[companion.classId] || CLASSES.knight;
+        const wis = companion.stats?.wis || cls.baseStats.wis || 10;
+        let wisBonus = wis <= 11 ? 0 : Math.floor((wis - 10) / 2);
+        let mp = cls.mpBase + this.getCompanionLevel(companion) * Math.max(1, cls.mpPerLevel + wisBonus);
+        Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) mp += ITEMS[this.state.inventory[key].itemId]?.mp || 0; });
+        return Math.max(0, Math.floor(mp * (companion.rarity === 'SSR' ? 1.12 : companion.rarity === 'SR' ? 1.06 : 1)));
+    },
+    getCompanionMagicDmg: function(companion) {
+        const int = companion?.stats?.int || 8;
+        let dmg = int >= 20 ? 6 : int >= 18 ? 4 : int >= 16 ? 3 : int >= 14 ? 2 : int >= 12 ? 1 : 0;
+        Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) dmg += ITEMS[this.state.inventory[key].itemId]?.mDmg || 0; });
+        if (companion.buffs?.potion_wisdom) dmg += 2;
+        return dmg + Math.floor(this.getCompanionLevel(companion) / 5);
+    },
+    getCompanionGearStats: function(companion) {
+        let stats = { ac: 0, hit: 0, dmg: 0, dr: 0 };
+        Object.values(companion?.equipment || {}).forEach(key => {
+            if (!key || !this.state.inventory[key]) return;
+            const item = this.state.inventory[key];
+            const def = ITEMS[item.itemId];
+            if (!def) return;
+            stats.ac += def.ac || 0;
+            stats.hit += def.hit || 0;
+            stats.dmg += (def.dmg || 0) + (def.type === 'weapon' ? Number(item.enchant || 0) : 0);
+            if (item.isBlessed && def.type !== 'weapon') stats.dr += 1;
+        });
+        return stats;
+    },
+    getCompanionEquippedCount: function(itemKey) {
+        let count = 0;
+        Object.values(this.state.companions || {}).forEach(c => {
+            Object.values(c.equipment || {}).forEach(key => { if (key === itemKey) count++; });
+        });
+        return count;
+    },
+    renderCompanionStatus: function() {
+        const el = document.getElementById('ui-active-companion');
+        const statusEl = document.getElementById('ui-companion-status');
+        const active = this.getActiveCompanion();
+        if (el && this.state.level < 30) {
+            el.className = 'text-base c-sys font-normal';
+            el.innerText = '30 級後開放';
+        } else if (el && !active) {
+            el.className = 'text-base c-sys font-normal';
+            el.innerText = '尚未召喚';
+        } else if (el && active) {
+            el.className = `text-base font-normal ${this.getCompanionRarityClass(active.rarity)}`;
+            el.innerText = `${active.name} ${CLASSES[active.classId].name}`;
+        }
+        if (statusEl) {
+            if (this.state.level < 30) {
+                statusEl.innerHTML = '<div class="c-sys italic">30 級後開放隊友系統。</div>';
+            } else if (!active) {
+                statusEl.innerHTML = '<div class="c-sys italic">尚未召喚隊友。</div>';
+            } else {
+                const maxHp = this.getCompanionMaxHp(active);
+                const maxMp = this.getCompanionMaxMp(active);
+                active.hp = Math.min(maxHp, Math.max(1, Number.isFinite(Number(active.hp)) ? Number(active.hp) : maxHp));
+                active.mp = Math.min(maxMp, Math.max(0, Number.isFinite(Number(active.mp)) ? Number(active.mp) : maxMp));
+                const req = this.getCompanionNextExp(active);
+                const expPct = req > 0 ? Math.min(100, ((active.exp || 0) / req) * 100) : 100;
+                const buffText = [
+                    active.buffs?.potion_blue ? '藍水' : '',
+                    active.buffs?.potion_wisdom ? '慎重' : '',
+                    active.buffs?.potion_haste ? '加速' : '',
+                    active.buffs?.second_haste ? '二段' : ''
+                ].filter(Boolean).join(' / ');
+                statusEl.innerHTML = `
+                    <div class="mb-1"><span class="${this.getCompanionRarityClass(active.rarity)} font-bold">${active.name}</span> <span class="c-sys">Lv.${this.getCompanionLevel(active)} ${CLASSES[active.classId].name}</span></div>
+                    <div class="space-y-2">
+                        <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, active.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(active.hp)}/${maxHp}</span></div></div>
+                        <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${maxMp > 0 ? Math.max(0, active.mp / maxMp * 100) : 0}%;"></div><span class="bar-text">${Math.floor(active.mp)}/${maxMp}</span></div></div>
+                        <div class="flex items-center">經驗:<div class="bar-container flex-1"><div class="bar-fill exp" style="width:${expPct}%;"></div><span class="bar-text">${req > 0 ? expPct.toFixed(2) + '%' : 'MAX'}</span></div></div>
+                    </div>
+                    <div class="mt-2 c-sys">${buffText ? `消耗品狀態：${buffText}` : '無消耗品狀態'}</div>
+                `;
+            }
+        }
+        const countEl = document.getElementById('companion-count');
+        if (countEl) countEl.innerText = `${Object.keys(this.state.companions || {}).length}/${COMPANION_MAX_COUNT}`;
+    },
+    renderCompanions: function() {
+        this.ensureCompanionState();
+        this.renderCompanionStatus();
+        const list = document.getElementById('companion-list');
+        if (!list) return;
+        if (this.state.level < 30) {
+            list.innerHTML = '<div class="c-sys italic p-3">隊友系統 30 級後開放。</div>';
+            return;
+        }
+        const companions = this.getCompanionList();
+        if (companions.length === 0) {
+            list.innerHTML = '<div class="c-sys italic p-3">目前沒有隊友。可以用金幣抽取。</div>';
+            return;
+        }
+        list.innerHTML = companions.map(c => this.getCompanionCardHtml(c)).join('');
+    },
+    getCompanionCardHtml: function(c) {
+        const active = this.state.activeCompanion === c.id;
+        const maxHp = this.getCompanionMaxHp(c), maxMp = this.getCompanionMaxMp(c);
+        c.hp = Math.min(maxHp, Math.max(1, Number.isFinite(Number(c.hp)) ? Number(c.hp) : maxHp));
+        c.mp = Math.min(maxMp, Math.max(0, Number.isFinite(Number(c.mp)) ? Number(c.mp) : maxMp));
+        const settings = this.getCompanionSettings(c);
+        const req = this.getCompanionNextExp(c);
+        const expPct = req > 0 ? Math.min(100, ((c.exp || 0) / req) * 100) : 100;
+        const statText = COMPANION_STATS.map(stat => `${this.getStatLabel(stat)} ${c.stats[stat]}`).join(' / ');
+        const skillOptions = this.getCompanionSkillOptions(c).map(id => `<option value="${id}" ${c.autoSkill === id ? 'selected' : ''}>${SPELLS[id].name}</option>`).join('');
+        const equipRows = COMPANION_EQUIP_SLOTS.filter(slot => c.equipment?.[slot]).map(slot => {
+            const key = c.equipment[slot], item = this.state.inventory[key], def = item && ITEMS[item.itemId];
+            if (!item || !def) return '';
+            return `<span class="text-xs c-item mr-2">${this.getCompanionSlotName(slot)}:${this.getDisplayName(item, def)} <button class="btn-ui !px-1 !py-0 text-xs" onclick="game.unequipCompanionItem('${c.id}','${slot}')">卸</button></span>`;
+        }).join('') || '<span class="text-xs c-sys">未裝備</span>';
+        const secondHasteName = c.classId === 'knight' ? '勇氣藥水' : (['elf','dark_elf'].includes(c.classId) ? '精靈餅乾' : '無職業可用道具');
+        return `
+            <div class="companion-card ${active ? 'border-yellow-500' : ''}">
+                <div class="flex justify-between items-start gap-2">
+                    <div>
+                        <div class="${this.getCompanionRarityClass(c.rarity)} font-bold text-lg">${c.name} <span class="text-xs c-sys">${CLASSES[c.classId].name}</span></div>
+                        <div class="text-xs c-sys">${c.rarity} / Lv.${this.getCompanionLevel(c)} / HP ${Math.floor(c.hp)}/${maxHp} / MP ${Math.floor(c.mp)}/${maxMp} / EXP ${req > 0 ? expPct.toFixed(1) + '%' : 'MAX'}</div>
+                    </div>
+                    <button class="btn-ui !px-2 !py-1 ${c.locked ? 'c-warn' : 'c-sys'}" onclick="game.toggleCompanionLock('${c.id}')">${c.locked ? '鎖定' : '未鎖'}</button>
+                </div>
+                <div class="text-xs c-sys mt-2">${statText}</div>
+                <div class="text-xs c-info mt-2">技能：${c.spells.length ? c.spells.map(id => SPELLS[id]?.name || id).join('、') : '尚未學習'}</div>
+                <div class="mt-2 flex flex-wrap gap-2 items-center">
+                    <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm" onchange="game.setCompanionBehavior('${c.id}', this.value)">
+                        <option value="attack" ${c.behavior === 'attack' ? 'selected' : ''}>攻擊模式</option>
+                        <option value="burst" ${c.behavior === 'burst' ? 'selected' : ''}>強力攻擊模式</option>
+                        <option value="support" ${c.behavior === 'support' ? 'selected' : ''}>輔助模式</option>
+                    </select>
+                    <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm max-w-[180px]" onchange="game.setCompanionSkill('${c.id}', this.value)">
+                        <option value="none">技能：無</option>${skillOptions}
+                    </select>
+                </div>
+                <div class="mt-2 border-t border-gray-700 pt-2 text-xs c-sys space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="c-info">體力低於</span>
+                        <input type="number" min="1" max="100" value="${settings.autoHpThreshold}" class="w-16 bg-black border border-gray-600 text-center text-white py-1 rounded" onchange="game.setCompanionConsumableSetting('${c.id}','autoHpThreshold', this.value)">
+                        <span class="c-info">% 自動使用</span>
+                        <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded" onchange="game.setCompanionConsumableSetting('${c.id}','autoHpType', this.value)">
+                            <option value="potion_red" ${settings.autoHpType === 'potion_red' ? 'selected' : ''}>治癒藥水</option>
+                            <option value="potion_orange" ${settings.autoHpType === 'potion_orange' ? 'selected' : ''}>強力治癒藥水</option>
+                            <option value="potion_clear" ${settings.autoHpType === 'potion_clear' ? 'selected' : ''}>終極治癒藥水</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        <label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${settings.autoBuyHp ? 'checked' : ''} onchange="game.setCompanionConsumableSetting('${c.id}','autoBuyHp', this.checked)"> 自動補買補血藥</label>
+                        <label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${settings.autoBuyMp ? 'checked' : ''} onchange="game.setCompanionConsumableSetting('${c.id}','autoBuyMp', this.checked)"> 藍色藥水</label>
+                        <label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${settings.autoBuyWis ? 'checked' : ''} onchange="game.setCompanionConsumableSetting('${c.id}','autoBuyWis', this.checked)"> 慎重藥水</label>
+                        <label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${settings.autoBuyHaste ? 'checked' : ''} onchange="game.setCompanionConsumableSetting('${c.id}','autoBuyHaste', this.checked)"> 加速藥水</label>
+                        <label class="cursor-pointer hover:text-white col-span-2 md:col-span-1" title="${secondHasteName}"><input type="checkbox" class="w-3 h-3 align-middle" ${settings.autoBuySecondHaste ? 'checked' : ''} ${secondHasteName.startsWith('無') ? 'disabled' : ''} onchange="game.setCompanionConsumableSetting('${c.id}','autoBuySecondHaste', this.checked)"> 二段加速</label>
+                    </div>
+                </div>
+                <div class="mt-2 border-t border-gray-700 pt-2">${equipRows}</div>
+                <div class="mt-3 flex flex-wrap justify-end gap-2">
+                    <button class="btn-ui c-success border-green-800" onclick="game.summonCompanion('${c.id}')">${active ? '出戰中' : '召喚'}</button>
+                    <button class="btn-ui c-err border-red-800" onclick="game.dismissCompanion('${c.id}')">解雇</button>
+                </div>
+            </div>`;
+    },
+    getCompanionSlotName: function(slot) {
+        return ({ weapon:'武器', shield:'盾牌', quiver:'箭桶', helmet:'頭盔', tshirt:'T恤', armor:'盔甲', cloak:'斗篷', leggings:'脛甲', gloves:'手套', boots:'靴子', amulet:'項鍊', earring1:'耳環1', earring2:'耳環2', belt:'腰帶', ring1:'戒指1', ring2:'戒指2' })[slot] || slot;
+    },
+    renderCompanionEquipmentList: function(container) {
+        if (!container) return;
+        const c = this.getActiveCompanion();
+        if (!c) {
+            container.innerHTML = '<div class="c-sys italic p-2 text-sm">尚未召喚隊友。</div>';
+            return;
+        }
+        const equipped = COMPANION_EQUIP_SLOTS
+            .map(slot => ({ slot, key: c.equipment?.[slot] }))
+            .filter(row => row.key && this.state.inventory[row.key]);
+        if (equipped.length === 0) {
+            container.innerHTML = `<div class="c-sys italic p-2 text-sm">${c.name} 目前沒有裝備。</div>`;
+            return;
+        }
+        equipped.sort((a, b) => compareItems(a.key, b.key, this.state.inventory));
+        container.innerHTML = equipped.map(row => {
+            const item = this.state.inventory[row.key];
+            const def = ITEMS[item.itemId] || { type: 'unknown', name: '未知' };
+            const colorClass = this.getItemColorClass(item, def);
+            const canEnchant = !['belt','amulet','ring','earring','quiver'].includes(def.type);
+            return `<div class="py-2 pl-2 pr-1 border-b border-dashed border-slate-700 hover:bg-white/5 transition-colors">
+                <div class="mb-2 text-sm"><span class="c-item">[${this.getCompanionSlotName(row.slot)}] <span class="${colorClass}">${this.getDisplayName(item, def)}</span></span></div>
+                <div class="flex gap-1 flex-wrap justify-end">
+                    <button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${row.key}')">詳細</button>
+                    ${canEnchant ? `<button class="btn-ui" onclick="game.openEnchantModal('${row.key}')">強化</button>` : ''}
+                    <button class="btn-ui" onclick="game.unequipCompanionItem('${c.id}','${row.slot}')">卸下</button>
+                </div>
+            </div>`;
+        }).join('');
+    },
+    getCompanionSkillOptions: function(c) {
+        return (c.spells || []).filter(id => SPELLS[id] && ['attack','buff','heal'].includes(SPELLS[id].type));
+    },
+    setCompanionBehavior: function(id, behavior) {
+        const c = this.state.companions?.[id];
+        if (!c || !['attack','burst','support'].includes(behavior)) return;
+        c.behavior = behavior;
+        if (behavior === 'burst' && (!c.autoSkill || c.autoSkill === 'none')) c.autoSkill = this.getCompanionSkillOptions(c)[0] || 'none';
+        this.renderCompanions();
+    },
+    setCompanionSkill: function(id, skillId) {
+        const c = this.state.companions?.[id];
+        if (!c) return;
+        c.autoSkill = skillId && c.spells.includes(skillId) ? skillId : 'none';
+    },
+    getCompanionSettings: function(c) {
+        if (!c) return { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS };
+        c.settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(c.settings || {}) };
+        c.settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(c.settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
+        if (!ITEMS[c.settings.autoHpType] || ITEMS[c.settings.autoHpType].type !== 'potion_hp') c.settings.autoHpType = 'potion_red';
+        ['autoBuyHp','autoBuyMp','autoBuyWis','autoBuyHaste','autoBuySecondHaste'].forEach(key => c.settings[key] = !!c.settings[key]);
+        return c.settings;
+    },
+    setCompanionConsumableSetting: function(id, key, value) {
+        const c = this.state.companions?.[id];
+        if (!c) return;
+        const settings = this.getCompanionSettings(c);
+        if (key === 'autoHpThreshold') settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(value) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
+        else if (key === 'autoHpType' && ITEMS[value]?.type === 'potion_hp') settings.autoHpType = value;
+        else if (Object.prototype.hasOwnProperty.call(COMPANION_DEFAULT_CONSUMABLE_SETTINGS, key)) settings[key] = !!value;
+        this.renderCompanions();
+    },
+    findInventoryKeyByItemId: function(itemId) {
+        return Object.keys(this.state.inventory || {}).find(k => this.state.inventory[k]?.itemId === itemId && this.state.inventory[k].count > 0) || null;
+    },
+    buyCompanionConsumableIfNeeded: function(c, itemId, count = 1) {
+        const def = ITEMS[itemId];
+        if (!c || !def || !def.price || this.findInventoryKeyByItemId(itemId)) return this.findInventoryKeyByItemId(itemId);
+        const price = this.getShopPrice(def.price) * Math.max(1, count);
+        if ((this.state.adena || 0) < price) return null;
+        this.state.adena -= price;
+        this.addInventory(itemId, Math.max(1, count), 0, false, true);
+        this.logSystem(`${c.name} 自動補買 ${def.name} x${Math.max(1, count)}。`, 'reward');
+        return this.findInventoryKeyByItemId(itemId);
+    },
+    usePotionOnCompanion: function(c, itemKey) {
+        const item = this.state.inventory?.[itemKey];
+        const def = item ? ITEMS[item.itemId] : null;
+        if (!c || !item || !def) return false;
+        if (def.classes && !def.classes.includes(c.classId)) return false;
+        if (def.type === 'potion_hp') {
+            this.removeInventory(itemKey, 1);
+            const heal = Math.max(1, Math.floor((def.heal || 1) * 1.15 + Math.max(0, (c.stats.con || 10) - 12)));
+            c.hp = Math.min(this.getCompanionMaxHp(c), (Number(c.hp) || 0) + heal);
+            this.logCombat(`${c.name} 使用了 ${def.name}，恢復 ${heal} 點體力。`, 'success');
+            return true;
+        }
+        if (def.type === 'potion_mp' || def.type === 'potion_buff') {
+            this.removeInventory(itemKey, 1);
+            if (item.itemId === 'potion_blue') c.buffs.potion_blue = def.duration || 600;
+            else if (item.itemId === 'potion_wisdom') c.buffs.potion_wisdom = def.duration || 300;
+            else if (item.itemId === 'potion_haste') c.buffs.potion_haste = def.duration || 1200;
+            else if (item.itemId === 'potion_courage' || item.itemId === 'elven_wafer') c.buffs.second_haste = def.duration || 600;
+            else if (def.buffId) c.buffs[def.buffId] = def.duration || 300;
+            this.logCombat(`${c.name} 使用了 ${def.name}。`, 'success');
+            return true;
+        }
+        return false;
+    },
+    applyCompanionConsumables: function(c) {
+        if (!c) return;
+        c.buffs = c.buffs && typeof c.buffs === 'object' ? c.buffs : {};
+        const settings = this.getCompanionSettings(c);
+        const maxHp = this.getCompanionMaxHp(c);
+        c.potionCooldown = Math.max(0, parseInt(c.potionCooldown) || 0);
+        if (c.potionCooldown <= 0 && c.hp < maxHp && c.hp <= Math.floor(maxHp * settings.autoHpThreshold / 100)) {
+            let hpKey = this.findInventoryKeyByItemId(settings.autoHpType);
+            if (!hpKey && settings.autoBuyHp) hpKey = this.buyCompanionConsumableIfNeeded(c, settings.autoHpType, 100);
+            if (hpKey && this.usePotionOnCompanion(c, hpKey)) c.potionCooldown = 1;
+        }
+        const buffQueue = [
+            { enabled: settings.autoBuyMp, itemId: 'potion_blue', buffId: 'potion_blue' },
+            { enabled: settings.autoBuyWis, itemId: 'potion_wisdom', buffId: 'potion_wisdom' },
+            { enabled: settings.autoBuyHaste, itemId: 'potion_haste', buffId: 'potion_haste' }
+        ];
+        const secondHasteId = c.classId === 'knight' ? 'potion_courage' : (['elf','dark_elf'].includes(c.classId) ? 'elven_wafer' : null);
+        if (secondHasteId) buffQueue.push({ enabled: settings.autoBuySecondHaste, itemId: secondHasteId, buffId: 'second_haste' });
+        buffQueue.forEach(row => {
+            if (!row.enabled || c.buffs[row.buffId] > 0) return;
+            let key = this.findInventoryKeyByItemId(row.itemId);
+            if (!key) key = this.buyCompanionConsumableIfNeeded(c, row.itemId, 1);
+            if (key) this.usePotionOnCompanion(c, key);
+        });
+    },
+    advanceCompanionBuffs: function(c, seconds = 2) {
+        if (!c) return;
+        c.buffs = c.buffs && typeof c.buffs === 'object' ? c.buffs : {};
+        Object.keys(c.buffs).forEach(key => {
+            c.buffs[key] = Math.max(0, (Number(c.buffs[key]) || 0) - seconds);
+            if (c.buffs[key] <= 0) delete c.buffs[key];
+        });
+        c.potionCooldown = Math.max(0, (Number(c.potionCooldown) || 0) - 1);
+    },
+    summonCompanion: function(id) {
+        if (!this.state.companions?.[id]) return;
+        this.state.activeCompanion = id;
+        this.renderCompanions();
+        this.updateUI();
+        this.logSystem(`${this.state.companions[id].name} 加入冒險。`, 'reward');
+    },
+    toggleCompanionLock: function(id) {
+        const c = this.state.companions?.[id];
+        if (!c) return;
+        c.locked = !c.locked;
+        this.renderCompanions();
+    },
+    dismissCompanion: function(id) {
+        const c = this.state.companions?.[id];
+        if (!c || c.locked) {
+            this.logSystem('鎖定的隊友不會被解雇。', 'danger');
+            return;
+        }
+        const refund = COMPANION_DISMISS_ADENA[c.rarity] || 0;
+        if (this.state.activeCompanion === id) this.state.activeCompanion = null;
+        delete this.state.companions[id];
+        this.state.adena += refund;
+        this.logSystem(`解雇了 ${c.name}，取回 ${refund.toLocaleString()} 金幣。`, 'reward');
+        this.renderCompanions();
+        this.updateUI();
+    },
+    dismissUnlockedCompanions: function() {
+        let refund = 0, count = 0;
+        Object.keys(this.state.companions || {}).forEach(id => {
+            const c = this.state.companions[id];
+            if (!c || c.locked) return;
+            refund += COMPANION_DISMISS_ADENA[c.rarity] || 0;
+            if (this.state.activeCompanion === id) this.state.activeCompanion = null;
+            delete this.state.companions[id];
+            count++;
+        });
+        this.state.adena += refund;
+        this.logSystem(`解雇未鎖定隊友 ${count} 名，取回 ${refund.toLocaleString()} 金幣。`, count ? 'reward' : 'normal');
+        this.renderCompanions();
+        this.updateUI();
+    },
+    getCompanionEquipSlot: function(c, itemKey) {
+        const item = this.state.inventory[itemKey], def = item && ITEMS[item.itemId];
+        if (!c || !def) return null;
+        if (def.classes && !def.classes.includes(c.classId)) return null;
+        if (def.type === 'weapon') {
+            const weaponClass = this.getWeaponClass(item.itemId);
+            if (!CLASSES[c.classId].allowedWeaponClasses.includes(weaponClass)) return null;
+            return 'weapon';
+        }
+        if (def.type === 'ring') return !c.equipment.ring1 ? 'ring1' : (!c.equipment.ring2 ? 'ring2' : 'ring1');
+        if (def.type === 'earring') return !c.equipment.earring1 ? 'earring1' : (!c.equipment.earring2 ? 'earring2' : 'earring1');
+        if (COMPANION_EQUIP_SLOTS.includes(def.type)) return def.type;
+        return null;
+    },
+    equipActiveCompanionItem: function(itemKey) {
+        const c = this.getActiveCompanion();
+        const item = this.state.inventory[itemKey], def = item && ITEMS[item.itemId];
+        if (!c || !item || !def) return;
+        if (this.getUnequippedCount(itemKey) <= 0) {
+            this.logSystem('沒有可給隊友裝備的未裝備物品。', 'danger');
+            return;
+        }
+        const slot = this.getCompanionEquipSlot(c, itemKey);
+        if (!slot) {
+            this.logSystem(`${c.name} 無法裝備 ${def.name}。`, 'danger');
+            return;
+        }
+        if (slot === 'weapon' && def.hands === 2) c.equipment.shield = null;
+        if (slot === 'shield' && c.equipment.weapon) {
+            const w = this.state.inventory[c.equipment.weapon];
+            if (w && ITEMS[w.itemId]?.hands === 2) c.equipment.weapon = null;
+        }
+        c.equipment[slot] = itemKey;
+        c.hp = Math.min(this.getCompanionMaxHp(c), Number.isFinite(Number(c.hp)) ? Number(c.hp) : this.getCompanionMaxHp(c));
+        c.mp = Math.min(this.getCompanionMaxMp(c), Number.isFinite(Number(c.mp)) ? Number(c.mp) : this.getCompanionMaxMp(c));
+        this.logSystem(`${c.name} 裝備了 ${this.getDisplayName(item, def)}。`, 'reward');
+        this.renderInventory();
+        this.renderCompanions();
+        this.renderCompanionStatus();
+    },
+    unequipCompanionItem: function(id, slot) {
+        const c = this.state.companions?.[id];
+        if (!c || !c.equipment || !(slot in c.equipment)) return;
+        c.equipment[slot] = null;
+        this.renderInventory();
+        this.renderCompanions();
+        this.renderCompanionStatus();
+    },
+    teachActiveCompanion: function(itemKey) {
+        const c = this.getActiveCompanion();
+        const item = this.state.inventory[itemKey], def = item && ITEMS[item.itemId], spell = def?.spellId && SPELLS[def.spellId];
+        if (!c || !item || !def || !spell) return;
+        if (!this.canCompanionUseSpell(c, spell.id)) {
+            this.logSystem(`${c.name} 無法學習 ${spell.name}。`, 'danger');
+            return;
+        }
+        if (c.spells.includes(spell.id)) {
+            this.logSystem(`${c.name} 已經會 ${spell.name}。`, 'danger');
+            return;
+        }
+        this.removeInventory(itemKey, 1);
+        c.spells.push(spell.id);
+        if (c.behavior === 'burst' && c.autoSkill === 'none') c.autoSkill = spell.id;
+        this.logSystem(`${c.name} 學會了 ${spell.name}。`, 'reward');
+        this.renderCompanions();
+        this.renderInventory();
+    },
+    companionPhysicalAttack: function(c) {
+        if (!c || !this.state.targetMonster) return false;
+        const wKey = c.equipment.weapon;
+        const w = wKey && this.state.inventory[wKey], wDef = w && ITEMS[w.itemId];
+        const gear = this.getCompanionGearStats(c);
+        const weaponClass = w ? this.getWeaponClass(w.itemId) : 'melee';
+        const dice = wDef?.dice || '1d3';
+        const hit = Math.floor((c.stats.str + c.stats.dex) / 3) + gear.hit + (c.rarity === 'SSR' ? 5 : c.rarity === 'SR' ? 3 : 1);
+        const companionLevel = this.getCompanionLevel(c);
+        const roll = rollDice('1d20');
+        let isHit = roll === 20 || (roll !== 1 && roll + hit + companionLevel - this.state.targetMonster.level >= 10 - this.state.targetMonster.ac);
+        if (!isHit && roll !== 1 && Math.random() < 0.2) isHit = true;
+        if (!isHit) {
+            this.logCombat(`${c.name} 的攻擊落空。`, 'normal');
+            return false;
+        }
+        let dmg = rollDice(dice) + gear.dmg + Math.floor((weaponClass === 'bow' ? c.stats.dex : c.stats.str) / 3) + Math.floor(companionLevel / 8);
+        if (c.rarity === 'SSR') dmg = Math.floor(dmg * 1.25);
+        if (c.rarity === 'SR') dmg = Math.floor(dmg * 1.12);
+        this.state.targetMonster.hp -= Math.max(1, dmg);
+        this.logCombat(`${c.name} 攻擊 ${this.state.targetMonster.name}，造成 ${Math.max(1, dmg)} 點傷害。`, 'success');
+        this.updateMonsterHpBar();
+        if (this.state.targetMonster.hp <= 0) this.monsterDied();
+        return true;
+    },
+    companionCastSpell: function(c, spellId, mode = 'burst') {
+        const spell = SPELLS[spellId];
+        if (!c || !spell || !c.spells.includes(spellId)) return false;
+        const cost = Math.max(0, this.getSpellCost(spell));
+        if ((c.mp || 0) < cost) return false;
+        if (spell.type === 'attack' && this.state.targetMonster) {
+            c.mp -= cost;
+            let dmg = (spell.dice ? rollDice(spell.dice) : 0) + (spell.baseDmg || 0) + this.getCompanionMagicDmg(c);
+            if (spell.intScale) dmg += Math.max(0, (c.stats.int || 8) - 12) * spell.intScale;
+            let finalDmg = this.calcMagicDmgToMonster(dmg, spell.mrIgnoreRate || 0);
+            this.state.targetMonster.hp -= finalDmg;
+            this.logCombat(`${c.name} 施放 ${spell.name}，造成 ${finalDmg} 點魔法傷害。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
+            this.updateMonsterHpBar();
+            if (this.state.targetMonster.hp <= 0) this.monsterDied();
+            return true;
+        }
+        if (spell.type === 'heal') {
+            c.mp -= cost;
+            this.castHealSpell(spell, this.getCompanionMagicDmg(c), `${c.name} `);
+            this.updateUI();
+            return true;
+        }
+        if (spell.type === 'buff') {
+            if (this.state.buffs[spellId] && this.state.buffs[spellId] > 0) return false;
+            c.mp -= cost;
+            this.state.buffs[spellId] = spell.duration || 300;
+            if (spellId === 'soul_ascension') this.calculateMaxHpMp();
+            this.logCombat(`${c.name} 施放 ${spell.name} 支援你。`, spell.classes?.includes('elf') ? 'skill-elf' : (spell.classes?.includes('wizard') ? 'skill-wizard' : 'magic'));
+            this.updateUI();
+            return true;
+        }
+        return false;
+    },
+    companionSupport: function(c) {
+        const hpPct = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        const heals = ['elf_bless_of_life','full_heal','high_heal','mid_heal','heal'].filter(id => c.spells.includes(id));
+        if (hpPct < 0.72) {
+            for (const id of heals) if (this.companionCastSpell(c, id, 'support')) return true;
+        }
+        const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_wind_shot','elf_earth_skin','elf_iron_skin','shield','haste','greater_haste'].filter(id => c.spells.includes(id));
+        for (const id of buffs) if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
+        return this.companionPhysicalAttack(c);
+    },
+    companionAct: function() {
+        const c = this.getActiveCompanion();
+        if (!c || !this.state.targetMonster || this.state.hp <= 0) return;
+        c.hp = Math.min(this.getCompanionMaxHp(c), Math.max(1, Number.isFinite(Number(c.hp)) ? Number(c.hp) : this.getCompanionMaxHp(c)));
+        c.mp = Math.min(this.getCompanionMaxMp(c), Number.isFinite(Number(c.mp)) ? Number(c.mp) : 0);
+        this.advanceCompanionBuffs(c, 2);
+        this.applyCompanionConsumables(c);
+        if (c.behavior === 'support') {
+            this.companionSupport(c);
+        } else if (c.behavior === 'burst') {
+            if ((!c.autoSkill || c.autoSkill === 'none') && this.getCompanionSkillOptions(c).length) c.autoSkill = this.getCompanionSkillOptions(c)[0];
+            if (!this.companionCastSpell(c, c.autoSkill, 'burst')) this.companionPhysicalAttack(c);
+        } else {
+            this.companionPhysicalAttack(c);
+        }
+        let mpRegen = Math.max(1, Math.floor((c.stats.wis || 8) / 8));
+        if (c.buffs?.potion_blue) mpRegen += 2 + Math.floor((c.stats.wis || 8) / 12);
+        c.mp = Math.min(this.getCompanionMaxMp(c), c.mp + mpRegen);
+        this.tickCompanionSupplies();
+        this.renderCompanionStatus();
+    },
+    tickCompanionSupplies: function() {
+        const now = Date.now();
+        Object.values(this.state.companions || {}).forEach(c => {
+            if (!c.supplyPotions) return;
+            if (!c.nextSupplyAt) c.nextSupplyAt = now + 1800 * 1000;
+            if (now < c.nextSupplyAt) return;
+            this.addInventory('potion_red', 200, 0, false, true);
+            this.addInventory('potion_orange', 200, 0, false, true);
+            this.addInventory('potion_clear', 200, 0, false, true);
+            c.nextSupplyAt = now + 1800 * 1000;
+            this.logSystem(`${c.name} 補給了三種治癒藥水各 200 瓶。`, 'reward');
+        });
+    },
+    startCompanionLoop: function() {
+        clearTimeout(this.state.companionLoop);
+        const loop = () => {
+            if (!this.state.isPlaying || this.state.hp <= 0) return;
+            if (this.state.targetMonster && !(this.state.buffs.petrified > 0) && !(this.state.buffs.stun > 0)) this.companionAct();
+            const c = this.getActiveCompanion();
+            let delay = 2400;
+            if (c?.buffs?.potion_haste) delay = Math.floor(delay * 0.82);
+            if (c?.buffs?.second_haste) delay = Math.floor(delay * 0.85);
+            this.state.companionLoop = setTimeout(loop, Math.max(1400, delay));
+        };
+        this.state.companionLoop = setTimeout(loop, 1600);
+    }
+});
+
+const DICKLE_PREV_START_BATTLE_090 = game.startBattle;
+game.startBattle = function() {
+    DICKLE_PREV_START_BATTLE_090.call(this);
+    this.startCompanionLoop();
+};
+const DICKLE_PREV_STOP_BATTLE_090 = game.stopBattle;
+game.stopBattle = function() {
+    DICKLE_PREV_STOP_BATTLE_090.call(this);
+    clearTimeout(this.state.companionLoop);
+};
 
 // DICKLE_MAGIC_CLASS_PATCH_040: split spell schools and class-use rules without changing ids.
 Object.assign(CLASSES.knight, { spellMaxLevel: 1, magicMaxLevel: 1, magicLevelStep: 40, classMagicLevelStep: 30 });
@@ -6683,16 +8231,17 @@ game.renderSkills = function() {
                 let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
                 let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
                 let reqLevel = this.getSpellRequiredLevel(spell.id);
-                let alwaysShowReq = ['de_armor_break','knight_shield_bash','knight_sword_shield_mastery','elf_elemental_fire','elf_dance_of_fire'].includes(spell.id);
+                let alwaysShowReq = ['de_armor_break','knight_shield_bash','knight_sword_shield_mastery','elf_elemental_fire','elf_dance_of_fire','elf_life_fountain','elf_aqua_protect','elf_bless_of_life','ultimate_light_spear','soul_ascension'].includes(spell.id);
                 let reqClass = canUse ? 'c-sys' : 'c-warn';
                 let reqText = (!canUse || alwaysShowReq) ? `<span class="text-xs ${reqClass} block">${reqLevel}級可用</span>` : '';
                 let stanceText = ['knight_shield_bash','knight_sword_shield_mastery'].includes(spell.id) ? '<span class="text-xs c-info block">單手武器＋盾牌</span>' : (['elf_elemental_fire','elf_dance_of_fire'].includes(spell.id) ? '<span class="text-xs c-info block">妖精近戰武器</span>' : '');
+                let descText = spell.desc ? `<span class="c-sys text-xs block mt-1 leading-snug">${this.escapeHtml(spell.desc)}</span>` : '';
                 let autoHtml = '';
                 if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
                 else if (isMpConvert) autoHtml = `<span class="c-sys text-xs mt-1 block">回魔技能</span>`;
                 else if (isBuff && canUse && !isHeal) autoHtml = `<label class="cursor-pointer c-sys hover:text-white mt-1 text-xs"><input type="checkbox" class="w-3 h-3 align-middle" ${checked} onchange="game.toggleAutoBuff('${spell.id}', this.checked)"> 自動</label>`;
                 else if (!canUse) this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== spell.id);
-                groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive||isMpConvert?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${costText}</span>${reqText}${stanceText}${autoHtml}</div>`;
+                groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive||isMpConvert?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${costText}</span>${reqText}${stanceText}${descText}${autoHtml}</div>`;
             });
             groupHtml += `</div></div>`;
             list.insertAdjacentHTML('beforeend', groupHtml);
