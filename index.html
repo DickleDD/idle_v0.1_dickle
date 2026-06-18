@@ -2149,6 +2149,7 @@ const game = {
     },
 
     renderMapSelect: function() {
+        this.ensureTowerProgressState();
         const select = document.getElementById('map-select');
         const dragonMaps = [
             { id: 'fafurion_lair', color: '#38bdf8' },
@@ -2207,9 +2208,15 @@ const game = {
         }
         let derivedFloor = 1;
         while (derivedFloor < 10 && defeatedBosses[this.getTowerBossIdForFloor(derivedFloor)]) derivedFloor++;
+        const currentMapFloor = this.getTowerFloorFromMap(this.state.currentMap);
         const savedFloor = Math.max(1, Math.min(10, parseInt(this.state.towerProgress.unlockedFloor) || 1));
+        const unlockedFloor = Math.max(savedFloor, derivedFloor, currentMapFloor || 1);
+        for (let floor = 1; floor < unlockedFloor; floor++) {
+            const bossId = this.getTowerBossIdForFloor(floor);
+            if (bossId) defeatedBosses[bossId] = true;
+        }
         this.state.towerProgress = {
-            unlockedFloor: Math.max(savedFloor, derivedFloor),
+            unlockedFloor,
             defeatedBosses
         };
         return this.state.towerProgress;
@@ -2270,6 +2277,7 @@ const game = {
     },
     getSaveData: function() {
         this.ensureAdventureState();
+        this.ensureCompanionState();
         this.ensureTowerProgressState();
         this.normalizeElixirStats();
         return {
@@ -2445,9 +2453,9 @@ const game = {
                 this.ensureCompanionState();
                 this.state.adventure = savedData.adventure || {};
                 this.ensureAdventureState();
+                this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.towerProgress = savedData.towerProgress || {};
                 this.ensureTowerProgressState();
-                this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
                 this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
                 this.state.hiddenValleyArubaSummoned = !!savedData.hiddenValleyArubaSummoned;
@@ -2497,6 +2505,8 @@ const game = {
                 document.getElementById('cfg-heal-threshold').value = this.state.settings.autoHealThreshold;
                 document.getElementById('cfg-auto-mp-skill-threshold').value = this.state.settings.autoMpSkillThreshold;
                 
+                this.ensureTowerProgressState();
+                this.renderMapSelect();
                 let mapSel = document.getElementById('map-select');
                 if (Array.from(mapSel.options).some(o => o.value === this.state.currentMap)) mapSel.value = this.state.currentMap;
                 else { this.state.currentMap = 'hidden_valley'; mapSel.value = 'hidden_valley'; }
@@ -7492,6 +7502,29 @@ Object.assign(game, {
         });
         if (this.state.activeCompanion && !this.state.companions[this.state.activeCompanion]) this.state.activeCompanion = null;
     },
+    collectCompanionSpellIds: function(raw) {
+        const ids = [];
+        const collect = value => {
+            if (!value) return;
+            if (Array.isArray(value)) {
+                value.forEach(entry => collect(entry));
+                return;
+            }
+            if (typeof value === 'object') {
+                if (value.id || value.spellId) collect(value.id || value.spellId);
+                else Object.keys(value).forEach(id => { if (value[id]) collect(id); });
+                return;
+            }
+            String(value).split(/[,\s]+/).forEach(id => { if (id && SPELLS[id]) ids.push(id); });
+        };
+        const spellFields = ['spells','skills','learnedSpells','learnedSkills','spellIds','skillIds'];
+        if (raw && typeof raw === 'object' && !Array.isArray(raw) && spellFields.some(key => raw[key] !== undefined)) {
+            spellFields.forEach(key => collect(raw[key]));
+        } else {
+            collect(raw);
+        }
+        return Array.from(new Set(ids));
+    },
     normalizeCompanion: function(raw, fallbackId = '') {
         if (!raw || typeof raw !== 'object') return null;
         const classId = CLASSES[raw.classId] ? raw.classId : 'knight';
@@ -7502,30 +7535,13 @@ Object.assign(game, {
             let key = raw.equipment?.[slot] || null;
             equipment[slot] = key && this.state.inventory?.[key] ? key : null;
         });
-        const collectedSpellIds = [];
-        const collectSpellIds = value => {
-            if (!value) return;
-            if (Array.isArray(value)) {
-                value.forEach(entry => collectSpellIds(entry));
-                return;
-            }
-            if (typeof value === 'object') {
-                if (value.id || value.spellId) collectSpellIds(value.id || value.spellId);
-                else Object.keys(value).forEach(id => { if (value[id]) collectSpellIds(id); });
-                return;
-            }
-            String(value).split(/[,\s]+/).forEach(id => { if (id) collectedSpellIds.push(id); });
-        };
-        ['spells','skills','learnedSpells','learnedSkills','spellIds','skillIds'].forEach(key => collectSpellIds(raw[key]));
-        const spells = Array.from(new Set(collectedSpellIds)).filter(id => SPELLS[id] && this.canCompanionUseSpell({ classId, stats }, id));
-        const collectedAutoSpellIds = [];
-        const collectAutoSpellIds = value => {
-            const before = collectedSpellIds.length;
-            collectSpellIds(value);
-            collectedSpellIds.slice(before).forEach(id => collectedAutoSpellIds.push(id));
-        };
-        ['autoSpells','autoSpellIds','autoCastSpells','autoCast'].forEach(key => collectAutoSpellIds(raw[key]));
-        const autoSpells = Array.from(new Set(collectedAutoSpellIds)).filter(id => spells.includes(id) && SPELLS[id]?.type !== 'passive');
+        const spells = this.collectCompanionSpellIds(raw).filter(id => SPELLS[id] && this.canCompanionUseSpell({ classId, stats }, id));
+        const autoSpells = this.collectCompanionSpellIds({
+            spells: raw.autoSpells,
+            skills: raw.autoSpellIds,
+            learnedSpells: raw.autoCastSpells,
+            learnedSkills: raw.autoCast
+        }).filter(id => spells.includes(id) && SPELLS[id]?.type !== 'passive');
         const settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(raw.settings || {}) };
         settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
         if (!ITEMS[settings.autoHpType] || ITEMS[settings.autoHpType].type !== 'potion_hp') settings.autoHpType = 'potion_red';
@@ -7538,6 +7554,8 @@ Object.assign(game, {
             level: Math.max(1, Math.min(90, parseInt(raw.level) || parseInt(this.state.level) || 1)),
             exp: Math.max(0, parseInt(raw.exp) || 0),
             spells,
+            skills: spells.slice(),
+            learnedSpells: spells.slice(),
             equipment,
             locked: !!raw.locked,
             behavior: ['attack','burst','support'].includes(raw.behavior) ? raw.behavior : 'attack',
@@ -7935,8 +7953,10 @@ Object.assign(game, {
     },
     getCompanionLearnedSpells: function(c) {
         if (!c) return [];
-        c.spells = Array.isArray(c.spells) ? c.spells.filter(id => SPELLS[id] && this.canCompanionUseSpell(c, id)) : [];
+        c.spells = this.collectCompanionSpellIds(c).filter(id => SPELLS[id] && this.canCompanionUseSpell(c, id));
         c.spells = Array.from(new Set(c.spells));
+        c.skills = c.spells.slice();
+        c.learnedSpells = c.spells.slice();
         c.autoSpells = Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]?.type !== 'passive') : [];
         if (c.autoSkill && c.autoSkill !== 'none' && !c.spells.includes(c.autoSkill)) c.autoSkill = 'none';
         return c.spells;
@@ -8166,6 +8186,9 @@ Object.assign(game, {
         }
         this.removeInventory(itemKey, 1);
         c.spells.push(spell.id);
+        c.spells = Array.from(new Set(c.spells));
+        c.skills = c.spells.slice();
+        c.learnedSpells = c.spells.slice();
         if (c.behavior === 'burst' && c.autoSkill === 'none' && this.getCompanionSkillOptions(c).includes(spell.id)) c.autoSkill = spell.id;
         this.logSystem(`${c.name} 學會了 ${spell.name}。`, 'reward');
         this.renderCompanions();
