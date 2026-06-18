@@ -487,7 +487,7 @@ const compareItems = (keyA, keyB, inventory) => {
     let itemA = inventory[keyA], itemB = inventory[keyB];
     let defA = ITEMS[itemA.itemId] || { type: 'unknown', name: '未知' };
     let defB = ITEMS[itemB.itemId] || { type: 'unknown', name: '未知' };
-    const typeOrder = { 'potion_hp':1, 'potion_mp':1, 'potion_buff':1, 'pet_scroll':2, 'scroll':2, 'pet_fruit':3, 'book':4, 'gem':5, 'pet_weapon':6, 'pet_armor':7, 'weapon':8, 'quiver':9, 'helmet':10, 'tshirt':11, 'armor':12, 'shield':13, 'cloak':14, 'leggings':15, 'gloves':16, 'boots':17, 'amulet':18, 'earring':19, 'belt':20, 'ring':21, 'quest':99 };
+    const typeOrder = { 'potion_hp':1, 'potion_mp':1, 'potion_buff':1, 'pet_scroll':2, 'scroll':2, 'stat_reset':2, 'elixir':2, 'pet_fruit':3, 'book':4, 'gem':5, 'pet_weapon':6, 'pet_armor':7, 'weapon':8, 'quiver':9, 'helmet':10, 'tshirt':11, 'armor':12, 'shield':13, 'cloak':14, 'leggings':15, 'gloves':16, 'boots':17, 'amulet':18, 'earring':19, 'belt':20, 'ring':21, 'quest':99 };
     let tA = typeOrder[defA.type] || 99, tB = typeOrder[defB.type] || 99;
     if (tA !== tB) return tA - tB;
     let bA = itemA.isBlessed || defA.isBlessed ? 1 : 0, bB = itemB.isBlessed || defB.isBlessed ? 1 : 0;
@@ -1932,6 +1932,12 @@ const DICKLE_TOWER_OF_INSOLENCE_090 = (() => {
         toi_high_fragment: { name: '傲慢之塔高階碎片', type: 'quest', dropRate: 0.35, sellPrice: 8000, desc: '傲慢之塔上層與 Boss 掉落的高階材料。' },
         toi_boss_soul: { name: '傲慢支配者精粹', type: 'quest', dropRate: 0.1, sellPrice: 25000, desc: '傲慢之塔 Boss 殘留的精粹，是製作塔內畢業裝的核心素材。' },
         toi_reaper_core: { name: '死神核心', type: 'quest', dropRate: 0.02, sellPrice: 120000, desc: '死神掉落的最上級素材，可用於製作死神鐮刀。' },
+        memory_candle: { name: '回憶蠟燭', type: 'stat_reset', dropRate: 0.015, sellPrice: 50000, desc: '使用後重置可分配能力點，回到職業初始能力，並返還創角點數與 50 級後升級點數。萬能藥效果會保留。' },
+        elixir_str: { name: '萬能藥(力量)', type: 'elixir', stat: 'str', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點力量，最高不超過能力上限。' },
+        elixir_dex: { name: '萬能藥(敏捷)', type: 'elixir', stat: 'dex', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點敏捷，最高不超過能力上限。' },
+        elixir_con: { name: '萬能藥(體質)', type: 'elixir', stat: 'con', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點體質，最高不超過能力上限。' },
+        elixir_int: { name: '萬能藥(智力)', type: 'elixir', stat: 'int', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點智力，最高不超過能力上限。' },
+        elixir_wis: { name: '萬能藥(精神)', type: 'elixir', stat: 'wis', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點精神，最高不超過能力上限。' },
         ring_zenith: { name: '潔尼斯戒指', type: 'ring', safe: 0, ac: -1, mr: 10, hp: 40, dr: 1, dropRate: 0.04, legendary: true, desc: '抗魔、體力與減傷兼具的塔之戒指。' },
         amulet_seer: { name: '幻象眼魔項鍊', type: 'amulet', safe: 0, ac: -1, int: 1, wis: 1, mp: 50, mr: 8, dropRate: 0.04, legendary: true, desc: '讓高智流派更容易突破高 MR 怪物。' },
         cloak_vampire: { name: '吸血鬼斗篷', type: 'cloak', safe: 4, ac: -4, hp: 80, hpRegen: 6, mr: 5, dropRate: 0.035, legendary: true, desc: '提供穩定回血與生命上限，適合長時間掛機。' },
@@ -1951,6 +1957,7 @@ const DICKLE_TOWER_OF_INSOLENCE_090 = (() => {
         { id: 'scroll_armor', rate: 0.45 + floor * 0.06 },
         { id: 'scroll_weapon', rate: 0.28 + floor * 0.04 },
         { id: ['gem_quality_diamond','gem_quality_ruby','gem_quality_sapphire','gem_quality_emerald'][floor % 4], rate: 0.65 + floor * 0.06 },
+        { id: 'memory_candle', rate: 0.01 + floor * 0.003 },
         ...extras
     ];
     const bossDrops = (floor, uniqueId, uniqueRate, extras = []) => [
@@ -1961,6 +1968,12 @@ const DICKLE_TOWER_OF_INSOLENCE_090 = (() => {
         { id: 'scroll_armor_blessed', rate: 0.45 + floor * 0.08 },
         { id: 'ancient_scroll', rate: 0.6 + floor * 0.18 },
         { id: 'gem_high_diamond', rate: 1.2 + floor * 0.12 },
+        { id: 'memory_candle', rate: 0.12 + floor * 0.02 },
+        { id: 'elixir_str', rate: 0.006 },
+        { id: 'elixir_dex', rate: 0.006 },
+        { id: 'elixir_con', rate: 0.006 },
+        { id: 'elixir_int', rate: 0.006 },
+        { id: 'elixir_wis', rate: 0.006 },
         { id: uniqueId, rate: uniqueRate },
         ...extras
     ];
@@ -2115,6 +2128,7 @@ const game = {
     state: {
         isPlaying: false, classId: 'knight', level: 1, exp: 0, adena: 0, hp: 0, maxHp: 0, mp: 0, maxMp: 0,
         baseStats: { str: 8, dex: 8, con: 8, int: 8, wis: 8 }, createPoints: 25, bonusPoints: 0, bonusPointsGrantedLevel: 49, bonusPointMigrationV1: false,
+        elixirStats: { str: 0, dex: 0, con: 0, int: 0, wis: 0 }, towerProgress: { unlockedFloor: 1, defeatedBosses: {} },
         inventory: {}, equipment: { weapon: null, shield: null, quiver: null, helmet: null, tshirt: null, armor: null, leggings: null, boots: null, cloak: null, gloves: null, amulet: null, earring1: null, earring2: null, ring1: null, ring2: null, belt: null },
         spells: [], buffs: {},
         pets: {}, activePet: null, petProtectMode: false,
@@ -2180,10 +2194,37 @@ const game = {
         }
         return `傲慢之塔${floor - 1}F Boss`;
     },
+    ensureTowerProgressState: function() {
+        if (!this.state.towerProgress || typeof this.state.towerProgress !== 'object') this.state.towerProgress = {};
+        const savedDefeated = this.state.towerProgress.defeatedBosses && typeof this.state.towerProgress.defeatedBosses === 'object'
+            ? this.state.towerProgress.defeatedBosses
+            : {};
+        const defeatedBosses = {};
+        for (let floor = 1; floor <= 10; floor++) {
+            const bossId = this.getTowerBossIdForFloor(floor);
+            if (!bossId) continue;
+            if (savedDefeated[bossId] || this.getMonsterKillCount(bossId) > 0) defeatedBosses[bossId] = true;
+        }
+        let derivedFloor = 1;
+        while (derivedFloor < 10 && defeatedBosses[this.getTowerBossIdForFloor(derivedFloor)]) derivedFloor++;
+        const savedFloor = Math.max(1, Math.min(10, parseInt(this.state.towerProgress.unlockedFloor) || 1));
+        this.state.towerProgress = {
+            unlockedFloor: Math.max(savedFloor, derivedFloor),
+            defeatedBosses
+        };
+        return this.state.towerProgress;
+    },
+    markTowerBossDefeated: function(monster) {
+        if (!monster || !monster.isBoss) return false;
+        const floor = TOWER_BOSS_IDS.indexOf(monster.id);
+        if (floor <= 0) return false;
+        const progress = this.ensureTowerProgressState();
+        progress.defeatedBosses[monster.id] = true;
+        progress.unlockedFloor = Math.max(progress.unlockedFloor, Math.min(10, floor + 1));
+        return true;
+    },
     getUnlockedTowerFloor: function() {
-        let floor = 1;
-        while (floor < 10 && this.getMonsterKillCount(this.getTowerBossIdForFloor(floor)) >= 1) floor++;
-        return floor;
+        return this.ensureTowerProgressState().unlockedFloor;
     },
     isTowerMapUnlocked: function(mapId) {
         const floor = this.getTowerFloorFromMap(mapId);
@@ -2229,11 +2270,14 @@ const game = {
     },
     getSaveData: function() {
         this.ensureAdventureState();
+        this.ensureTowerProgressState();
+        this.normalizeElixirStats();
         return {
             classId: this.state.classId, level: this.state.level, exp: this.state.exp, adena: this.state.adena,
             hp: this.state.hp, maxHp: this.state.maxHp, mp: this.state.mp, maxMp: this.state.maxMp,
             lastActiveAt: this.state.lastActiveAt || Date.now(),
-            baseStats: this.state.baseStats, bonusPoints: this.state.bonusPoints, bonusPointsGrantedLevel: this.state.bonusPointsGrantedLevel, bonusPointMigrationV1: this.state.bonusPointMigrationV1,
+            baseStats: this.state.baseStats, createPoints: this.state.createPoints, bonusPoints: this.state.bonusPoints, bonusPointsGrantedLevel: this.state.bonusPointsGrantedLevel, bonusPointMigrationV1: this.state.bonusPointMigrationV1,
+            elixirStats: this.state.elixirStats, towerProgress: this.state.towerProgress,
             inventory: this.state.inventory, equipment: this.state.equipment, spells: this.state.spells,
             pets: this.state.pets, activePet: this.state.activePet,
             companions: this.state.companions || {}, activeCompanion: this.state.activeCompanion || null, companionSeq: this.state.companionSeq || 0,
@@ -2363,6 +2407,8 @@ const game = {
                 this.state.createPoints = parseInt(savedData.createPoints) || 0;
                 this.state.bonusPoints = parseInt(savedData.bonusPoints) || 0;
                 this.normalizeBaseStats();
+                this.state.elixirStats = savedData.elixirStats || {};
+                this.normalizeElixirStats();
                 this.state.bonusPointsGrantedLevel = parseInt(savedData.bonusPointsGrantedLevel) || (this.state.level >= 50 ? this.state.level : 49);
                 this.state.bonusPointMigrationV1 = !!savedData.bonusPointMigrationV1;
                 this.state.spells = Array.isArray(savedData.spells) ? savedData.spells.filter(id => SPELLS[id]) : [];
@@ -2399,6 +2445,8 @@ const game = {
                 this.ensureCompanionState();
                 this.state.adventure = savedData.adventure || {};
                 this.ensureAdventureState();
+                this.state.towerProgress = savedData.towerProgress || {};
+                this.ensureTowerProgressState();
                 this.state.currentMap = savedData.currentMap || 'hidden_valley';
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
                 this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
@@ -3623,6 +3671,15 @@ const game = {
             this.state.baseStats[stat] = Math.max(fallback, value);
         });
     },
+    normalizeElixirStats: function() {
+        if (!this.state.elixirStats || typeof this.state.elixirStats !== 'object') this.state.elixirStats = {};
+        ['str','dex','con','int','wis'].forEach(stat => {
+            let value = parseInt(this.state.elixirStats[stat]);
+            if (!Number.isFinite(value)) value = 0;
+            this.state.elixirStats[stat] = Math.max(0, Math.min(LEVEL_BONUS_STAT_CAP, value));
+        });
+        return this.state.elixirStats;
+    },
     getStatLabel: function(stat) {
         return { str: '力量', dex: '敏捷', con: '體質', int: '智力', wis: '精神' }[stat] || stat;
     },
@@ -3711,6 +3768,8 @@ const game = {
         document.getElementById('main-ui').classList.remove('hidden');
         this.state.adventure = { obtainedItems: {}, mapStats: {}, achievements: {} };
         this.ensureAdventureState();
+        this.state.towerProgress = { unlockedFloor: 1, defeatedBosses: {} };
+        this.state.elixirStats = { str: 0, dex: 0, con: 0, int: 0, wis: 0 };
         this.state.companions = {};
         this.state.activeCompanion = null;
         this.state.companionSeq = 0;
@@ -3751,7 +3810,8 @@ const game = {
     },
 
     getEffStat: function(stat) {
-        let val = this.state.baseStats[stat];
+        this.normalizeElixirStats();
+        let val = (parseInt(this.state.baseStats[stat]) || 0) + (parseInt(this.state.elixirStats[stat]) || 0);
         if (stat === 'str' && this.state.buffs.de_dress_mighty) val += 2;
         if (stat === 'wis' && this.state.buffs.elf_clear_mind) val += 3;
         for(let slot in this.state.equipment) {
@@ -4226,6 +4286,8 @@ const game = {
         if (def.type === 'pet_armor') return 'c-info';
         if (def.type === 'pet_fruit') return 'c-magic';
         if (def.type === 'pet_scroll') return def.isBlessed ? 'c-blessed' : 'c-info';
+        if (def.type === 'stat_reset') return 'c-magic';
+        if (def.type === 'elixir') return 'c-success';
         if (def.type === 'gem') return 'c-enchant';
         if (def.type === 'potion_hp') {
             if (item.itemId === 'potion_red') return 'c-potion-red';
@@ -4289,6 +4351,8 @@ const game = {
         else if(def.type === 'pet_armor') typeName = '寵物防具';
         else if(def.type === 'pet_scroll') typeName = '寵物卷軸';
         else if(def.type === 'pet_fruit') typeName = '寵物道具';
+        else if(def.type === 'stat_reset') typeName = '回憶道具';
+        else if(def.type === 'elixir') typeName = '萬能藥';
         
         if (typeName) html += `<div class="c-sys mb-2">[${typeName}]</div>`;
         let detailBonus = {
@@ -4478,6 +4542,12 @@ const game = {
                 if (this.getActiveCompanion && this.getActiveCompanion()) actions += `<button class="btn-ui c-info border-blue-800" onclick="game.teachActiveCompanion('${key}')">隊友學習</button> `;
             } else if(def.type.startsWith('potion')) {
                 actions += `<button class="btn-ui c-info border-blue-800" onclick="game.usePotion('${key}')">使用</button> `;
+            } else if(def.type === 'stat_reset') {
+                actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
+                actions += `<button class="btn-ui c-magic border-purple-800" onclick="game.useMemoryCandle('${key}')">使用</button> `;
+            } else if(def.type === 'elixir') {
+                actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
+                actions += `<button class="btn-ui c-success border-green-800" onclick="game.useElixir('${key}')">使用</button> `;
             } else if(def.type === 'pet_scroll') {
                 actions += `<button class="btn-ui c-info border-blue-800" onclick="game.revivePetWithScroll('${key}')">復活</button> `;
             } else if(def.type === 'pet_fruit') {
@@ -4501,7 +4571,7 @@ const game = {
             } else if (def.type === 'book') {
                 canSell = true;
                 sellPrice = this.getBookSellPrice(item, def);
-            } else if (['scroll','pet_scroll','pet_fruit'].includes(def.type) || (def.type && def.type.startsWith('potion'))) {
+            } else if (['scroll','pet_scroll','pet_fruit','stat_reset','elixir'].includes(def.type) || (def.type && def.type.startsWith('potion'))) {
                 sellPrice = this.getConsumableSellPrice(item, def);
                 canSell = sellPrice > 0;
             } else if (def.type === 'gem' && def.sellPrice) {
@@ -4619,6 +4689,56 @@ const game = {
             }
         }
         this.updateUI();
+    },
+    useMemoryCandle: function(itemKey) {
+        const item = this.state.inventory[itemKey];
+        const def = item && ITEMS[item.itemId];
+        if (!item || !def || def.type !== 'stat_reset') return;
+        if (!confirm('使用回憶蠟燭會重置已分配能力點，並返還成可重新分配點數。確定使用？')) return;
+        const cls = this.getClassDef();
+        const hpRatio = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        const mpRatio = this.state.maxMp > 0 ? this.state.mp / this.state.maxMp : 1;
+        this.removeInventory(itemKey, 1);
+        this.normalizeElixirStats();
+        const earnedLevelPoints = this.getEarnedBonusPointsForLevel(this.state.level);
+        const returnedPoints = Math.max(0, (cls.createPoints || 0) + earnedLevelPoints);
+        this.state.baseStats = { ...cls.baseStats };
+        this.state.createPoints = 0;
+        this.state.bonusPoints = returnedPoints;
+        this.state.bonusPointsGrantedLevel = Math.max(49, Math.min(90, Number(this.state.level) || 1));
+        this.state.bonusPointMigrationV1 = true;
+        this.calculateMaxHpMp();
+        this.state.hp = Math.max(1, Math.min(this.state.maxHp, Math.floor(this.state.maxHp * hpRatio)));
+        this.state.mp = Math.max(0, Math.min(this.state.maxMp, Math.floor(this.state.maxMp * mpRatio)));
+        this.logSystem(`使用了回憶蠟燭，能力回到初始狀態，返還 ${returnedPoints} 點可分配能力點。萬能藥效果已保留。`, 'reward');
+        this.updateUI();
+        this.updateSettingsUI();
+        this.renderInventory();
+    },
+    useElixir: function(itemKey) {
+        const item = this.state.inventory[itemKey];
+        const def = item && ITEMS[item.itemId];
+        if (!item || !def || def.type !== 'elixir' || !['str','dex','con','int','wis'].includes(def.stat)) return;
+        this.normalizeBaseStats();
+        this.normalizeElixirStats();
+        const stat = def.stat;
+        const cap = this.getBonusStatCap();
+        const permanentValue = (parseInt(this.state.baseStats[stat]) || 0) + (parseInt(this.state.elixirStats[stat]) || 0);
+        if (permanentValue >= cap) {
+            this.logSystem(`${this.getStatLabel(stat)} 已達 ${cap} 點上限，無法使用 ${def.name}。`, 'danger');
+            return;
+        }
+        const hpRatio = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        const mpRatio = this.state.maxMp > 0 ? this.state.mp / this.state.maxMp : 1;
+        this.removeInventory(itemKey, 1);
+        this.state.elixirStats[stat]++;
+        this.calculateMaxHpMp();
+        this.state.hp = Math.max(1, Math.min(this.state.maxHp, Math.floor(this.state.maxHp * hpRatio)));
+        this.state.mp = Math.max(0, Math.min(this.state.maxMp, Math.floor(this.state.maxMp * mpRatio)));
+        this.logSystem(`使用了 ${def.name}，${this.getStatLabel(stat)} 永久增加 1 點。`, 'reward');
+        this.updateUI();
+        this.updateSettingsUI();
+        this.renderInventory();
     },
     usePotionOnPet: function(itemKey) {
         const active = this.getActivePetData();
@@ -6359,6 +6479,7 @@ if(Math.random()*100 <= this.getER()) {
         let m = this.state.targetMonster;
         let towerUnlockBefore = this.getUnlockedTowerFloor();
         this.recordMonsterKill(this.state.currentMap, m);
+        this.markTowerBossDefeated(m);
         let expGain = Math.floor(Math.max(0, m.exp || 0) * this.getAchievementExpMultiplier());
         this.state.exp += expGain;
         this.gainPetExp(Math.max(1, Math.floor(expGain * (m.isBoss ? 0.18 : 0.35))));
@@ -6751,6 +6872,7 @@ if(Math.random()*100 <= this.getER()) {
             let m = this.pickBackgroundMonster(monsters);
             if (!m) continue;
             this.recordMonsterKill(this.state.currentMap, m, 1, true);
+            this.markTowerBossDefeated(m);
             let exp = Math.floor(Math.max(0, m.exp || 0) * this.getAchievementExpMultiplier());
             this.state.exp += exp;
             expGain += exp;
@@ -7380,7 +7502,30 @@ Object.assign(game, {
             let key = raw.equipment?.[slot] || null;
             equipment[slot] = key && this.state.inventory?.[key] ? key : null;
         });
-        const spells = Array.isArray(raw.spells) ? raw.spells.filter(id => SPELLS[id] && this.canCompanionUseSpell({ classId, stats }, id)) : [];
+        const collectedSpellIds = [];
+        const collectSpellIds = value => {
+            if (!value) return;
+            if (Array.isArray(value)) {
+                value.forEach(entry => collectSpellIds(entry));
+                return;
+            }
+            if (typeof value === 'object') {
+                if (value.id || value.spellId) collectSpellIds(value.id || value.spellId);
+                else Object.keys(value).forEach(id => { if (value[id]) collectSpellIds(id); });
+                return;
+            }
+            String(value).split(/[,\s]+/).forEach(id => { if (id) collectedSpellIds.push(id); });
+        };
+        ['spells','skills','learnedSpells','learnedSkills','spellIds','skillIds'].forEach(key => collectSpellIds(raw[key]));
+        const spells = Array.from(new Set(collectedSpellIds)).filter(id => SPELLS[id] && this.canCompanionUseSpell({ classId, stats }, id));
+        const collectedAutoSpellIds = [];
+        const collectAutoSpellIds = value => {
+            const before = collectedSpellIds.length;
+            collectSpellIds(value);
+            collectedSpellIds.slice(before).forEach(id => collectedAutoSpellIds.push(id));
+        };
+        ['autoSpells','autoSpellIds','autoCastSpells','autoCast'].forEach(key => collectAutoSpellIds(raw[key]));
+        const autoSpells = Array.from(new Set(collectedAutoSpellIds)).filter(id => spells.includes(id) && SPELLS[id]?.type !== 'passive');
         const settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(raw.settings || {}) };
         settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
         if (!ITEMS[settings.autoHpType] || ITEMS[settings.autoHpType].type !== 'potion_hp') settings.autoHpType = 'potion_red';
@@ -7396,7 +7541,8 @@ Object.assign(game, {
             equipment,
             locked: !!raw.locked,
             behavior: ['attack','burst','support'].includes(raw.behavior) ? raw.behavior : 'attack',
-            autoSkill: raw.autoSkill && SPELLS[raw.autoSkill] ? raw.autoSkill : 'none',
+            autoSkill: raw.autoSkill && spells.includes(raw.autoSkill) ? raw.autoSkill : 'none',
+            autoSpells,
             hp: Math.max(1, parseInt(raw.hp) || 1),
             mp: Math.max(0, parseInt(raw.mp) || 0),
             buffs: raw.buffs && typeof raw.buffs === 'object' ? raw.buffs : {},
@@ -7691,7 +7837,12 @@ Object.assign(game, {
         const req = this.getCompanionNextExp(c);
         const expPct = req > 0 ? Math.min(100, ((c.exp || 0) / req) * 100) : 100;
         const statText = COMPANION_STATS.map(stat => `${this.getStatLabel(stat)} ${c.stats[stat]}`).join(' / ');
+        const learnedSpells = this.getCompanionLearnedSpells(c);
         const skillOptions = this.getCompanionSkillOptions(c).map(id => `<option value="${id}" ${c.autoSkill === id ? 'selected' : ''}>${SPELLS[id].name}</option>`).join('');
+        const autoSpellOptions = this.getCompanionAutoSpellOptions(c);
+        const autoSpellRows = autoSpellOptions.length
+            ? autoSpellOptions.map(id => `<label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${c.autoSpells?.includes(id) ? 'checked' : ''} onchange="game.toggleCompanionAutoSpell('${c.id}','${id}', this.checked)"> ${SPELLS[id].name}</label>`).join('')
+            : '<span class="c-sys italic">尚無可自動施放技能</span>';
         const equipRows = COMPANION_EQUIP_SLOTS.filter(slot => c.equipment?.[slot]).map(slot => {
             const key = c.equipment[slot], item = this.state.inventory[key], def = item && ITEMS[item.itemId];
             if (!item || !def) return '';
@@ -7708,7 +7859,7 @@ Object.assign(game, {
                     <button class="btn-ui !px-2 !py-1 ${c.locked ? 'c-warn' : 'c-sys'}" onclick="game.toggleCompanionLock('${c.id}')">${c.locked ? '鎖定' : '未鎖'}</button>
                 </div>
                 <div class="text-xs c-sys mt-2">${statText}</div>
-                <div class="text-xs c-info mt-2">技能：${c.spells.length ? c.spells.map(id => SPELLS[id]?.name || id).join('、') : '尚未學習'}</div>
+                <div class="text-xs c-info mt-2">技能：${learnedSpells.length ? learnedSpells.map(id => SPELLS[id]?.name || id).join('、') : '尚未學習'}</div>
                 <div class="mt-2 flex flex-wrap gap-2 items-center">
                     <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm" onchange="game.setCompanionBehavior('${c.id}', this.value)">
                         <option value="attack" ${c.behavior === 'attack' ? 'selected' : ''}>攻擊模式</option>
@@ -7718,6 +7869,10 @@ Object.assign(game, {
                     <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm max-w-[180px]" onchange="game.setCompanionSkill('${c.id}', this.value)">
                         <option value="none">技能：無</option>${skillOptions}
                     </select>
+                </div>
+                <div class="mt-2 text-xs c-sys">
+                    <div class="c-info mb-1">自動施法</div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2">${autoSpellRows}</div>
                 </div>
                 <div class="mt-2 border-t border-gray-700 pt-2 text-xs c-sys space-y-2">
                     <div class="flex flex-wrap items-center gap-2">
@@ -7778,8 +7933,32 @@ Object.assign(game, {
             </div>`;
         }).join('');
     },
+    getCompanionLearnedSpells: function(c) {
+        if (!c) return [];
+        c.spells = Array.isArray(c.spells) ? c.spells.filter(id => SPELLS[id] && this.canCompanionUseSpell(c, id)) : [];
+        c.spells = Array.from(new Set(c.spells));
+        c.autoSpells = Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]?.type !== 'passive') : [];
+        if (c.autoSkill && c.autoSkill !== 'none' && !c.spells.includes(c.autoSkill)) c.autoSkill = 'none';
+        return c.spells;
+    },
     getCompanionSkillOptions: function(c) {
-        return (c.spells || []).filter(id => SPELLS[id] && ['attack','buff','heal'].includes(SPELLS[id].type));
+        return this.getCompanionLearnedSpells(c).filter(id => SPELLS[id] && ['attack','buff','heal'].includes(SPELLS[id].type));
+    },
+    getCompanionAutoSpellOptions: function(c) {
+        return this.getCompanionLearnedSpells(c).filter(id => {
+            const type = SPELLS[id]?.type;
+            return ['buff','heal','mp_convert'].includes(type);
+        });
+    },
+    toggleCompanionAutoSpell: function(id, spellId, enabled) {
+        const c = this.state.companions?.[id];
+        if (!c || !SPELLS[spellId]) return;
+        this.getCompanionLearnedSpells(c);
+        if (!c.spells.includes(spellId) || SPELLS[spellId].type === 'passive') return;
+        c.autoSpells = Array.isArray(c.autoSpells) ? c.autoSpells : [];
+        if (enabled && !c.autoSpells.includes(spellId)) c.autoSpells.push(spellId);
+        if (!enabled) c.autoSpells = c.autoSpells.filter(id => id !== spellId);
+        this.renderCompanions();
     },
     setCompanionBehavior: function(id, behavior) {
         const c = this.state.companions?.[id];
@@ -7791,6 +7970,7 @@ Object.assign(game, {
     setCompanionSkill: function(id, skillId) {
         const c = this.state.companions?.[id];
         if (!c) return;
+        this.getCompanionLearnedSpells(c);
         c.autoSkill = skillId && c.spells.includes(skillId) ? skillId : 'none';
     },
     getCompanionSettings: function(c) {
@@ -7979,13 +8159,14 @@ Object.assign(game, {
             this.logSystem(`${c.name} 無法學習 ${spell.name}。`, 'danger');
             return;
         }
+        this.getCompanionLearnedSpells(c);
         if (c.spells.includes(spell.id)) {
             this.logSystem(`${c.name} 已經會 ${spell.name}。`, 'danger');
             return;
         }
         this.removeInventory(itemKey, 1);
         c.spells.push(spell.id);
-        if (c.behavior === 'burst' && c.autoSkill === 'none') c.autoSkill = spell.id;
+        if (c.behavior === 'burst' && c.autoSkill === 'none' && this.getCompanionSkillOptions(c).includes(spell.id)) c.autoSkill = spell.id;
         this.logSystem(`${c.name} 學會了 ${spell.name}。`, 'reward');
         this.renderCompanions();
         this.renderInventory();
@@ -8020,6 +8201,19 @@ Object.assign(game, {
         if (!c || !spell || !c.spells.includes(spellId)) return false;
         const cost = Math.max(0, this.getSpellCost(spell));
         if ((c.mp || 0) < cost) return false;
+        if (spell.type === 'mp_convert') {
+            const maxHp = this.getCompanionMaxHp(c);
+            const maxMp = this.getCompanionMaxMp(c);
+            const hpCost = Math.max(1, parseInt(spell.hpCost) || 1);
+            if ((c.hp || 0) <= hpCost + Math.floor(maxHp * 0.30)) return false;
+            if ((c.mp || 0) >= Math.floor(maxMp * 0.85)) return false;
+            c.hp = Math.max(1, (c.hp || maxHp) - hpCost);
+            const gain = Math.max(1, (parseInt(spell.mpGain) || 1) + Math.floor((c.stats.wis || 8) / 10));
+            c.mp = Math.min(maxMp, (c.mp || 0) + gain);
+            this.logCombat(`${c.name} 施放 ${spell.name}，轉換 ${gain} 點魔力。`, 'skill-elf');
+            this.renderCompanionStatus();
+            return true;
+        }
         if (spell.type === 'attack' && this.state.targetMonster) {
             c.mp -= cost;
             let dmg = (spell.dice ? rollDice(spell.dice) : 0) + (spell.baseDmg || 0) + this.getCompanionMagicDmg(c);
@@ -8048,13 +8242,37 @@ Object.assign(game, {
         }
         return false;
     },
+    companionAutoCast: function(c) {
+        if (!c) return false;
+        this.getCompanionLearnedSpells(c);
+        const ids = Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]) : [];
+        if (ids.length === 0) return false;
+        const playerHpPct = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
+        const companionMaxMp = this.getCompanionMaxMp(c);
+        for (const id of ids) {
+            const spell = SPELLS[id];
+            if (!spell) continue;
+            if (spell.type === 'mp_convert') {
+                if ((c.mp || 0) <= Math.floor(companionMaxMp * 0.45) && this.companionCastSpell(c, id, 'auto')) return true;
+                continue;
+            }
+            if (spell.type === 'heal') {
+                if (playerHpPct < 0.72 && this.companionCastSpell(c, id, 'auto')) return true;
+                continue;
+            }
+            if (spell.type === 'buff') {
+                if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'auto')) return true;
+            }
+        }
+        return false;
+    },
     companionSupport: function(c) {
         const hpPct = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
         const heals = ['elf_bless_of_life','full_heal','high_heal','mid_heal','heal'].filter(id => c.spells.includes(id));
         if (hpPct < 0.72) {
             for (const id of heals) if (this.companionCastSpell(c, id, 'support')) return true;
         }
-        const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_wind_shot','elf_earth_skin','elf_iron_skin','shield','haste','greater_haste'].filter(id => c.spells.includes(id));
+        const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_wind_shot','elf_storm_shot','elf_earth_skin','elf_iron_skin','elf_clear_mind','elf_resist_magic','shield','haste','greater_haste'].filter(id => c.spells.includes(id));
         for (const id of buffs) if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
         return this.companionPhysicalAttack(c);
     },
@@ -8065,7 +8283,10 @@ Object.assign(game, {
         c.mp = Math.min(this.getCompanionMaxMp(c), Number.isFinite(Number(c.mp)) ? Number(c.mp) : 0);
         this.advanceCompanionBuffs(c, 2);
         this.applyCompanionConsumables(c);
-        if (c.behavior === 'support') {
+        const autoCasted = this.companionAutoCast(c);
+        if (autoCasted) {
+            // 自動施法消耗本次隊友行動，避免勾選太多技能造成爆發過高。
+        } else if (c.behavior === 'support') {
             this.companionSupport(c);
         } else if (c.behavior === 'burst') {
             if ((!c.autoSkill || c.autoSkill === 'none') && this.getCompanionSkillOptions(c).length) c.autoSkill = this.getCompanionSkillOptions(c)[0];
