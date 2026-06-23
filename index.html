@@ -7230,7 +7230,8 @@ if(Math.random()*100 <= this.getER()) {
                     }
                 }
 
-                for(let sId of this.state.settings.autoBuffs) {
+                const helmetAutoBuffs = this.getEquippedMagicHelmetAutoBuffs ? this.getEquippedMagicHelmetAutoBuffs() : [];
+                for(let sId of Array.from(new Set([...(this.state.settings.autoBuffs || []), ...helmetAutoBuffs]))) {
                     let sp = SPELLS[sId];
                     if(availSpells.includes(sId) && this.state.level >= this.getSpellRequiredLevel(sId)) {
                         let shouldCast = (!this.state.buffs[sId] || this.state.buffs[sId] <= 0);
@@ -7256,7 +7257,7 @@ if(Math.random()*100 <= this.getER()) {
                                 needUpdate = true;
                             }
                         }
-                    } else if (!availSpells.includes(sId)) {
+                    } else if (!availSpells.includes(sId) && !helmetAutoBuffs.includes(sId)) {
                         this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== sId);
                     }
                 }
@@ -7870,6 +7871,17 @@ Object.assign(game, {
         });
         return stats;
     },
+    getCompanionRegenStats: function(companion) {
+        let regen = { hp: 0, mp: 0 };
+        Object.values(companion?.equipment || {}).forEach(key => {
+            if (!key || !this.state.inventory[key]) return;
+            const def = ITEMS[this.state.inventory[key].itemId];
+            if (!def) return;
+            regen.hp += def.hpRegen || 0;
+            regen.mp += def.mpRegen || 0;
+        });
+        return regen;
+    },
     getCompanionEquippedCount: function(itemKey) {
         let count = 0;
         Object.values(this.state.companions || {}).forEach(c => {
@@ -8125,10 +8137,22 @@ Object.assign(game, {
         if (!c || !item || !def) return false;
         if (def.classes && !def.classes.includes(c.classId)) return false;
         if (def.type === 'potion_hp') {
-            this.removeInventory(itemKey, 1);
+            const maxHp = this.getCompanionMaxHp(c);
+            const before = Math.min(maxHp, Math.max(0, Number.isFinite(Number(c.hp)) ? Number(c.hp) : maxHp));
+            if (before >= maxHp) {
+                c.hp = maxHp;
+                return false;
+            }
             const heal = Math.max(1, Math.floor((def.heal || 1) * 1.15 + Math.max(0, (c.stats.con || 10) - 12)));
-            c.hp = Math.min(this.getCompanionMaxHp(c), (Number(c.hp) || 0) + heal);
-            this.logCombat(`${c.name} 使用了 ${def.name}，恢復 ${heal} 點體力。`, 'success');
+            const after = Math.min(maxHp, before + heal);
+            const actualHeal = Math.max(0, Math.floor(after - before));
+            if (actualHeal <= 0) {
+                c.hp = after;
+                return false;
+            }
+            this.removeInventory(itemKey, 1);
+            c.hp = after;
+            this.logCombat(`${c.name} 使用了 ${def.name}，恢復 ${actualHeal} 點體力。`, 'success');
             return true;
         }
         if (def.type === 'potion_mp' || def.type === 'potion_buff') {
@@ -8463,7 +8487,11 @@ Object.assign(game, {
         } else {
             this.companionPhysicalAttack(c);
         }
-        let mpRegen = Math.max(1, Math.floor((c.stats.wis || 8) / 8));
+        const regenStats = this.getCompanionRegenStats(c);
+        let hpRegen = Math.max(0, Math.floor((c.stats.con || 8) / 12)) + regenStats.hp;
+        if (c.buffs?.elf_life_fountain) hpRegen += 4 + Math.floor(this.getCompanionLevel(c) / 12);
+        if (hpRegen > 0 && c.hp > 0) c.hp = Math.min(this.getCompanionMaxHp(c), c.hp + hpRegen);
+        let mpRegen = Math.max(1, Math.floor((c.stats.wis || 8) / 8)) + regenStats.mp;
         if (c.buffs?.potion_blue) mpRegen += 2 + Math.floor((c.stats.wis || 8) / 12);
         c.mp = Math.min(this.getCompanionMaxMp(c), c.mp + mpRegen);
         this.tickCompanionSupplies();
@@ -8523,6 +8551,16 @@ game.isKnightMagicHelmetSpell = function(spellId) {
     if (helmId === 'helm_heal_magic') return ['heal', 'mid_heal'].includes(spellId);
     if (helmId === 'helm_dex_magic') return ['dex_buff', 'haste'].includes(spellId);
     return false;
+};
+
+game.getEquippedMagicHelmetAutoBuffs = function() {
+    if (this.state.classId !== 'knight') return [];
+    let helmKey = this.state.equipment && this.state.equipment.helmet;
+    if (!helmKey || !this.state.inventory || !this.state.inventory[helmKey]) return [];
+    let helmId = this.state.inventory[helmKey].itemId;
+    if (helmId === 'helm_str_magic') return ['enchant_weapon', 'str_buff'];
+    if (helmId === 'helm_dex_magic') return ['dex_buff', 'haste'];
+    return [];
 };
 
 game.getSpellRequiredLevel = function(spellId) {
@@ -8619,7 +8657,8 @@ game.renderSkills = function() {
             group.forEach(spell => {
                 let canUse = this.state.level >= this.getSpellRequiredLevel(spell.id);
                 let isBuff = spell.type === 'buff', isPassive = spell.type === 'passive', isHeal = spell.type === 'heal', isMpConvert = spell.type === 'mp_convert';
-                let checked = this.state.settings.autoBuffs.includes(spell.id) ? 'checked' : '';
+                let helmetAuto = this.getEquippedMagicHelmetAutoBuffs && this.getEquippedMagicHelmetAutoBuffs().includes(spell.id);
+                let checked = (this.state.settings.autoBuffs.includes(spell.id) || helmetAuto) ? 'checked' : '';
                 let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
                 let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
                 let reqLevel = this.getSpellRequiredLevel(spell.id);
@@ -8631,6 +8670,7 @@ game.renderSkills = function() {
                 let autoHtml = '';
                 if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
                 else if (isMpConvert) autoHtml = `<span class="c-sys text-xs mt-1 block">回魔技能</span>`;
+                else if (isBuff && canUse && !isHeal && helmetAuto) autoHtml = `<span class="c-info text-xs mt-1 block">頭盔自動</span>`;
                 else if (isBuff && canUse && !isHeal) autoHtml = `<label class="cursor-pointer c-sys hover:text-white mt-1 text-xs"><input type="checkbox" class="w-3 h-3 align-middle" ${checked} onchange="game.toggleAutoBuff('${spell.id}', this.checked)"> 自動</label>`;
                 else if (!canUse) this.state.settings.autoBuffs = this.state.settings.autoBuffs.filter(bid => bid !== spell.id);
                 groupHtml += `<div class="spell-grid-item ${canUse ? '' : 'opacity-30'}"><span class="${isBuff?'c-success':(isPassive||isMpConvert?'c-info':'c-err')} text-sm font-bold block mb-1">${spell.name}</span>${equipMark}<span class="c-sys text-xs block">${costText}</span>${reqText}${stanceText}${descText}${autoHtml}</div>`;
