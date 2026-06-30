@@ -230,7 +230,7 @@
                     </div>
                     <div id="active-companion-detail" class="mb-3"></div>
                     <div class="grid grid-cols-1 gap-3 mb-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
-                        <div>30 級後可用金幣尋找隊友；同時只能帶一名隊友與一隻寵物出戰。</div>
+                            <div>30 級後可用金幣尋找隊友；同時只能帶一名隊友與一隻寵物出戰。未出戰隊友會每 16 秒逐漸恢復 HP/MP。</div>
                         <div class="flex flex-wrap items-center gap-3">
                             <button class="btn-ui c-info" onclick="game.drawCompanions(1)">抽取隊友 100,000</button>
                             <button class="btn-ui c-warn" onclick="game.drawCompanions(10)">十連抽 1,000,000</button>
@@ -6152,9 +6152,10 @@ const game = {
                 activePet.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), activePet.data.hp + h);
                 extra.push('寵物');
             }
-            const companion = this.getActiveCompanion();
+            const companion = this.state.activeCompanion ? this.state.companions[this.state.activeCompanion] || null : null;
             if (companion) {
-                companion.hp = Math.min(this.getCompanionMaxHp(companion), (companion.hp || 0) + h);
+                const vitals = this.normalizeCompanionVitals(companion, { minHp: 0 });
+                companion.hp = Math.min(vitals.maxHp, vitals.hp + h);
                 extra.push('隊友');
             }
         }
@@ -6805,6 +6806,7 @@ if(Math.random()*100 <= this.getER()) {
             active.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), active.data.hp + Math.max(1, Math.floor(active.data.level / 6)) * ticks);
             active.data.mp = Math.min(this.getPetMaxMp(this.state.activePet), active.data.mp + Math.max(1, Math.floor(active.data.level / 5)) * ticks);
         }
+        this.regenRestingCompanions(seconds);
     },
     advanceBackgroundBuffs: function(seconds) {
         for(let key in this.state.buffs) {
@@ -6990,6 +6992,10 @@ if(Math.random()*100 <= this.getER()) {
                 active.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), active.data.hp + Math.max(1, Math.floor(active.data.level / 6)));
                 active.data.mp = Math.min(this.getPetMaxMp(this.state.activePet), active.data.mp + Math.max(1, Math.floor(active.data.level / 5)));
                 this.renderPets();
+            }
+            if (this.regenRestingCompanions(16)) {
+                const companionTab = document.getElementById('tab-companion');
+                if (companionTab && !companionTab.classList.contains('hidden')) this.renderCompanions();
             }
             this.updateUI();
         }, 16000); 
@@ -7562,7 +7568,7 @@ Object.assign(game, {
         const settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(raw.settings || {}) };
         settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
         if (!ITEMS[settings.autoHpType] || ITEMS[settings.autoHpType].type !== 'potion_hp') settings.autoHpType = 'potion_red';
-        return {
+        const companion = {
             id: raw.id || fallbackId || `comp_${Date.now()}`,
             name: raw.name || '無名隊友',
             rarity: ['R','SR','SSR'].includes(raw.rarity) ? raw.rarity : 'R',
@@ -7586,6 +7592,42 @@ Object.assign(game, {
             supplyPotions: !!raw.supplyPotions,
             nextSupplyAt: Math.max(0, parseInt(raw.nextSupplyAt) || 0)
         };
+        this.normalizeCompanionVitals(companion);
+        return companion;
+    },
+    normalizeCompanionVitals: function(c, options = {}) {
+        if (!c) return { maxHp: 1, maxMp: 0, hp: 1, mp: 0 };
+        const maxHp = this.getCompanionMaxHp(c);
+        const maxMp = this.getCompanionMaxMp(c);
+        const minHp = options.minHp === 0 ? 0 : 1;
+        const fallbackHp = Number.isFinite(Number(options.fallbackHp)) ? Number(options.fallbackHp) : maxHp;
+        const fallbackMp = Number.isFinite(Number(options.fallbackMp)) ? Number(options.fallbackMp) : 0;
+        const hp = Number.isFinite(Number(c.hp)) ? Number(c.hp) : fallbackHp;
+        const mp = Number.isFinite(Number(c.mp)) ? Number(c.mp) : fallbackMp;
+        c.hp = Math.min(maxHp, Math.max(minHp, hp));
+        c.mp = Math.min(maxMp, Math.max(0, mp));
+        return { maxHp, maxMp, hp: c.hp, mp: c.mp };
+    },
+    getCompanionVitalsView: function(c, options = {}) {
+        if (!c) return { maxHp: 1, maxMp: 0, hp: 1, mp: 0 };
+        const maxHp = this.getCompanionMaxHp(c);
+        const maxMp = this.getCompanionMaxMp(c);
+        const minHp = options.minHp === 0 ? 0 : 1;
+        const fallbackHp = Number.isFinite(Number(options.fallbackHp)) ? Number(options.fallbackHp) : maxHp;
+        const fallbackMp = Number.isFinite(Number(options.fallbackMp)) ? Number(options.fallbackMp) : 0;
+        const hp = Number.isFinite(Number(c.hp)) ? Number(c.hp) : fallbackHp;
+        const mp = Number.isFinite(Number(c.mp)) ? Number(c.mp) : fallbackMp;
+        return {
+            maxHp,
+            maxMp,
+            hp: Math.min(maxHp, Math.max(minHp, hp)),
+            mp: Math.min(maxMp, Math.max(0, mp))
+        };
+    },
+    refreshCompanionUi: function() {
+        const companionTab = document.getElementById('tab-companion');
+        if (companionTab && !companionTab.classList.contains('hidden')) this.renderCompanions();
+        else this.renderCompanionStatus();
     },
     getCompanionRarityClass: function(rarity) {
         return rarity === 'SSR' ? 'rarity-ssr' : (rarity === 'SR' ? 'rarity-sr' : 'rarity-r');
@@ -7632,10 +7674,9 @@ Object.assign(game, {
     getCompanionActiveDetailHtml: function(c) {
         if (this.state.level < 30) return '<div class="c-sys italic bg-gray-900 border border-gray-800 rounded p-3">30 級後開放隊友系統。</div>';
         if (!c) return '<div class="c-sys italic bg-gray-900 border border-gray-800 rounded p-3">尚未召喚隊友。召喚後會在這裡顯示目前出戰隊友的詳細資料。</div>';
-        const maxHp = this.getCompanionMaxHp(c);
-        const maxMp = this.getCompanionMaxMp(c);
-        c.hp = Math.min(maxHp, Math.max(1, Number.isFinite(Number(c.hp)) ? Number(c.hp) : maxHp));
-        c.mp = Math.min(maxMp, Math.max(0, Number.isFinite(Number(c.mp)) ? Number(c.mp) : maxMp));
+        const vitals = this.getCompanionVitalsView(c);
+        const maxHp = vitals.maxHp;
+        const maxMp = vitals.maxMp;
         const req = this.getCompanionNextExp(c);
         const expPct = req > 0 ? Math.min(100, ((c.exp || 0) / req) * 100) : 100;
         const settings = this.getCompanionSettings(c);
@@ -7659,8 +7700,8 @@ Object.assign(game, {
                     <div class="text-xs c-info text-right">${behaviorText}<br>攻擊技能：${skillText}</div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                    <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, c.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(c.hp)}/${maxHp}</span></div></div>
-                    <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${maxMp > 0 ? Math.max(0, c.mp / maxMp * 100) : 0}%;"></div><span class="bar-text">${Math.floor(c.mp)}/${maxMp}</span></div></div>
+                    <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, vitals.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(vitals.hp)}/${maxHp}</span></div></div>
+                    <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${maxMp > 0 ? Math.max(0, vitals.mp / maxMp * 100) : 0}%;"></div><span class="bar-text">${Math.floor(vitals.mp)}/${maxMp}</span></div></div>
                     <div class="flex items-center">經驗:<div class="bar-container flex-1"><div class="bar-fill exp" style="width:${expPct}%;"></div><span class="bar-text">${req > 0 ? expPct.toFixed(2) + '%' : 'MAX'}</span></div></div>
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1 text-xs mt-2 c-sys">
@@ -7911,18 +7952,17 @@ Object.assign(game, {
             } else if (!active) {
                 statusEl.innerHTML = '<div class="c-sys italic">尚未召喚隊友。</div>';
             } else {
-                const maxHp = this.getCompanionMaxHp(active);
-                const maxMp = this.getCompanionMaxMp(active);
-                active.hp = Math.min(maxHp, Math.max(1, Number.isFinite(Number(active.hp)) ? Number(active.hp) : maxHp));
-                active.mp = Math.min(maxMp, Math.max(0, Number.isFinite(Number(active.mp)) ? Number(active.mp) : maxMp));
+                const vitals = this.getCompanionVitalsView(active);
+                const maxHp = vitals.maxHp;
+                const maxMp = vitals.maxMp;
                 const req = this.getCompanionNextExp(active);
                 const expPct = req > 0 ? Math.min(100, ((active.exp || 0) / req) * 100) : 100;
                 const buffText = this.getCompanionBuffNames(active).join(' / ');
                 statusEl.innerHTML = `
                     <div class="mb-1"><span class="${this.getCompanionRarityClass(active.rarity)} font-bold">${active.name}</span> <span class="c-sys">Lv.${this.getCompanionLevel(active)} ${CLASSES[active.classId].name}</span></div>
                     <div class="space-y-2">
-                        <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, active.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(active.hp)}/${maxHp}</span></div></div>
-                        <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${maxMp > 0 ? Math.max(0, active.mp / maxMp * 100) : 0}%;"></div><span class="bar-text">${Math.floor(active.mp)}/${maxMp}</span></div></div>
+                        <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, vitals.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(vitals.hp)}/${maxHp}</span></div></div>
+                        <div class="flex items-center">魔力:<div class="bar-container flex-1"><div class="bar-fill mp" style="width:${maxMp > 0 ? Math.max(0, vitals.mp / maxMp * 100) : 0}%;"></div><span class="bar-text">${Math.floor(vitals.mp)}/${maxMp}</span></div></div>
                         <div class="flex items-center">經驗:<div class="bar-container flex-1"><div class="bar-fill exp" style="width:${expPct}%;"></div><span class="bar-text">${req > 0 ? expPct.toFixed(2) + '%' : 'MAX'}</span></div></div>
                     </div>
                     <div class="mt-2 c-sys">${buffText ? `狀態：${buffText}` : '無附加狀態'}</div>
@@ -7950,9 +7990,8 @@ Object.assign(game, {
     },
     getCompanionCardHtml: function(c) {
         const active = this.state.activeCompanion === c.id;
-        const maxHp = this.getCompanionMaxHp(c), maxMp = this.getCompanionMaxMp(c);
-        c.hp = Math.min(maxHp, Math.max(1, Number.isFinite(Number(c.hp)) ? Number(c.hp) : maxHp));
-        c.mp = Math.min(maxMp, Math.max(0, Number.isFinite(Number(c.mp)) ? Number(c.mp) : maxMp));
+        const vitals = this.getCompanionVitalsView(c);
+        const maxHp = vitals.maxHp, maxMp = vitals.maxMp;
         const settings = this.getCompanionSettings(c);
         const req = this.getCompanionNextExp(c);
         const expPct = req > 0 ? Math.min(100, ((c.exp || 0) / req) * 100) : 100;
@@ -7979,7 +8018,7 @@ Object.assign(game, {
                 <div class="flex justify-between items-start gap-2">
                     <div>
                         <div class="${this.getCompanionRarityClass(c.rarity)} font-bold text-lg">${c.name} <span class="text-xs c-sys">${CLASSES[c.classId].name}</span></div>
-                        <div class="text-xs c-sys">${c.rarity} / Lv.${this.getCompanionLevel(c)} / HP ${Math.floor(c.hp)}/${maxHp} / MP ${Math.floor(c.mp)}/${maxMp} / EXP ${req > 0 ? expPct.toFixed(1) + '%' : 'MAX'}</div>
+                        <div class="text-xs c-sys">${c.rarity} / Lv.${this.getCompanionLevel(c)} / HP ${Math.floor(vitals.hp)}/${maxHp} / MP ${Math.floor(vitals.mp)}/${maxMp} / EXP ${req > 0 ? expPct.toFixed(1) + '%' : 'MAX'}</div>
                     </div>
                     <button class="btn-ui !px-2 !py-1 ${c.locked ? 'c-warn' : 'c-sys'}" onclick="game.toggleCompanionLock('${c.id}')">${c.locked ? '鎖定' : '未鎖'}</button>
                 </div>
@@ -7997,7 +8036,7 @@ Object.assign(game, {
                     <div class="c-info mb-1">自動施法</div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2">${autoSpellRows}</div>
                     <div class="mt-2 border-t border-gray-800 pt-2 leading-relaxed">
-                        攻擊模式：自動施法後普攻。強力攻擊：自動施法後使用選定攻擊技能，MP 不足改普攻。輔助模式：優先補血與替玩家上輔助狀態，沒有可用技能才普攻。一般補血看玩家 HP 低於 72%；生命的祝福會看玩家、寵物或隊友任一方低於 72%。
+                        攻擊模式：自動施法後普攻。強力攻擊：自動施法後使用選定攻擊技能，MP 不足改普攻。輔助模式：只會使用上方已勾選的補血與輔助狀態，沒有可用技能才普攻。一般補血看玩家 HP 低於 72%；生命的祝福會看玩家、寵物或隊友任一方低於 72%。
                     </div>
                 </div>
                 <div class="mt-2 border-t border-gray-700 pt-2 text-xs c-sys space-y-2">
@@ -8078,6 +8117,11 @@ Object.assign(game, {
             return ['buff','heal','mp_convert'].includes(type);
         });
     },
+    getCompanionEnabledAutoSpellIds: function(c) {
+        if (!c) return [];
+        this.getCompanionLearnedSpells(c);
+        return Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]) : [];
+    },
     toggleCompanionAutoSpell: function(id, spellId, enabled) {
         const c = this.state.companions?.[id];
         if (!c || !SPELLS[spellId]) return;
@@ -8135,10 +8179,12 @@ Object.assign(game, {
         const item = this.state.inventory?.[itemKey];
         const def = item ? ITEMS[item.itemId] : null;
         if (!c || !item || !def) return false;
+        const companionId = c.id;
         if (def.classes && !def.classes.includes(c.classId)) return false;
         if (def.type === 'potion_hp') {
-            const maxHp = this.getCompanionMaxHp(c);
-            const before = Math.min(maxHp, Math.max(0, Number.isFinite(Number(c.hp)) ? Number(c.hp) : maxHp));
+            const vitals = this.normalizeCompanionVitals(c, { minHp: 0 });
+            const maxHp = vitals.maxHp;
+            const before = vitals.hp;
             if (before >= maxHp) {
                 c.hp = maxHp;
                 return false;
@@ -8151,12 +8197,16 @@ Object.assign(game, {
                 return false;
             }
             this.removeInventory(itemKey, 1);
+            c = this.state.companions?.[companionId] || c;
+            this.normalizeCompanionVitals(c, { minHp: 0 });
             c.hp = after;
             this.logCombat(`${c.name} 使用了 ${def.name}，恢復 ${actualHeal} 點體力。`, 'success');
             return true;
         }
         if (def.type === 'potion_mp' || def.type === 'potion_buff') {
             this.removeInventory(itemKey, 1);
+            c = this.state.companions?.[companionId] || c;
+            c.buffs = c.buffs && typeof c.buffs === 'object' ? c.buffs : {};
             if (item.itemId === 'potion_blue') c.buffs.potion_blue = def.duration || 600;
             else if (item.itemId === 'potion_wisdom') c.buffs.potion_wisdom = def.duration || 300;
             else if (item.itemId === 'potion_haste') c.buffs.potion_haste = def.duration || 1200;
@@ -8168,15 +8218,24 @@ Object.assign(game, {
         return false;
     },
     applyCompanionConsumables: function(c) {
-        if (!c) return;
+        if (!c) return c;
+        const companionId = c.id;
+        const syncCompanion = () => {
+            c = this.state.companions?.[companionId] || c;
+            return c;
+        };
         c.buffs = c.buffs && typeof c.buffs === 'object' ? c.buffs : {};
         const settings = this.getCompanionSettings(c);
-        const maxHp = this.getCompanionMaxHp(c);
+        const vitals = this.normalizeCompanionVitals(c, { minHp: 0 });
+        const maxHp = vitals.maxHp;
         c.potionCooldown = Math.max(0, parseInt(c.potionCooldown) || 0);
         if (c.potionCooldown <= 0 && c.hp < maxHp && c.hp <= Math.floor(maxHp * settings.autoHpThreshold / 100)) {
             let hpKey = this.findInventoryKeyByItemId(settings.autoHpType);
-            if (!hpKey && settings.autoBuyHp) hpKey = this.buyCompanionConsumableIfNeeded(c, settings.autoHpType, 100);
-            if (hpKey && this.usePotionOnCompanion(c, hpKey)) c.potionCooldown = 1;
+            if (!hpKey && settings.autoBuyHp) { hpKey = this.buyCompanionConsumableIfNeeded(c, settings.autoHpType, 100); syncCompanion(); }
+            if (hpKey && this.usePotionOnCompanion(c, hpKey)) {
+                syncCompanion();
+                c.potionCooldown = 1;
+            }
         }
         const buffQueue = [
             { enabled: settings.autoBuyMp, itemId: 'potion_blue', buffId: 'potion_blue' },
@@ -8188,9 +8247,10 @@ Object.assign(game, {
         buffQueue.forEach(row => {
             if (!row.enabled || c.buffs[row.buffId] > 0) return;
             let key = this.findInventoryKeyByItemId(row.itemId);
-            if (!key) key = this.buyCompanionConsumableIfNeeded(c, row.itemId, 1);
-            if (key) this.usePotionOnCompanion(c, key);
+            if (!key) { key = this.buyCompanionConsumableIfNeeded(c, row.itemId, 1); syncCompanion(); }
+            if (key && this.usePotionOnCompanion(c, key)) syncCompanion();
         });
+        return syncCompanion();
     },
     advanceCompanionBuffs: function(c, seconds = 2) {
         if (!c) return;
@@ -8276,8 +8336,7 @@ Object.assign(game, {
             if (w && ITEMS[w.itemId]?.hands === 2) c.equipment.weapon = null;
         }
         c.equipment[slot] = itemKey;
-        c.hp = Math.min(this.getCompanionMaxHp(c), Number.isFinite(Number(c.hp)) ? Number(c.hp) : this.getCompanionMaxHp(c));
-        c.mp = Math.min(this.getCompanionMaxMp(c), Number.isFinite(Number(c.mp)) ? Number(c.mp) : this.getCompanionMaxMp(c));
+        this.normalizeCompanionVitals(c);
         this.logSystem(`${c.name} 裝備了 ${this.getDisplayName(item, def)}。`, 'reward');
         this.renderInventory();
         this.renderCompanions();
@@ -8367,11 +8426,12 @@ Object.assign(game, {
     companionCastSpell: function(c, spellId, mode = 'burst') {
         const spell = SPELLS[spellId];
         if (!c || !spell || !c.spells.includes(spellId)) return false;
+        const vitals = this.normalizeCompanionVitals(c, { minHp: 0 });
         const cost = Math.max(0, this.getSpellCost(spell));
         if ((c.mp || 0) < cost) return false;
         if (spell.type === 'mp_convert') {
-            const maxHp = this.getCompanionMaxHp(c);
-            const maxMp = this.getCompanionMaxMp(c);
+            const maxHp = vitals.maxHp;
+            const maxMp = vitals.maxMp;
             const hpCost = Math.max(1, parseInt(spell.hpCost) || 1);
             if ((c.hp || 0) <= hpCost + Math.floor(maxHp * 0.30)) return false;
             if ((c.mp || 0) >= Math.floor(maxMp * 0.85)) return false;
@@ -8379,7 +8439,6 @@ Object.assign(game, {
             const gain = Math.max(1, (parseInt(spell.mpGain) || 1) + Math.floor((c.stats.wis || 8) / 10));
             c.mp = Math.min(maxMp, (c.mp || 0) + gain);
             this.logCombat(`${c.name} 施放 ${spell.name}，轉換 ${gain} 點魔力。`, 'skill-elf');
-            this.renderCompanionStatus();
             return true;
         }
         if (spell.type === 'attack' && this.state.targetMonster) {
@@ -8396,7 +8455,6 @@ Object.assign(game, {
         if (spell.type === 'heal') {
             c.mp -= cost;
             this.castHealSpell(spell, this.getCompanionMagicDmg(c), `${c.name} `);
-            this.updateUI();
             return true;
         }
         if (spell.type === 'buff') {
@@ -8409,10 +8467,8 @@ Object.assign(game, {
             if (supportPlayer) {
                 if (spellId === 'soul_ascension') this.calculateMaxHpMp();
                 this.logCombat(`${c.name} 施放 ${spell.name} 支援你。`, spell.classes?.includes('elf') ? 'skill-elf' : (spell.classes?.includes('wizard') ? 'skill-wizard' : 'magic'));
-                this.updateUI();
             } else {
                 this.logCombat(`${c.name} 施放 ${spell.name} 強化自己。`, spell.classes?.includes('elf') ? 'skill-elf' : (spell.classes?.includes('dark_elf') ? 'skill-dark' : (spell.classes?.includes('knight') ? 'skill-knight' : 'magic')));
-                this.renderCompanionStatus();
             }
             return true;
         }
@@ -8420,8 +8476,7 @@ Object.assign(game, {
     },
     companionAutoCast: function(c) {
         if (!c) return false;
-        this.getCompanionLearnedSpells(c);
-        const ids = Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]) : [];
+        const ids = this.getCompanionEnabledAutoSpellIds(c);
         if (ids.length === 0) return false;
         const companionMaxMp = this.getCompanionMaxMp(c);
         for (const id of ids) {
@@ -8463,19 +8518,19 @@ Object.assign(game, {
         return playerHpPct < threshold;
     },
     companionSupport: function(c) {
-        const heals = ['elf_bless_of_life','full_heal','high_heal','mid_heal','heal'].filter(id => c.spells.includes(id));
+        const enabled = this.getCompanionEnabledAutoSpellIds(c);
+        const heals = ['elf_bless_of_life','full_heal','high_heal','mid_heal','heal'].filter(id => enabled.includes(id));
         for (const id of heals) if (this.shouldCompanionUseHealSpell(c, SPELLS[id]) && this.companionCastSpell(c, id, 'support')) return true;
-        const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_wind_shot','elf_storm_shot','elf_earth_skin','elf_iron_skin','elf_clear_mind','elf_resist_magic','shield','haste','greater_haste'].filter(id => c.spells.includes(id));
+        const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_wind_shot','elf_storm_shot','elf_earth_skin','elf_iron_skin','elf_clear_mind','elf_resist_magic','shield','haste','greater_haste'].filter(id => enabled.includes(id));
         for (const id of buffs) if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
         return this.companionPhysicalAttack(c);
     },
     companionAct: function() {
-        const c = this.getActiveCompanion();
+        let c = this.getActiveCompanion();
         if (!c || !this.state.targetMonster || this.state.hp <= 0) return;
-        c.hp = Math.min(this.getCompanionMaxHp(c), Math.max(1, Number.isFinite(Number(c.hp)) ? Number(c.hp) : this.getCompanionMaxHp(c)));
-        c.mp = Math.min(this.getCompanionMaxMp(c), Number.isFinite(Number(c.mp)) ? Number(c.mp) : 0);
+        this.normalizeCompanionVitals(c);
         this.advanceCompanionBuffs(c, 2);
-        this.applyCompanionConsumables(c);
+        c = this.applyCompanionConsumables(c) || c;
         const autoCasted = this.companionAutoCast(c);
         if (autoCasted) {
             // 自動施法消耗本次隊友行動，避免勾選太多技能造成爆發過高。
@@ -8495,7 +8550,32 @@ Object.assign(game, {
         if (c.buffs?.potion_blue) mpRegen += 2 + Math.floor((c.stats.wis || 8) / 12);
         c.mp = Math.min(this.getCompanionMaxMp(c), c.mp + mpRegen);
         this.tickCompanionSupplies();
-        this.renderCompanionStatus();
+        this.updateUI();
+        this.refreshCompanionUi();
+    },
+    regenRestingCompanions: function(seconds = 16) {
+        const ticks = Math.max(1, Math.floor((parseInt(seconds) || 16) / 16));
+        const activeId = this.state.activeCompanion;
+        let changed = false;
+        Object.values(this.state.companions || {}).forEach(c => {
+            if (!c || c.id === activeId) return;
+            const maxHp = this.getCompanionMaxHp(c);
+            const maxMp = this.getCompanionMaxMp(c);
+            if (maxHp <= 0) return;
+            this.normalizeCompanionVitals(c, { minHp: 0 });
+            const beforeHp = c.hp;
+            const beforeMp = c.mp;
+            this.advanceCompanionBuffs(c, 16 * ticks);
+            const regenStats = this.getCompanionRegenStats(c);
+            let hpRegen = Math.max(1, Math.floor((c.stats?.con || 8) / 12)) + Math.max(0, regenStats.hp || 0);
+            if (c.buffs?.elf_life_fountain) hpRegen += 4 + Math.floor(this.getCompanionLevel(c) / 12);
+            let mpRegen = Math.max(1, Math.floor((c.stats?.wis || 8) / 8)) + Math.max(0, regenStats.mp || 0);
+            if (c.buffs?.potion_blue) mpRegen += 2 + Math.floor((c.stats?.wis || 8) / 12);
+            if (c.hp < maxHp) c.hp = Math.min(maxHp, c.hp + hpRegen * ticks);
+            if (c.mp < maxMp) c.mp = Math.min(maxMp, c.mp + mpRegen * ticks);
+            if (c.hp !== beforeHp || c.mp !== beforeMp) changed = true;
+        });
+        return changed;
     },
     tickCompanionSupplies: function() {
         const now = Date.now();
