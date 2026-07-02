@@ -1215,6 +1215,8 @@ Object.assign(ITEMS, {
     staff_sorcery: { name: '巫術魔杖', type: 'weapon', hands: 1, speed: 1000, safe: 6, dice: '1d4', hit: 0, mDmg: 2, dropRate: 0.3, desc: '法師任務獎勵改為掉落。' , classes: ['wizard'] },
     cloak_shadow: { name: '影子斗篷', type: 'cloak', safe: 4, ac: -2, mr: 5, dropRate: 0.3, desc: '黑暗妖精任務獎勵改為掉落。' },
     armor_shadow: { name: '影子盔甲', type: 'armor', safe: 4, ac: -6, mr: 6, dropRate: 0.25, desc: '黑暗妖精任務獎勵改為掉落。' },
+    gloves_shadow: { name: '影子手套', type: 'gloves', safe: 6, ac: -1, dropRate: 0.18, desc: '黑暗妖精影子系防具。與影子長靴一起裝備可啟動影子疾行套裝。' },
+    boots_shadow: { name: '影子長靴', type: 'boots', safe: 4, ac: -2, hp: 50, hpRegen: 4, dropRate: 0.16, desc: 'HP+50，體力恢復+4。與影子手套一起裝備可啟動影子疾行套裝。' },
     claw_bloody: { name: '血腥鋼爪', type: 'weapon', weaponClass: 'claw', hands: 1, speed: 800, safe: 6, dice: '1d14', hit: 3, dropRate: 0.08, legendary: true },
     dual_blade_bloody: { name: '血腥雙刀', type: 'weapon', weaponClass: 'dual_blade', hands: 1, speed: 740, safe: 6, dice: '1d12', hit: 4, dropRate: 0.08, legendary: true },
     blade_ronde: { name: '倫得雙刀', type: 'weapon', weaponClass: 'dual_blade', hands: 1, speed: 730, safe: 6, dice: '1d13', hit: 5, dropRate: 0.03, legendary: true },
@@ -1558,6 +1560,8 @@ const DICKLE_BALANCE_040 = (() => {
     Object.assign(ITEMS.sandals_black_elder, { classes: ['wizard'] });
     Object.assign(ITEMS.armor_shadow, { classes: ['dark_elf'] });
     Object.assign(ITEMS.cloak_shadow, { classes: ['dark_elf'] });
+    Object.assign(ITEMS.gloves_shadow, { classes: ['dark_elf'] });
+    Object.assign(ITEMS.boots_shadow, { classes: ['dark_elf'] });
     Object.assign(ITEMS.armor_bronze, { classes: ['knight'] });
     Object.assign(ITEMS.armor_metal, { classes: ['knight'] });
     Object.assign(ITEMS.armor_crystal, { classes: ['knight'] });
@@ -1637,9 +1641,35 @@ const DICKLE_BALANCE_040 = (() => {
     tune('shadow_temple', 'shadow_beast', { name: '混沌的司祭' });
     tune('shadow_temple', 'cursed_dark_elf_fighter', { name: '死亡的司祭' });
     tune('shadow_temple', 'succubus_queen', { name: '死亡與火焰之影' });
+    addDrop(getM('shadow_temple', 'shadow_beast'), 'armor_shadow', 0.12);
+    addDrop(getM('shadow_temple', 'shadow_beast'), 'gloves_shadow', 0.16);
+    addDrop(getM('shadow_temple', 'shadow_beast'), 'boots_shadow', 0.14);
+    addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'armor_shadow', 0.08);
+    addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'gloves_shadow', 0.12);
+    addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'boots_shadow', 0.1);
+    addDrop(getM('shadow_temple', 'succubus_queen'), 'armor_shadow', 0.35);
+    addDrop(getM('shadow_temple', 'succubus_queen'), 'gloves_shadow', 0.3);
+    addDrop(getM('shadow_temple', 'succubus_queen'), 'boots_shadow', 0.28);
     lowerMap('lastavard', 7, 0.86, 0.9);
     const lastaDarkCrystalPool = [['crystal_dark_enchant_venom',1], ['crystal_dark_shadow_armor',0.8], ['crystal_dark_burning_spirit',0.45], ['crystal_dark_shadow_fang',0.3], ['crystal_dark_uncanny_dodge',0.12], ['crystal_dark_double_break',0.1], ['crystal_dark_dress_mighty',0.1], ['crystal_dark_armor_break',0.01]];
     each('lastavard', m => lastaDarkCrystalPool.forEach(([id, rate]) => addDrop(m, id, m.isBoss ? rate * 2.5 : rate)));
+    [
+        ['lasta_dark_spirit', 0.03],
+        ['lasta_thief', 0.04],
+        ['lasta_elite_soldier', 0.05],
+        ['lasta_spirit_envoy', 0.08],
+        ['lasta_spirit_king', 0.16]
+    ].forEach(([monsterId, rate]) => addDrop(getM('lastavard', monsterId), 'armor_shadow', rate));
+    [
+        ['lasta_dark_spirit', 0.04, 0.04],
+        ['lasta_thief', 0.05, 0.05],
+        ['lasta_elite_soldier', 0.06, 0.06],
+        ['lasta_spirit_envoy', 0.1, 0.09],
+        ['lasta_spirit_king', 0.18, 0.16]
+    ].forEach(([monsterId, glovesRate, bootsRate]) => {
+        addDrop(getM('lastavard', monsterId), 'gloves_shadow', glovesRate);
+        addDrop(getM('lastavard', monsterId), 'boots_shadow', bootsRate);
+    });
     tune('demon_temple', 'chaos_guardian', { name: '墮落的司祭' });
     tune('demon_temple', 'mammoth', { name: '墮落', magicProfile: { text: '以墮落神力壓碎你的靈魂', dice: '7d12+24', chance: 0.45 } });
 
@@ -3854,7 +3884,7 @@ const game = {
             let k = this.state.equipment[slot];
             if(k && this.state.inventory[k]) eq[slot] = this.state.inventory[k].itemId;
         }
-        let sets = { active: [], ac: 0, hp: 0, mp: 0, dmg: 0, hit: 0, dr: 0, mr: 0, mDmg: 0, mpRegen: 0, critDmg: 0 };
+        let sets = { active: [], ac: 0, hp: 0, mp: 0, dmg: 0, hit: 0, dr: 0, mr: 0, mDmg: 0, mpRegen: 0, critDmg: 0, er: 0 };
         if(eq.helmet === 'helm_dk' && eq.armor === 'armor_dk' && eq.gloves === 'gloves_dk' && eq.boots === 'boots_dk') {
             sets.active.push('死亡騎士套裝'); sets.ac += 6; sets.dr += 3; sets.dmg += 3; sets.hit += 3;
         }
@@ -3872,6 +3902,9 @@ const game = {
         }
         if(eq.cloak === 'cloak_shadow' && eq.armor === 'armor_shadow') {
             sets.active.push('影子套裝'); sets.ac += 4; sets.mr += 5; sets.dmg += 2; sets.hit += 2; sets.critDmg += 0.25;
+        }
+        if(eq.gloves === 'gloves_shadow' && eq.boots === 'boots_shadow') {
+            sets.active.push('影子疾行套裝'); sets.hp += 50; sets.mr += 5; sets.er += 5;
         }
         return sets;
     },
@@ -4183,6 +4216,7 @@ const game = {
     },
     getER: function() {
         let er = this.getDexBonus().er;
+        er += this.getSetBonuses().er || 0;
         if (this.state.buffs.knight_solid_carriage) er += this.isKnightOneHandShieldStyle() ? 20 : 15;
         if (this.state.buffs.de_uncanny_dodge) er += 10;
         if (this.state.buffs.elf_aqua_protect) er += 18 + Math.floor(this.state.level / 20);
