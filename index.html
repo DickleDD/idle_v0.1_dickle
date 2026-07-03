@@ -344,6 +344,10 @@
                         </div>
                         <div class="flex flex-col min-h-0">
                             <div class="c-title mb-2 border-b border-gray-800 pb-1 flex justify-between items-center gap-2">
+                                <span>套裝收集</span><span id="set-collection-count" class="text-sm c-sys font-normal">0/0</span>
+                            </div>
+                            <div id="set-collection-list" class="max-h-[34%] overflow-y-auto custom-scroll pr-2 space-y-2 mb-4"></div>
+                            <div class="c-title mb-2 border-b border-gray-800 pb-1 flex justify-between items-center gap-2">
                                 <span>資料查詢</span><span id="record-search-count" class="text-sm c-sys font-normal">0</span>
                             </div>
                             <div class="flex gap-2 mb-2">
@@ -1644,12 +1648,15 @@ const DICKLE_BALANCE_040 = (() => {
     addDrop(getM('shadow_temple', 'shadow_beast'), 'armor_shadow', 0.12);
     addDrop(getM('shadow_temple', 'shadow_beast'), 'gloves_shadow', 0.16);
     addDrop(getM('shadow_temple', 'shadow_beast'), 'boots_shadow', 0.14);
+    addDrop(getM('shadow_temple', 'shadow_beast'), 'cloak_shadow', 0.18);
     addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'armor_shadow', 0.08);
     addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'gloves_shadow', 0.12);
     addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'boots_shadow', 0.1);
+    addDrop(getM('shadow_temple', 'cursed_dark_elf_fighter'), 'cloak_shadow', 0.1);
     addDrop(getM('shadow_temple', 'succubus_queen'), 'armor_shadow', 0.35);
     addDrop(getM('shadow_temple', 'succubus_queen'), 'gloves_shadow', 0.3);
     addDrop(getM('shadow_temple', 'succubus_queen'), 'boots_shadow', 0.28);
+    addDrop(getM('shadow_temple', 'succubus_queen'), 'cloak_shadow', 0.32);
     lowerMap('lastavard', 7, 0.86, 0.9);
     const lastaDarkCrystalPool = [['crystal_dark_enchant_venom',1], ['crystal_dark_shadow_armor',0.8], ['crystal_dark_burning_spirit',0.45], ['crystal_dark_shadow_fang',0.3], ['crystal_dark_uncanny_dodge',0.12], ['crystal_dark_double_break',0.1], ['crystal_dark_dress_mighty',0.1], ['crystal_dark_armor_break',0.01]];
     each('lastavard', m => lastaDarkCrystalPool.forEach(([id, rate]) => addDrop(m, id, m.isBoss ? rate * 2.5 : rate)));
@@ -1660,6 +1667,13 @@ const DICKLE_BALANCE_040 = (() => {
         ['lasta_spirit_envoy', 0.08],
         ['lasta_spirit_king', 0.16]
     ].forEach(([monsterId, rate]) => addDrop(getM('lastavard', monsterId), 'armor_shadow', rate));
+    [
+        ['lasta_dark_spirit', 0.03],
+        ['lasta_thief', 0.04],
+        ['lasta_elite_soldier', 0.05],
+        ['lasta_spirit_envoy', 0.08],
+        ['lasta_spirit_king', 0.16]
+    ].forEach(([monsterId, rate]) => addDrop(getM('lastavard', monsterId), 'cloak_shadow', rate));
     [
         ['lasta_dark_spirit', 0.04, 0.04],
         ['lasta_thief', 0.05, 0.05],
@@ -2918,6 +2932,7 @@ const game = {
         this.renderAdventureSummary();
         this.renderMapProgressList(selectedMap);
         this.renderDropCodex(selectedMap);
+        this.renderSetCollection();
         this.renderDataSearch();
         this.renderAchievementList();
     },
@@ -3003,6 +3018,116 @@ const game = {
                 </div>
             `);
         });
+    },
+    getSetCollectionDefinitions: function() {
+        return [
+            {
+                name: '死亡騎士套裝',
+                bonus: 'AC -6 / DR +3 / 近戰傷害 +3 / 命中 +3',
+                parts: [
+                    { id: 'helm_dk', slots: ['helmet'] },
+                    { id: 'armor_dk', slots: ['armor'] },
+                    { id: 'gloves_dk', slots: ['gloves'] },
+                    { id: 'boots_dk', slots: ['boots'] }
+                ]
+            },
+            {
+                name: '侏儒套裝',
+                bonus: 'AC -1 / HP +6',
+                parts: [
+                    { id: 'helm_gnome', slots: ['helmet'] },
+                    { id: 'cloak_gnome', slots: ['cloak'] },
+                    { id: 'shield_gnome', slots: ['shield'] }
+                ]
+            },
+            {
+                name: '歐西斯套裝',
+                bonus: 'AC -3 / 近戰傷害 +1 / 命中 +1',
+                parts: [
+                    { id: 'helm_orc', slots: ['helmet'] },
+                    { id: 'orc_cloak', slots: ['cloak'] },
+                    { id: 'ring_mail_orc', slots: ['armor'] },
+                    { id: 'arkai_shield', slots: ['shield'] }
+                ]
+            },
+            {
+                name: '骷髏套裝',
+                bonus: 'AC -2 / HP +10',
+                parts: [
+                    { id: 'helm_skeleton', slots: ['helmet'] },
+                    { id: 'armor_skeleton', slots: ['armor'] },
+                    { id: 'shield_skeleton', slots: ['shield'] }
+                ]
+            },
+            {
+                name: '冰之女王套裝',
+                bonus: 'AC -2 / MR +10 / 魔法傷害 +2 / MP恢復 +3',
+                parts: [
+                    { id: 'ice_queen_staff', slots: ['weapon'] },
+                    { id: 'ice_queen_earring', slots: ['earring1','earring2'] }
+                ]
+            },
+            {
+                name: '影子套裝',
+                bonus: 'AC -4 / MR +5 / 近戰傷害 +2 / 命中 +2 / 暴擊傷害 +25%',
+                parts: [
+                    { id: 'cloak_shadow', slots: ['cloak'] },
+                    { id: 'armor_shadow', slots: ['armor'] }
+                ]
+            },
+            {
+                name: '影子疾行套裝',
+                bonus: 'HP +50 / MR +5 / 遠攻迴避 ER +5',
+                parts: [
+                    { id: 'gloves_shadow', slots: ['gloves'] },
+                    { id: 'boots_shadow', slots: ['boots'] }
+                ]
+            }
+        ];
+    },
+    getEquippedItemIdBySlot: function(slot) {
+        const key = this.state.equipment?.[slot];
+        return key && this.state.inventory?.[key] ? this.state.inventory[key].itemId : null;
+    },
+    isSetPartEquipped: function(part) {
+        return (part.slots || []).some(slot => this.getEquippedItemIdBySlot(slot) === part.id);
+    },
+    renderSetCollection: function() {
+        const list = document.getElementById('set-collection-list');
+        const count = document.getElementById('set-collection-count');
+        if (!list) return;
+        const activeSets = this.getSetBonuses().active || [];
+        const sets = this.getSetCollectionDefinitions();
+        let completed = 0;
+        list.innerHTML = sets.map(set => {
+            const parts = set.parts.filter(part => ITEMS[part.id]);
+            const owned = parts.filter(part => this.hasObtainedItem(part.id)).length;
+            const equipped = parts.filter(part => this.isSetPartEquipped(part)).length;
+            const complete = parts.length > 0 && owned >= parts.length;
+            const active = activeSets.includes(set.name);
+            if (complete) completed++;
+            const status = active ? '<span class="c-success">啟動中</span>' : (complete ? '<span class="c-warn">已收齊</span>' : `<span class="c-sys">${owned}/${parts.length}</span>`);
+            const partHtml = parts.map(part => {
+                const def = ITEMS[part.id];
+                const item = { itemId: part.id, enchant: 0, count: 1, isBlessed: false };
+                const got = this.hasObtainedItem(part.id);
+                const worn = this.isSetPartEquipped(part);
+                const color = this.getItemColorClass(item, def);
+                return `<span class="${got ? color : 'c-sys'} text-xs mr-2 whitespace-nowrap">${got ? '✓' : '□'} ${this.escapeHtml(def.name)}${worn ? '<span class="c-info">[裝備]</span>' : ''}</span>`;
+            }).join('');
+            return `
+                <div class="bg-gray-900 border ${active ? 'border-yellow-600' : 'border-gray-800'} rounded p-2">
+                    <div class="flex justify-between gap-2">
+                        <span class="${active ? 'c-blessed' : 'c-item'} font-bold">${this.escapeHtml(set.name)}</span>
+                        <span class="text-xs">${status}</span>
+                    </div>
+                    <div class="text-xs c-info mt-1">套裝加成：${this.escapeHtml(set.bonus)}</div>
+                    <div class="text-xs c-sys mt-1">裝備進度：${equipped}/${parts.length}</div>
+                    <div class="mt-1 leading-relaxed">${partHtml}</div>
+                </div>
+            `;
+        }).join('');
+        if (count) count.innerText = `${completed}/${sets.length}`;
     },
     escapeHtml: function(value) {
         return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -4519,6 +4644,9 @@ const game = {
         if (sets.active.includes('侏儒套裝')) ['helmet', 'cloak', 'shield'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
         if (sets.active.includes('歐西斯套裝')) ['helmet', 'cloak', 'armor', 'shield'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
         if (sets.active.includes('骷髏套裝')) ['helmet', 'armor', 'shield'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
+        if (sets.active.includes('冰之女王套裝')) ['weapon', 'earring1', 'earring2'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
+        if (sets.active.includes('影子套裝')) ['cloak', 'armor'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
+        if (sets.active.includes('影子疾行套裝')) ['gloves', 'boots'].forEach(s => activeSetItemKeys.push(this.state.equipment[s]));
 
         let equippedPairs = [];
         for(let slot in this.state.equipment) {
@@ -8613,16 +8741,22 @@ Object.assign(game, {
     },
     tickCompanionSupplies: function() {
         const now = Date.now();
-        Object.values(this.state.companions || {}).forEach(c => {
-            if (!c.supplyPotions) return;
-            if (!c.nextSupplyAt) c.nextSupplyAt = now + 1800 * 1000;
-            if (now < c.nextSupplyAt) return;
-            this.addInventory('potion_red', 200, 0, false, true);
-            this.addInventory('potion_orange', 200, 0, false, true);
-            this.addInventory('potion_clear', 200, 0, false, true);
-            c.nextSupplyAt = now + 1800 * 1000;
-            this.logSystem(`${c.name} 補給了三種治癒藥水各 200 瓶。`, 'reward');
-        });
+        const interval = 1800 * 1000;
+        const c = this.getActiveCompanion();
+        if (!c || !c.supplyPotions) return;
+        if (!c.nextSupplyAt) {
+            c.nextSupplyAt = now + interval;
+            return;
+        }
+        if (now < c.nextSupplyAt) return;
+
+        c.nextSupplyAt = now + interval;
+        if (this.state.companions?.[c.id]) this.state.companions[c.id].nextSupplyAt = c.nextSupplyAt;
+        this.addInventory('potion_red', 200, 0, false, true);
+        this.addInventory('potion_orange', 200, 0, false, true);
+        this.addInventory('potion_clear', 200, 0, false, true);
+        if (this.state.companions?.[c.id]) this.state.companions[c.id].nextSupplyAt = c.nextSupplyAt;
+        this.logSystem(`${c.name} 補給了三種治癒藥水各 200 瓶。`, 'reward');
     },
     startCompanionLoop: function() {
         clearTimeout(this.state.companionLoop);
