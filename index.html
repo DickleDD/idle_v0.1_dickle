@@ -951,6 +951,15 @@ const KALIP_FRAGMENT_EXCHANGES = {
     }
 };
 
+const SPELL_ACHIEVEMENT_TARGET_BY_CLASS = {
+    knight: 6
+};
+
+function getSpellAchievementTarget(game) {
+    let classId = game && game.state ? game.state.classId : '';
+    return SPELL_ACHIEVEMENT_TARGET_BY_CLASS[classId] || 10;
+}
+
 const ACHIEVEMENTS = [
     { id: 'first_blood', name: '第一道戰痕', desc: '擊敗第一隻怪物。', reward: { passive: { hp: 5 }, adena: 500 }, check: g => g.getTotalMonsterKills() >= 1, progress: g => [g.getTotalMonsterKills(), 1] },
     { id: 'hundred_kills', name: '百戰暖身', desc: '累積擊敗 100 隻怪物。', reward: { passive: { hit: 1 }, adena: 5000 }, check: g => g.getTotalMonsterKills() >= 100, progress: g => [g.getTotalMonsterKills(), 100] },
@@ -962,7 +971,7 @@ const ACHIEVEMENTS = [
     { id: 'level_50', name: '五十級門檻', desc: '角色達到 50 級。', reward: { passive: { hp: 30, mDmg: 1 }, items: [{ id: 'kalip_high_weapon_fragment', count: 2 }] }, check: g => g.state.level >= 50, progress: g => [g.state.level, 50] },
     { id: 'level_60', name: '中後期成形', desc: '角色達到 60 級。', reward: { passive: { dr: 1, mr: 3 }, items: [{ id: 'scroll_armor_blessed', count: 1 }] }, check: g => g.state.level >= 60, progress: g => [g.state.level, 60] },
     { id: 'first_spell', name: '知識的重量', desc: '學會第一個魔法或技能。', reward: { passive: { mp: 5 }, adena: 3000 }, check: g => (g.state.spells || []).length >= 1, progress: g => [(g.state.spells || []).length, 1] },
-    { id: 'ten_spells', name: '書頁開始發亮', desc: '學會 10 個魔法或技能。', reward: { passive: { mDmg: 1 }, items: [{ id: 'potion_blue', count: 5 }] }, check: g => (g.state.spells || []).length >= 10, progress: g => [(g.state.spells || []).length, 10] },
+    { id: 'ten_spells', name: '書頁開始發亮', desc: '依目前職業學會足夠數量的魔法或技能。', reward: { passive: { mDmg: 1 }, items: [{ id: 'potion_blue', count: 5 }] }, check: g => (g.state.spells || []).length >= getSpellAchievementTarget(g), progress: g => [(g.state.spells || []).length, getSpellAchievementTarget(g)] },
     { id: 'first_pet', name: '旅途不再單人', desc: '契約第一隻寵物。', reward: { passive: { hpRegen: 1 }, adena: 10000 }, check: g => Object.keys(g.state.pets || {}).length >= 1, progress: g => [Object.keys(g.state.pets || {}).length, 1] },
     { id: 'pet_evolved', name: '值得驕傲的夥伴', desc: '讓任一寵物進化。', reward: { passive: { hp: 15, dr: 1 }, items: [{ id: 'potion_orange', count: 20 }] }, check: g => Object.values(g.state.pets || {}).some(p => p && p.evolved), progress: g => [Object.values(g.state.pets || {}).some(p => p && p.evolved) ? 1 : 0, 1] },
     { id: 'that_man', name: '那個男人', desc: '遇見歐林。', reward: { passive: { shopDiscount: 0.05 } }, check: g => g.getMonsterKillCount('orin_easter') >= 1, progress: g => [g.getMonsterKillCount('orin_easter'), 1] },
