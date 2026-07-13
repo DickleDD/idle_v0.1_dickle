@@ -783,7 +783,7 @@ const CLASSES = {
         meleeDmgBonusEvery: 10,
         drBase: 1,
         drEvery: 12,
-        bossDmgBonus: 0.15
+        bossDmgBonus: 0.25
     },
     elf: {
         name: '妖精',
@@ -868,8 +868,8 @@ const DICKLE_MAGIC_AND_COMPANION_DATA_090 = (() => {
         elf_life_fountain: { id: 'elf_life_fountain', name: '生命之泉', level: 4, type: 'buff', mp: 35, duration: 1200, classes: ['elf'], element: 'water', desc: '妖精四階水系魔法。強力增加 HP 回復量，角色等級越高效果越好。' },
         elf_aqua_protect: { id: 'elf_aqua_protect', name: '水之防護', level: 4, type: 'buff', mp: 35, duration: 900, classes: ['elf'], element: 'water', desc: '妖精四階水系魔法。大幅提高迴避率，適合高壓掛機與推進。' },
         elf_bless_of_life: { id: 'elf_bless_of_life', name: '生命的祝福', level: 4, type: 'heal', mp: 45, healBase: 80, classes: ['elf'], element: 'water', partyHeal: true, desc: '妖精四階水系魔法。一次回復玩家、寵物與隊友生命值。' },
-        ultimate_light_spear: { id: 'ultimate_light_spear', name: '究極光裂術', level: 10, type: 'attack', mp: 120, dice: '12d18', baseDmg: 180, classes: ['wizard'], mrIgnoreRate: 0.75, intScale: 8, desc: '法師十階魔法。巨大的光矛貫穿目標，降低敵人有效 MR 75%，並受智力加值。' },
-        soul_ascension: { id: 'soul_ascension', name: '靈魂昇華', level: 10, type: 'buff', mp: 80, duration: 1800, classes: ['wizard'], desc: '法師十階魔法。1800 秒內 HP/MP 最大值提高 20%。' }
+        ultimate_light_spear: { id: 'ultimate_light_spear', name: '究極光裂術', level: 10, type: 'attack', mp: 95, dice: '14d20', baseDmg: 260, classes: ['wizard'], mrIgnoreRate: 0.75, intScale: 11, desc: '法師十階魔法。巨大的光矛貫穿目標，降低敵人有效 MR 75%，並大幅受智力加值。' },
+        soul_ascension: { id: 'soul_ascension', name: '靈魂昇華', level: 10, type: 'buff', mp: 80, duration: 1800, classes: ['wizard'], desc: '法師十階魔法。1800 秒內 HP/MP 最大值提高 20%，並強化法師回魔循環。' }
     });
     const desc = {
         light_arrow: '低耗魔攻擊魔法，適合法師初期自動戰鬥。',
@@ -1286,10 +1286,10 @@ Object.assign(SPELLS, {
     de_double_break: { id: 'de_double_break', name: '雙重破壞', level: 3, type: 'buff', mp: 30, duration: 600, classes: ['dark_elf'], desc: '雙刀限定爆發核心。命中時有機率傷害翻倍，對 Boss 近戰還追加命中與破防收益。' },
     de_armor_break: { id: 'de_armor_break', name: '破壞盔甲', level: 4, type: 'buff', mp: 45, duration: 600, classes: ['dark_elf'], desc: '40級可用。爪/雙刀對 Boss 近戰時可觸發破甲、追加傷害；閃避時也會反擊。' },
     de_dress_mighty: { id: 'de_dress_mighty', name: '力量提升', level: 3, type: 'buff', mp: 25, duration: 1200, classes: ['dark_elf'], desc: '提高力量 +2 並增加傷害 +2，強化黑妖近戰輸出。' },
-    knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'], desc: '雙手武器限定攻擊技。一般怪會被震暈；Boss 改為短暫打斷並破甲。' },
+    knight_shock_stun: { id: 'knight_shock_stun', name: '衝擊之暈', level: 3, type: 'attack', mp: 15, duration: 3, classes: ['knight'], desc: '雙手近戰武器限定攻擊技。一般怪會被震暈；Boss 改為短暫打斷並破甲。' },
     knight_reduction_armor: { id: 'knight_reduction_armor', name: '增幅防禦', level: 3, type: 'buff', mp: 10, duration: 1200, classes: ['knight'], desc: '裝備盾牌時追加 AC 與減傷。' },
     knight_solid_carriage: { id: 'knight_solid_carriage', name: '堅固防護', level: 3, type: 'buff', mp: 15, duration: 600, classes: ['knight'], desc: '單手武器加盾牌時追加 DR 與 MR。' },
-    knight_counter_barrier: { id: 'knight_counter_barrier', name: '反擊屏障', level: 3, type: 'buff', mp: 20, duration: 600, classes: ['knight'], desc: '雙手武器限定，受擊時有機率反擊。' },
+    knight_counter_barrier: { id: 'knight_counter_barrier', name: '反擊屏障', level: 3, type: 'buff', mp: 20, duration: 600, classes: ['knight'], desc: '雙手近戰武器限定，受擊時有機率反擊。' },
     knight_shield_bash: { id: 'knight_shield_bash', name: '盾擊', level: 3, type: 'attack', mp: 8, duration: 6, classes: ['knight'], desc: '單手武器加盾牌限定，造成小傷害並降低怪物命中與攻擊節奏；Boss效果減弱。' },
     knight_sword_shield_mastery: { id: 'knight_sword_shield_mastery', name: '劍盾精通', level: 3, type: 'passive', classes: ['knight'], desc: '單手武器加盾牌時提升命中、DR、MR與盾牌AC。' }
 });
@@ -3739,6 +3739,13 @@ const game = {
         let sDef = ITEMS[this.state.inventory[sKey].itemId];
         return !!wDef && !!sDef && wDef.type === 'weapon' && sDef.type === 'shield' && wDef.hands !== 2 && this.getWeaponClass(this.state.inventory[wKey].itemId) === 'melee';
     },
+    isKnightTwoHandMeleeStyle: function() {
+        if (this.state.classId !== 'knight') return false;
+        let wKey = this.state.equipment.weapon;
+        if (!wKey || !this.state.inventory[wKey]) return false;
+        let wDef = ITEMS[this.state.inventory[wKey].itemId];
+        return !!wDef && wDef.type === 'weapon' && wDef.hands === 2 && this.getWeaponClass(this.state.inventory[wKey].itemId) === 'melee';
+    },
     hasKnightSwordShieldMastery: function() {
         return this.state.classId === 'knight'
             && this.state.spells.includes('knight_sword_shield_mastery')
@@ -3756,10 +3763,10 @@ const game = {
         if (!this.isKnightOneHandShieldStyle() || !this.hasKnightSwordShieldMastery()) return { hit: 0, dr: 0, mr: 0, shieldAc: 0 };
         let shieldValue = this.getShieldAcValue();
         return {
-            hit: 2 + Math.floor(this.state.level / 30),
-            dr: 1 + Math.floor(this.state.level / 35),
-            mr: 4 + Math.floor(this.state.level / 20),
-            shieldAc: Math.max(1, Math.ceil(shieldValue / 2))
+            hit: 3 + Math.floor(this.state.level / 25),
+            dr: 2 + Math.floor(this.state.level / 30),
+            mr: 6 + Math.floor(this.state.level / 18),
+            shieldAc: Math.max(1, Math.ceil(shieldValue * 0.65))
         };
     },
     isElfMeleeWeaponStyle: function() {
@@ -3786,13 +3793,14 @@ const game = {
     },
     getElfFireWeaponBonus: function() {
         if (!this.isElfMeleeWeaponStyle()) return 0;
-        let intBonus = Math.max(0, Math.floor((this.getEffStat('int') - 12) / 4));
-        let magicBonus = Math.max(0, Math.floor(this.getMagicDmg() * 0.18));
-        return Math.max(1, intBonus + magicBonus);
+        let intBonus = Math.max(0, Math.floor((this.getEffStat('int') - 12) * 0.75));
+        let magicBonus = Math.max(0, Math.floor(this.getMagicDmg() * 0.35));
+        let levelBonus = Math.max(0, Math.floor((this.state.level - 40) / 10));
+        return Math.max(2, intBonus + magicBonus + levelBonus);
     },
     getElfElementalFireChance: function() {
         if (!this.isElfMeleeWeaponStyle()) return 0;
-        return Math.min(0.35, 0.18 + this.getMagicPenetrationRate() * 0.4);
+        return Math.min(0.5, 0.22 + this.getMagicPenetrationRate() * 0.75 + Math.max(0, this.state.level - 40) * 0.002);
     },
     canUseSpellForClass: function(spellId) {
         let spell = SPELLS[spellId];
@@ -4228,9 +4236,10 @@ const game = {
         wpnHit += this.getAchievementPassiveBonuses().hit || 0;
         let shieldStyle = this.getKnightShieldStyleBonuses();
         wpnHit += shieldStyle.hit;
-        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += 5;
-        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += 8;
-        if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) wpnHit += 30;
+        let isElfBowStyle = this.state.classId === 'elf' && weaponClass === 'bow';
+        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnHit += isElfBowStyle ? 5 : 3;
+        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnHit += isElfBowStyle ? 8 : 5;
+        if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) wpnHit += isElfBowStyle ? 30 : 14;
         if (this.state.buffs.pet_blessing) wpnHit += 2;
         if (weaponClass === 'bow') return dexBonus * 2 + wpnHit + sets.hit + Math.floor(this.state.level / 10);
         if (this.state.classId === 'dark_elf' && ['claw','dual_blade'].includes(weaponClass)) return strBonus + dexBonus + wpnHit + sets.hit + 2;
@@ -4253,12 +4262,13 @@ const game = {
         let wpnDmg = 0;
         let wKey = this.state.equipment.weapon;
         let weaponClass = 'melee';
+        let wpn = null;
         if(wKey && this.state.inventory[wKey]) {
-            let item = this.state.inventory[wKey];
-            weaponClass = this.getWeaponClass(item.itemId);
-            wpnDmg = Number(item.enchant);
-            if (ITEMS[item.itemId] && ITEMS[item.itemId].dmg) wpnDmg += ITEMS[item.itemId].dmg;
-            if (item.isBlessed) wpnDmg += 1;
+            wpn = this.state.inventory[wKey];
+            weaponClass = this.getWeaponClass(wpn.itemId);
+            wpnDmg = Number(wpn.enchant);
+            if (ITEMS[wpn.itemId] && ITEMS[wpn.itemId].dmg) wpnDmg += ITEMS[wpn.itemId].dmg;
+            if (wpn.isBlessed) wpnDmg += 1;
         }
         let quiverKey = this.state.equipment.quiver;
         if (weaponClass === 'bow' && quiverKey && this.state.inventory[quiverKey]) {
@@ -4274,11 +4284,19 @@ const game = {
         if (this.state.buffs.de_burning_spirit) wpnDmg += 3;
         if (this.state.buffs.de_shadow_fang) wpnDmg += 5;
         if (this.state.buffs.de_dress_mighty) wpnDmg += 2;
-        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnDmg += 3;
-        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnDmg += 6;
+        let isElfBowStyle = this.state.classId === 'elf' && weaponClass === 'bow';
+        if (weaponClass === 'bow' && this.state.buffs.elf_wind_shot) wpnDmg += isElfBowStyle ? 3 : 2;
+        if (weaponClass === 'bow' && this.state.buffs.elf_storm_shot) wpnDmg += isElfBowStyle ? 6 : 4;
         if (this.state.buffs.berserkers) wpnDmg += 5;
         if (this.state.buffs.pet_blessing) wpnDmg += 2;
         if (this.state.buffs.player_weapon_break > 0 && this.canCurrentWeaponBeDamaged()) wpnDmg -= 10;
+        if (this.state.classId === 'knight' && weaponClass === 'melee') {
+            let enchantBonus = Math.max(0, Number(wpn?.enchant || 0) - 6);
+            let knightMeleeBonus = Math.floor(this.state.level / 12) + Math.floor(enchantBonus / 4);
+            if (this.isKnightTwoHandMeleeStyle()) knightMeleeBonus += Math.floor(this.state.level / 10) + Math.floor(enchantBonus / 4);
+            else if (this.isKnightOneHandShieldStyle()) knightMeleeBonus += Math.floor(this.state.level / 16) + Math.floor(this.getShieldAcValue() / 3);
+            wpnDmg += knightMeleeBonus;
+        }
         let gearDmg = 0;
         for(let slot in this.state.equipment) {
             if (slot === 'weapon') continue;
@@ -5780,6 +5798,7 @@ const game = {
         let reduction = profile.costReduction;
         if (spell.level >= 5 && profile.tier >= 18) reduction += 1;
         if (spell.level >= 6 && profile.tier >= 20) reduction += 1;
+        if (this.state.classId === 'wizard' && spell.level >= 10) reduction += 6 + Math.floor(Math.max(0, this.getEffStat('int') - 18) / 2);
         return Math.max(1, baseCost - reduction);
     },
     castMpConvert: function(spellId) {
@@ -6042,6 +6061,7 @@ const game = {
         let wpn = null, wDef = null;
         if(wKey && this.state.inventory[wKey]) { wpn = this.state.inventory[wKey]; wDef = ITEMS[wpn.itemId]; }
         let weaponClass = wpn ? this.getWeaponClass(wpn.itemId) : 'melee';
+        let isElfBowStyle = this.state.classId === 'elf' && weaponClass === 'bow';
         
         let dbf = this.state.targetMonster.debuffs || {};
         let isDarkElfBossMelee = this.state.classId === 'dark_elf' && this.state.targetMonster.isBoss && ['claw','dual_blade'].includes(weaponClass);
@@ -6081,7 +6101,7 @@ const game = {
             if (isGraze) dmg = Math.max(1, Math.floor((getDiceMax(dice) + Math.max(0, this.getMeleeDmg()) + rangedPierceDr) * 0.3));
             let cls = this.getClassDef();
             if (this.state.targetMonster.isBoss && cls.bossDmgBonus) dmg = Math.max(1, Math.floor(dmg * (1 + cls.bossDmgBonus)));
-            if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) dmg = Math.max(1, Math.floor(dmg * 1.08));
+            if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) dmg = Math.max(1, Math.floor(dmg * (isElfBowStyle ? 1.08 : 1.03)));
             if (doubleBreakTriggered && !isGraze) {
                 dmg *= 2;
                 if (weaponClass === 'dual_blade' && Math.random() < (0.15 + deBackwaterRank * 0.03)) dmg *= 2;
@@ -6091,7 +6111,11 @@ const game = {
                 isCrit = true;
             }
             if (weaponClass === 'bow' && this.state.buffs.elf_triple_arrow) {
-                let arrowBase = Math.max(1, Math.floor(this.state.maxMp * 0.055));
+                let arrowRate = isElfBowStyle ? 0.055 : 0.028;
+                let arrowBase = Math.max(1, Math.floor(this.state.maxMp * arrowRate));
+                arrowBase += isElfBowStyle
+                    ? Math.max(0, Math.floor((this.getEffStat('dex') - 12) * 1.2)) + Math.floor(this.state.level / 20)
+                    : Math.max(0, Math.floor((this.getEffStat('dex') - 12) * 0.35));
                 if (qDef && qDef.magicArrow && ['ancient_crossbow','bow_sayha'].includes(wpn?.itemId)) arrowBase += Math.max(1, Math.floor((qDef.arrowDmg || 0) * 0.5));
                 let arrowHits = [
                     Math.max(1, Math.floor(arrowBase * 0.9)),
@@ -6124,8 +6148,8 @@ const game = {
                 this.logCombat(`【燃燒鬥志】血氣回流 ${leech}，背水反噬再造成 ${backlash} 點傷害。`, 'skill-dark');
             }
             if (this.state.buffs.elf_elemental_fire && isHit && !isGraze && this.isElfMeleeWeaponStyle() && Math.random() < this.getElfElementalFireChance()) {
-                let fireBase = rollDice('2d6') + 6 + Math.floor(this.getMagicDmg() * 0.8);
-                let fireDmg = this.calcMagicDmgToMonster(fireBase);
+                let fireBase = rollDice('4d10') + 60 + Math.floor(this.getMagicDmg() * 2.4) + Math.max(0, this.getEffStat('int') - 12) * 7 + Math.floor(this.state.level * 0.75);
+                let fireDmg = this.calcMagicDmgToMonster(fireBase, this.getMagicPenetrationRate() * 0.6);
                 this.state.targetMonster.hp -= fireDmg;
                 this.logCombat(`【烈焰之魂】近戰命中引燃火焰，追加 ${fireDmg} 點魔法傷害。`, 'skill-elf');
             }
@@ -6174,6 +6198,7 @@ const game = {
         if (spell.id === 'weapon_break' && dbf.weapon_break > 0) return;
         if (spell.id === 'slow' && dbf.slow > 0) return;
         if (spell.id === 'knight_shield_bash' && (!this.isKnightOneHandShieldStyle() || dbf.shield_bash > 0)) return;
+        if (spell.id === 'knight_shock_stun' && !this.isKnightTwoHandMeleeStyle()) return;
         if (this.state.mp < this.state.settings.autoAttackMpThreshold) return;
         
         let cost = this.getSpellCost(spell);
@@ -6219,9 +6244,7 @@ const game = {
         }
 
         if (spell.id === 'knight_shock_stun') {
-            let wKey = this.state.equipment.weapon;
-            let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
-            if (!wDef || wDef.hands !== 2) return;
+            if (!this.isKnightTwoHandMeleeStyle()) return;
             if (!this.state.targetMonster.debuffs) this.state.targetMonster.debuffs = {};
             let count = this.state.targetMonster.stunCount || 0;
             let success = Math.random() < Math.max(0.15, 0.55 - count * 0.12);
@@ -6290,6 +6313,7 @@ const game = {
                 if (spell.intScale) d += Math.max(0, this.getEffStat('int') - 12) * spell.intScale;
                 
                 let finalDmg = this.calcMagicDmgToMonster(d, spell.mrIgnoreRate || 0);
+                if (spell.id === 'ultimate_light_spear' && this.state.classId === 'wizard') finalDmg = Math.max(1, Math.floor(finalDmg * (this.state.targetMonster.isBoss ? 1.25 : 1.12)));
                 if (this.state.targetMonster.isBoss && ['fire_storm','blizzard'].includes(spell.id) && this.state.targetMonster.hp <= this.state.targetMonster.maxHp * 0.2 && Math.random() < 0.1) {
                     finalDmg *= 4;
                     this.logCombat(`法術暴擊！${spell.name} 觸發核爆斬殺。`, 'magic');
@@ -6570,10 +6594,8 @@ if(Math.random()*100 <= this.getER()) {
             
             this.state.hp -= dmg;
             this.logCombat(`${this.state.targetMonster.name} 命中了你，造成 ${dmg} 點傷害。`, 'danger');
-            let cbWKey = this.state.equipment.weapon;
-            let cbWDef = cbWKey && this.state.inventory[cbWKey] ? ITEMS[this.state.inventory[cbWKey].itemId] : null;
-            if (this.state.buffs.knight_counter_barrier && cbWDef && cbWDef.hands === 2 && Math.random() < 0.4) {
-                let counterDmg = Math.max(1, Math.floor(dmg * 1.5) + Math.abs(this.getAC()));
+            if (this.state.buffs.knight_counter_barrier && this.isKnightTwoHandMeleeStyle() && Math.random() < 0.4) {
+                let counterDmg = Math.max(1, Math.floor(dmg * (1.65 + this.state.level / 250)) + Math.abs(this.getAC()) + Math.floor(this.getMeleeDmg() * 0.5));
                 this.state.targetMonster.hp -= counterDmg;
                 this.logCombat(`【反擊屏障】巨刃架開攻勢，反彈了 ${counterDmg} 點傷害。`, 'skill-knight');
                 this.updateMonsterHpBar();
@@ -6915,6 +6937,8 @@ if(Math.random()*100 <= this.getER()) {
             let cost = this.getSpellCost(spell);
             if (this.state.maxMp >= cost && this.state.settings.autoAttackMpThreshold <= this.state.maxMp) {
                 let magicDamage = Math.max(1, getDiceMax(spell.dice || '1d4') * 0.55 + (spell.baseDmg || 0) + this.getMagicDmg());
+                if (spell.intScale) magicDamage += Math.max(0, this.getEffStat('int') - 12) * spell.intScale;
+                if (spell.id === 'ultimate_light_spear' && this.state.classId === 'wizard') magicDamage *= 1.12;
                 dps += (magicDamage / 3) * 0.65;
             }
         }
@@ -6951,6 +6975,7 @@ if(Math.random()*100 <= this.getER()) {
             let r = wis<=14?1:wis<=16?2:wis===17?3:4;
             if(this.state.buffs.potion_blue) r += (wis<=11?1:1+(wis-10));
             if(this.state.buffs.potion_wisdom) r += 2;
+            if(this.state.classId === 'wizard' && this.state.buffs.soul_ascension) r += 4 + Math.floor(this.getEffStat('int') / 10);
             for(let slot in this.state.equipment) {
                 let itemKey = this.state.equipment[slot];
                 if(itemKey && this.state.inventory[itemKey]) {
@@ -7135,6 +7160,7 @@ if(Math.random()*100 <= this.getER()) {
                 let r = wis<=14?1:wis<=16?2:wis===17?3:4;
                 if(this.state.buffs.potion_blue) r += (wis<=11?1:1+(wis-10));
                 if(this.state.buffs.potion_wisdom) r += 2;
+                if(this.state.classId === 'wizard' && this.state.buffs.soul_ascension) r += 4 + Math.floor(this.getEffStat('int') / 10);
                 for(let slot in this.state.equipment) {
                     let itemKey = this.state.equipment[slot];
                     if(itemKey && this.state.inventory[itemKey]) {
@@ -7413,9 +7439,7 @@ if(Math.random()*100 <= this.getER()) {
                     if(availSpells.includes(sId) && this.state.level >= this.getSpellRequiredLevel(sId)) {
                         let shouldCast = (!this.state.buffs[sId] || this.state.buffs[sId] <= 0);
                         if (sId === 'knight_counter_barrier') {
-                            let wKey = this.state.equipment.weapon;
-                            let wDef = wKey && this.state.inventory[wKey] ? ITEMS[this.state.inventory[wKey].itemId] : null;
-                            if (!wDef || wDef.hands !== 2) shouldCast = false;
+                            if (!this.isKnightTwoHandMeleeStyle()) shouldCast = false;
                         }
                         if (sId === 'elf_dance_of_fire' && !this.isElfMeleeWeaponStyle()) shouldCast = false;
 
@@ -8576,11 +8600,11 @@ Object.assign(game, {
         if (weaponClass === 'bow' && c.buffs?.elf_storm_shot) { dmg += 5; tags.push('暴風神射'); }
         if (weaponClass === 'bow' && c.buffs?.elf_triple_arrow) { dmg = Math.floor(dmg * 1.25); tags.push('三重矢'); }
         if (weaponClass !== 'bow' && c.buffs?.elf_fire_weapon) {
-            dmg += 2 + Math.max(0, Math.floor(((c.stats.int || 8) - 12) / 4)) + Math.floor(this.getCompanionMagicDmg(c) * 0.12);
+            dmg += 4 + Math.max(0, Math.floor(((c.stats.int || 8) - 12) * 0.7)) + Math.floor(this.getCompanionMagicDmg(c) * 0.32) + Math.floor(companionLevel / 12);
             tags.push('火焰武器');
         }
-        if (weaponClass !== 'bow' && c.buffs?.elf_elemental_fire && Math.random() < 0.22) {
-            let fireDmg = Math.max(3, Math.floor(6 + this.getCompanionMagicDmg(c) * 0.8 + Math.max(0, (c.stats.int || 8) - 12) * 0.8));
+        if (weaponClass !== 'bow' && c.buffs?.elf_elemental_fire && Math.random() < Math.min(0.46, 0.22 + Math.max(0, (c.stats.int || 8) - 12) * 0.01 + this.getCompanionMagicDmg(c) * 0.004)) {
+            let fireDmg = Math.max(8, Math.floor(24 + this.getCompanionMagicDmg(c) * 1.8 + Math.max(0, (c.stats.int || 8) - 12) * 5 + companionLevel * 0.55));
             dmg += fireDmg;
             tags.push('烈焰之魂');
         }
@@ -8600,6 +8624,31 @@ Object.assign(game, {
         const vitals = this.normalizeCompanionVitals(c, { minHp: 0 });
         const cost = Math.max(0, this.getSpellCost(spell));
         if ((c.mp || 0) < cost) return false;
+        if (spellId === 'knight_shock_stun' && this.state.targetMonster) {
+            const wKey = c.equipment.weapon;
+            const w = wKey && this.state.inventory[wKey];
+            const wDef = w && ITEMS[w.itemId];
+            const weaponClass = w ? this.getWeaponClass(w.itemId) : 'melee';
+            if (!wDef || wDef.hands !== 2 || weaponClass !== 'melee') return false;
+            c.mp -= cost;
+            if (!this.state.targetMonster.debuffs) this.state.targetMonster.debuffs = {};
+            const count = this.state.targetMonster.stunCount || 0;
+            const companionLevel = this.getCompanionLevel(c);
+            const success = Math.random() < Math.max(0.12, 0.48 + (companionLevel - this.state.targetMonster.level) * 0.01 - count * 0.10);
+            if (success && this.state.targetMonster.isBoss) {
+                this.state.targetMonster.stunCount = count + 1;
+                this.state.targetMonster.debuffs.armor_break = Math.max(this.state.targetMonster.debuffs.armor_break || 0, Math.max(2, 4 - count));
+                this.state.monsterSpecialTick = Math.max(0, this.state.monsterSpecialTick - 2);
+                this.logCombat(`${c.name} 施放 ${spell.name}，打斷 ${this.state.targetMonster.name} 並造成破甲。`, 'skill-knight');
+            } else if (success) {
+                this.state.targetMonster.stunCount = count + 1;
+                this.state.targetMonster.debuffs.sleep = Math.max(this.state.targetMonster.debuffs.sleep || 0, Math.max(1, spell.duration - count));
+                this.logCombat(`${c.name} 施放 ${spell.name}，震暈 ${this.state.targetMonster.name}。`, 'skill-knight');
+            } else {
+                this.logCombat(`${c.name} 施放 ${spell.name}，但 ${this.state.targetMonster.name} 抵抗了。`, 'skill-knight');
+            }
+            return true;
+        }
         if (spell.type === 'mp_convert') {
             const maxHp = vitals.maxHp;
             const maxMp = vitals.maxMp;
@@ -8617,6 +8666,7 @@ Object.assign(game, {
             let dmg = (spell.dice ? rollDice(spell.dice) : 0) + (spell.baseDmg || 0) + this.getCompanionMagicDmg(c);
             if (spell.intScale) dmg += Math.max(0, (c.stats.int || 8) - 12) * spell.intScale;
             let finalDmg = this.calcMagicDmgToMonster(dmg, spell.mrIgnoreRate || 0);
+            if (spell.id === 'ultimate_light_spear' && c.classId === 'wizard') finalDmg = Math.max(1, Math.floor(finalDmg * (this.state.targetMonster.isBoss ? 1.18 : 1.08)));
             this.state.targetMonster.hp -= finalDmg;
             this.logCombat(`${c.name} 施放 ${spell.name}，造成 ${finalDmg} 點魔法傷害。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
             this.updateMonsterHpBar();
@@ -8919,10 +8969,10 @@ game.renderSkills = function() {
                 let equipMark = !this.state.spells.includes(spell.id) ? '<span class="text-xs c-warn block">[裝備]</span>' : '';
                 let costText = isMpConvert ? `HP:${spell.hpCost}→MP:${spell.mpGain}` : (spell.mp!==undefined ? 'MP:'+spell.mp : '');
                 let reqLevel = this.getSpellRequiredLevel(spell.id);
-                let alwaysShowReq = ['de_armor_break','knight_shield_bash','knight_sword_shield_mastery','elf_elemental_fire','elf_dance_of_fire','elf_life_fountain','elf_aqua_protect','elf_bless_of_life','ultimate_light_spear','soul_ascension'].includes(spell.id);
+                let alwaysShowReq = ['de_armor_break','knight_shock_stun','knight_counter_barrier','knight_shield_bash','knight_sword_shield_mastery','elf_elemental_fire','elf_dance_of_fire','elf_life_fountain','elf_aqua_protect','elf_bless_of_life','ultimate_light_spear','soul_ascension'].includes(spell.id);
                 let reqClass = canUse ? 'c-sys' : 'c-warn';
                 let reqText = (!canUse || alwaysShowReq) ? `<span class="text-xs ${reqClass} block">${reqLevel}級可用</span>` : '';
-                let stanceText = ['knight_shield_bash','knight_sword_shield_mastery'].includes(spell.id) ? '<span class="text-xs c-info block">單手武器＋盾牌</span>' : (['elf_elemental_fire','elf_dance_of_fire'].includes(spell.id) ? '<span class="text-xs c-info block">妖精近戰武器</span>' : '');
+                let stanceText = ['knight_shield_bash','knight_sword_shield_mastery'].includes(spell.id) ? '<span class="text-xs c-info block">單手武器＋盾牌</span>' : (['knight_shock_stun','knight_counter_barrier'].includes(spell.id) ? '<span class="text-xs c-info block">雙手近戰武器</span>' : (['elf_elemental_fire','elf_dance_of_fire'].includes(spell.id) ? '<span class="text-xs c-info block">妖精近戰武器</span>' : ''));
                 let descText = spell.desc ? `<span class="c-sys text-xs block mt-1 leading-snug">${this.escapeHtml(spell.desc)}</span>` : '';
                 let autoHtml = '';
                 if (isPassive) autoHtml = `<span class="c-sys text-xs mt-1 block">常駐被動</span>`;
