@@ -2191,7 +2191,7 @@ const game = {
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoPetHpThreshold: 30, autoPetHpType: 'potion_red', autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, companionLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
-        potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false,
+        potionCooldown: 0, petPotionCooldown: 0, autoHealCd: 0, autoMpSkillCd: 0, enchantTargetKey: null, zombieTick: 0, monsterSpecialTick: 0, antarasDeadUntil: 0, hiddenValleyArubaDefeated: false, hiddenValleyArubaSummoned: false, hiddenValleyReturnPassKills: 0,
         lastActiveAt: Date.now()
     },
     backgroundHandlersReady: false,
@@ -2344,7 +2344,7 @@ const game = {
             pets: this.state.pets, activePet: this.state.activePet,
             companions: this.state.companions || {}, activeCompanion: this.state.activeCompanion || null, companionSeq: this.state.companionSeq || 0,
             adventure: this.state.adventure,
-            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned
+            settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned, hiddenValleyReturnPassKills: this.state.hiddenValleyReturnPassKills || 0
         };
     },
     saveGame: function() {
@@ -2513,6 +2513,7 @@ const game = {
                 this.state.antarasDeadUntil = savedData.antarasDeadUntil || 0;
                 this.state.hiddenValleyArubaDefeated = !!savedData.hiddenValleyArubaDefeated;
                 this.state.hiddenValleyArubaSummoned = !!savedData.hiddenValleyArubaSummoned;
+                this.state.hiddenValleyReturnPassKills = Math.max(0, parseInt(savedData.hiddenValleyReturnPassKills) || 0);
                 
                 this.state.settings = { ...this.state.settings, ...(savedData.settings || {}) };
                 this.state.settings.autoHpThreshold = parseInt(this.state.settings.autoHpThreshold) || 5;
@@ -2673,7 +2674,12 @@ const game = {
         return !!tab && !tab.classList.contains('hidden');
     },
     refreshAdventureRecordsIfOpen: function() {
-        if (this.isRecordsTabOpen()) this.renderAdventureRecords();
+        if (!this.isRecordsTabOpen()) return;
+        if (this.adventureRecordRefreshTimer) return;
+        this.adventureRecordRefreshTimer = setTimeout(() => {
+            this.adventureRecordRefreshTimer = null;
+            if (this.isRecordsTabOpen()) this.renderAdventureRecords();
+        }, 160);
     },
     recordItemObtained: function(itemId, count = 1, silent = false) {
         if (!itemId || !ITEMS[itemId] || this.isRemovedSystemItem(itemId)) return;
@@ -2760,7 +2766,7 @@ const game = {
         let ids = new Set();
         map.monsters.forEach(monster => {
             (monster.drops || []).forEach(drop => {
-                if (drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id)) ids.add(drop.id);
+                if (drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id) && !(monster.isBoss && this.isBossTrashDrop(drop.id))) ids.add(drop.id);
             });
         });
         return Array.from(ids);
@@ -2934,6 +2940,10 @@ const game = {
         return { current, target, percent: Math.min(100, Math.floor(current / target * 100)), text: `${Math.min(current, target).toLocaleString()}/${target.toLocaleString()}` };
     },
     renderAdventureRecords: function(mapId = null) {
+        if (this.adventureRecordRefreshTimer) {
+            clearTimeout(this.adventureRecordRefreshTimer);
+            this.adventureRecordRefreshTimer = null;
+        }
         this.ensureAdventureState();
         if (mapId && MAPS[mapId]) this.adventureSelectedMap = mapId;
         let selectedMap = this.adventureSelectedMap && MAPS[this.adventureSelectedMap] ? this.adventureSelectedMap : (MAPS[this.state.currentMap] ? this.state.currentMap : Object.keys(MAPS)[0]);
@@ -3013,7 +3023,7 @@ const game = {
             </div>
         `);
         map.monsters.forEach(monster => {
-            let drops = (monster.drops || []).filter(drop => drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id));
+            let drops = (monster.drops || []).filter(drop => drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id) && !(monster.isBoss && this.isBossTrashDrop(drop.id)));
             let killCount = this.getMapStats(selectedMap).monsters[monster.id] || 0;
             let dropHtml = drops.length ? drops.map(drop => {
                 let got = this.hasObtainedItem(drop.id);
@@ -3176,6 +3186,7 @@ const game = {
             (map.monsters || []).forEach(monster => {
                 (monster.drops || []).forEach(drop => {
                     if (!drop || drop.id !== itemId) return;
+                    if (monster.isBoss && this.isBossTrashDrop(drop.id)) return;
                     sources.push({
                         mapId,
                         mapName: map.name,
@@ -3296,7 +3307,7 @@ const game = {
     },
     renderDataSearchMonsterResult: function(result) {
         let monster = result.monster;
-        let drops = (monster.drops || []).filter(drop => drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id));
+        let drops = (monster.drops || []).filter(drop => drop && ITEMS[drop.id] && !this.isRemovedSystemItem(drop.id) && !(monster.isBoss && this.isBossTrashDrop(drop.id)));
         drops.sort((a, b) => (Number(b.rate) || 0) - (Number(a.rate) || 0));
         let dropHtml = drops.length ? drops.slice(0, 14).map(drop => {
             let def = ITEMS[drop.id];
@@ -5924,8 +5935,21 @@ const game = {
         return d;
     },
 
-    forceLeaveHiddenValley: function() {
+    getHiddenValleyReturnFee: function() {
+        return Math.min(250000, Math.max(50000, Math.floor((this.state.level || 1) * 3000)));
+    },
+    getHiddenValleyReturnKillLimit: function() {
+        return 120;
+    },
+    hasHiddenValleyAccess: function() {
+        return this.state.level <= 13 || Math.max(0, parseInt(this.state.hiddenValleyReturnPassKills) || 0) > 0;
+    },
+    clearHiddenValleyReturnPass: function() {
+        this.state.hiddenValleyReturnPassKills = 0;
+    },
+    forceLeaveHiddenValley: function(message = '您已超過13等，警衛將您帶到銀騎士村') {
         this.stopBattle();
+        this.clearHiddenValleyReturnPass();
         this.state.currentMap = 'knight_village';
         this.state.targetMonster = null;
         let mapSel = document.getElementById('map-select');
@@ -5933,7 +5957,7 @@ const game = {
         document.getElementById('target-name').innerText = '尋找目標中...';
         document.getElementById('target-name').className = 'c-err font-bold text-2xl mb-4';
         document.getElementById('target-hp-container').classList.add('hidden');
-        this.logSystem('您已超過13等，警衛將您帶到銀騎士村', 'danger');
+        this.logSystem(message, 'danger');
         this.updateUI();
         clearTimeout(this.state.mapChangeLoop);
         this.state.mapChangeLoop = setTimeout(() => this.startBattle(), 1000);
@@ -5941,8 +5965,19 @@ const game = {
 
     changeMap: function(mapId) {
         if (mapId === 'hidden_valley' && this.state.level > 13) {
-            this.forceLeaveHiddenValley();
-            return;
+            let fee = this.getHiddenValleyReturnFee();
+            if (this.state.currentMap !== 'hidden_valley' || !this.hasHiddenValleyAccess()) {
+                if (this.state.adena < fee) {
+                    let mapSel = document.getElementById('map-select');
+                    if (mapSel) mapSel.value = this.state.currentMap;
+                    this.logSystem(`回訪隱藏之谷需要 ${fee.toLocaleString()} 金幣。`, 'danger');
+                    return;
+                }
+                this.state.adena -= fee;
+                this.state.hiddenValleyReturnPassKills = this.getHiddenValleyReturnKillLimit();
+                if (!this.state.hiddenValleyArubaDefeated) this.state.hiddenValleyArubaSummoned = false;
+                this.logSystem(`支付 ${fee.toLocaleString()} 金幣取得隱藏之谷回訪許可，可補圖鑑 ${this.state.hiddenValleyReturnPassKills} 隻。`, 'reward');
+            }
         }
         if (mapId === 'antaras_lair' && this.state.antarasDeadUntil && Date.now() < this.state.antarasDeadUntil) {
             this.stopBattle();
@@ -5962,6 +5997,7 @@ const game = {
             return;
         }
 
+        if (this.state.currentMap === 'hidden_valley' && mapId !== 'hidden_valley') this.clearHiddenValleyReturnPass();
         this.state.currentMap = mapId;
         this.logSystem(`移動到了 ${MAPS[mapId].name}。`);
         this.stopBattle();
@@ -5974,7 +6010,7 @@ const game = {
     },
     spawnMonster: function() {
         if(this.state.hp <= 0) return;
-        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) {
+        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13 && !this.hasHiddenValleyAccess()) {
             this.forceLeaveHiddenValley();
             return;
         }
@@ -6632,7 +6668,7 @@ if(Math.random()*100 <= this.getER()) {
         const trashIds = [
             'dagger_orc','short_sword_orc','broadsword','club','long_sword','short_sword_gnome','fauchard','battle_axe','giant_axe','berserk_axe','broad_spear',
             'helm_orc','ring_mail_orc','chain_mail_orc','boots_short','boots_long','shield_small','studded_leather','scale_mail','orc_cloak','cloak_gnome','shield_gnome',
-            'shield_large','arkai_shield','steel_helmet','armor_rattan','armor_bronze','gloves_normal','armor_metal','armor_crystal','shield_skeleton','armor_skeleton','helm_skeleton',
+            'shield_large','arkai_shield','steel_helmet','armor_rattan','armor_bronze','gloves_normal','armor_metal','shield_skeleton','armor_skeleton','helm_skeleton',
             'bow_short','bow_normal','bow_orc','leather_jacket'
         ];
         return trashIds.includes(itemId);
@@ -6782,7 +6818,16 @@ if(Math.random()*100 <= this.getER()) {
         
         this.state.targetMonster = null;
         this.checkLevelUp();
+        let hiddenValleyReturnExpired = false;
+        if (this.state.currentMap === 'hidden_valley' && this.state.level > 13 && this.state.hiddenValleyReturnPassKills > 0) {
+            this.state.hiddenValleyReturnPassKills = Math.max(0, this.state.hiddenValleyReturnPassKills - 1);
+            hiddenValleyReturnExpired = this.state.hiddenValleyReturnPassKills <= 0;
+        }
         this.updateUI();
+        if (hiddenValleyReturnExpired) {
+            this.forceLeaveHiddenValley('隱藏之谷回訪許可已用完，警衛將你帶回銀騎士村。');
+            return;
+        }
         
         if (this.state.currentMap === 'antaras_lair' && m.id === 'antaras') {
             setTimeout(() => { if(this.state.isPlaying) this.spawnMonster(); }, 1000);
@@ -6847,7 +6892,7 @@ if(Math.random()*100 <= this.getER()) {
             this.renderSkills();
             this.checkAchievements();
             this.updateUI();
-            if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) this.forceLeaveHiddenValley();
+            if (this.state.currentMap === 'hidden_valley' && this.state.level > 13 && !this.hasHiddenValleyAccess()) this.forceLeaveHiddenValley();
         }
         return leveled;
     },
@@ -7061,6 +7106,12 @@ if(Math.random()*100 <= this.getER()) {
         this.advanceBackgroundBuffs(seconds);
 
         if (this.state.currentMap === 'hidden_valley' && this.state.level > 13) {
+            if (this.hasHiddenValleyAccess()) {
+                this.logSystem('隱藏之谷回訪不進行背景補算，請在頁面開啟時手動補圖鑑。', 'warn');
+                this.updateUI();
+                this.persistActiveTimestamp();
+                return { seconds, kills: 0 };
+            }
             this.forceLeaveHiddenValley();
             this.persistActiveTimestamp();
             return { seconds, kills: 0 };
