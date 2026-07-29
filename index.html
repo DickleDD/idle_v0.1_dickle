@@ -242,6 +242,11 @@
                 </div>
                 <div id="tab-shop" class="flex-1 flex flex-col h-full overflow-hidden hidden">
                     <div class="flex-1 overflow-y-auto custom-scroll pr-2">
+                        <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">最近出售與買回</div>
+                        <div class="mb-8 c-sys bg-gray-900 p-4 rounded border border-gray-800">
+                            <div class="text-sm mb-3">出售後 10 分鐘內可用原售價買回，強化值與祝福狀態都會保留。</div>
+                            <div id="shop-buyback-list" class="grid grid-cols-1 gap-2"></div>
+                        </div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">消耗品商店</div>
                         <div class="mb-4 c-sys bg-gray-900 p-4 rounded border border-gray-800">
                             <div class="flex flex-wrap items-center gap-3">
@@ -299,6 +304,7 @@
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">卡立普碎片交換</div>
                         <div id="kalip-fragment-exchange-list" class="grid grid-cols-1 gap-3 mb-8"></div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">傲慢之塔戰利品製作</div>
+                        <div class="c-sys text-sm mb-3">所有裝備製作皆有 1% 機率產出受祝福版本。</div>
                         <div id="tower-craft-list" class="grid grid-cols-1 gap-3 mb-8"></div>
                         <div class="c-title mb-3 border-b border-gray-800 pb-2 text-xl">龍鱗盔甲製作</div>
                         <div class="grid grid-cols-1 gap-3 mb-8">
@@ -2188,6 +2194,7 @@ const game = {
         pets: {}, activePet: null, petProtectMode: false,
         companions: {}, activeCompanion: null, companionSeq: 0,
         adventure: { obtainedItems: {}, mapStats: {}, achievements: {} },
+        buybackItems: [], buybackSeq: 0,
         settings: { autoHpThreshold: 5, autoHpType: 'potion_red', autoBuyHp: false, autoPetHpThreshold: 30, autoPetHpType: 'potion_red', autoBuyMp: false, autoBuyWis: false, autoBuyHaste: false, autoBuySecondHaste: false, autoAttack: 'none', autoAttackMpThreshold: 0, autoBuffs: [], autoHealSpell: 'none', autoHealThreshold: 50, autoMpSkill: 'none', autoMpSkillThreshold: 20 },
         currentMap: 'hidden_valley', targetMonster: null,
         battleLoop: null, monsterLoop: null, magicLoop: null, petLoop: null, companionLoop: null, regenLoop: null, tickLoop: null, mapChangeLoop: null,
@@ -2333,6 +2340,7 @@ const game = {
         this.ensureAdventureState();
         this.ensureCompanionState();
         this.ensureTowerProgressState();
+        this.ensureBuybackState();
         this.normalizeElixirStats();
         return {
             classId: this.state.classId, level: this.state.level, exp: this.state.exp, adena: this.state.adena,
@@ -2344,6 +2352,7 @@ const game = {
             pets: this.state.pets, activePet: this.state.activePet,
             companions: this.state.companions || {}, activeCompanion: this.state.activeCompanion || null, companionSeq: this.state.companionSeq || 0,
             adventure: this.state.adventure,
+            buybackItems: this.state.buybackItems, buybackSeq: this.state.buybackSeq || 0,
             settings: this.state.settings, currentMap: this.state.currentMap, antarasDeadUntil: this.state.antarasDeadUntil, hiddenValleyArubaDefeated: this.state.hiddenValleyArubaDefeated, hiddenValleyArubaSummoned: this.state.hiddenValleyArubaSummoned, hiddenValleyReturnPassKills: this.state.hiddenValleyReturnPassKills || 0
         };
     },
@@ -2505,6 +2514,9 @@ const game = {
                 }
                 this.state.activeCompanion = savedData.activeCompanion && this.state.companions[savedData.activeCompanion] ? savedData.activeCompanion : null;
                 this.ensureCompanionState();
+                this.state.buybackItems = Array.isArray(savedData.buybackItems) ? savedData.buybackItems : [];
+                this.state.buybackSeq = Math.max(0, parseInt(savedData.buybackSeq) || 0);
+                this.ensureBuybackState();
                 this.state.adventure = savedData.adventure || {};
                 this.ensureAdventureState();
                 this.state.currentMap = savedData.currentMap || 'hidden_valley';
@@ -2621,7 +2633,7 @@ const game = {
         if(tabId === 'magic') this.renderSkills();
         if(tabId === 'pet') this.renderPets();
         if(tabId === 'companion') this.renderCompanions();
-        if(tabId === 'shop') { this.renderGemExchange(); this.renderKalipFragmentExchange(); this.renderTowerCrafts(); this.renderShopPrices(); this.renderShopBulkBuy(); }
+        if(tabId === 'shop') { this.renderBuyback(); this.renderGemExchange(); this.renderKalipFragmentExchange(); this.renderTowerCrafts(); this.renderShopPrices(); this.renderShopBulkBuy(); }
         if(tabId === 'records') this.renderAdventureRecords();
         if(tabId === 'settings') this.updateSettingsUI();
     },
@@ -3967,6 +3979,8 @@ const game = {
         this.state.companions = {};
         this.state.activeCompanion = null;
         this.state.companionSeq = 0;
+        this.state.buybackItems = [];
+        this.state.buybackSeq = 0;
         this.ensureCompanionState();
         this.state.currentMap = 'hidden_valley';
         this.state.hiddenValleyArubaDefeated = false;
@@ -4622,7 +4636,7 @@ const game = {
     getItemKey: function(itemId, enchant, isBlessed = false) {
         return `${itemId}_${enchant}_${isBlessed}`;
     },
-    addInventory: function(itemId, count, enchant = 0, isBlessed = false, silentRecord = false) {
+    addInventory: function(itemId, count, enchant = 0, isBlessed = false, silentRecord = false, skipRecord = false) {
         let def = ITEMS[itemId];
         if(!def) return;
         if(this.isRemovedSystemItem(itemId)) return;
@@ -4632,7 +4646,7 @@ const game = {
         let key = this.getItemKey(itemId, enchant, isBlessed);
         if(this.state.inventory[key]) this.state.inventory[key].count += count;
         else this.state.inventory[key] = { itemId: itemId, enchant: Number(enchant), count: count, isBlessed: isBlessed };
-        this.recordItemObtained(itemId, count, silentRecord);
+        if (!skipRecord) this.recordItemObtained(itemId, count, silentRecord);
         if(!this.state.isPlaying) return;
         this.renderInventory();
     },
@@ -5080,6 +5094,122 @@ const game = {
         return Math.max(0, item.count - equippedCount);
     },
 
+    getBuybackWindowMs: function() {
+        return 10 * 60 * 1000;
+    },
+
+    ensureBuybackState: function() {
+        const now = Date.now();
+        const cutoff = now - this.getBuybackWindowMs();
+        const source = Array.isArray(this.state.buybackItems) ? this.state.buybackItems : [];
+        const normalized = [];
+        source.forEach(row => {
+            if (!row || !ITEMS[row.itemId] || this.isRemovedSystemItem(row.itemId)) return;
+            const soldAt = Math.max(0, parseInt(row.soldAt) || 0);
+            const count = Math.max(0, parseInt(row.count) || 0);
+            const unitPrice = Math.max(0, parseInt(row.unitPrice) || 0);
+            if (soldAt <= cutoff || count <= 0 || unitPrice <= 0) return;
+            normalized.push({
+                id: Math.max(1, parseInt(row.id) || 1),
+                itemId: row.itemId,
+                enchant: Math.max(0, parseInt(row.enchant) || 0),
+                isBlessed: !!row.isBlessed,
+                count,
+                unitPrice,
+                soldAt
+            });
+        });
+        normalized.sort((a, b) => b.soldAt - a.soldAt || b.id - a.id);
+        this.state.buybackItems = normalized.slice(0, 100);
+        const highestId = this.state.buybackItems.reduce((max, row) => Math.max(max, row.id), 0);
+        this.state.buybackSeq = Math.max(highestId, parseInt(this.state.buybackSeq) || 0);
+        return this.state.buybackItems;
+    },
+
+    recordBuybackSale: function(item, count, unitPrice) {
+        if (!item || !ITEMS[item.itemId]) return;
+        const sellCount = Math.max(0, parseInt(count) || 0);
+        const price = Math.max(0, parseInt(unitPrice) || 0);
+        if (sellCount <= 0 || price <= 0) return;
+        this.ensureBuybackState();
+        this.state.buybackSeq = Math.max(0, parseInt(this.state.buybackSeq) || 0) + 1;
+        this.state.buybackItems.unshift({
+            id: this.state.buybackSeq,
+            itemId: item.itemId,
+            enchant: Math.max(0, parseInt(item.enchant) || 0),
+            isBlessed: !!item.isBlessed,
+            count: sellCount,
+            unitPrice: price,
+            soldAt: Date.now()
+        });
+        if (this.state.buybackItems.length > 100) this.state.buybackItems.length = 100;
+    },
+
+    renderBuyback: function() {
+        const list = document.getElementById('shop-buyback-list');
+        if (!list) return;
+        const rows = this.ensureBuybackState();
+        if (rows.length === 0) {
+            list.innerHTML = '<div class="text-sm c-sys italic">最近 10 分鐘沒有可買回的物品。</div>';
+            return;
+        }
+        const now = Date.now();
+        list.innerHTML = rows.map(row => {
+            const def = ITEMS[row.itemId];
+            const name = this.getDisplayName(row, def);
+            const colorClass = this.getItemColorClass(row, def);
+            const remainingSeconds = Math.max(1, Math.ceil((row.soldAt + this.getBuybackWindowMs() - now) / 1000));
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = String(remainingSeconds % 60).padStart(2, '0');
+            const allPrice = row.unitPrice * row.count;
+            const allButton = row.count > 1
+                ? `<button class="btn-ui !px-3 !py-1 c-warn" onclick="game.buybackItem(${row.id}, 'all')">全部買回</button>`
+                : '';
+            return `<div class="list-item gap-3">
+                <div class="min-w-0">
+                    <div class="${colorClass}">${name} x${row.count}</div>
+                    <div class="text-xs c-sys">剩餘 ${minutes}:${seconds}，單價 ${row.unitPrice.toLocaleString()}，全數 ${allPrice.toLocaleString()} 金幣</div>
+                </div>
+                <div class="flex flex-wrap justify-end gap-2 shrink-0">
+                    <button class="btn-ui !px-3 !py-1 c-success" onclick="game.buybackItem(${row.id}, 1)">買回${row.count > 1 ? ' 1 個' : ''}</button>
+                    ${allButton}
+                </div>
+            </div>`;
+        }).join('');
+    },
+
+    buybackItem: function(entryId, quantity = 1) {
+        const rows = this.ensureBuybackState();
+        const row = rows.find(entry => entry.id === parseInt(entryId));
+        if (!row) {
+            this.logSystem('這筆買回紀錄已超過 10 分鐘。', 'danger');
+            this.renderBuyback();
+            return;
+        }
+        const def = ITEMS[row.itemId];
+        const count = quantity === 'all' ? row.count : Math.max(1, Math.min(row.count, parseInt(quantity) || 1));
+        const totalPrice = row.unitPrice * count;
+        if (def.unique && Object.values(this.state.inventory).some(item => item && item.itemId === row.itemId)) {
+            this.logSystem(`${def.name} 為唯一物品，持有期間無法再次買回。`, 'danger');
+            return;
+        }
+        if ((this.state.adena || 0) < totalPrice) {
+            this.logSystem(`金幣不足，買回 ${this.getDisplayName(row, def)} 需要 ${totalPrice.toLocaleString()} 金幣。`, 'danger');
+            return;
+        }
+        this.state.adena -= totalPrice;
+        this.addInventory(row.itemId, count, row.enchant, row.isBlessed, true, true);
+        row.count -= count;
+        if (row.count <= 0) this.state.buybackItems = this.state.buybackItems.filter(entry => entry.id !== row.id);
+        this.logSystem(`買回了 ${this.getDisplayName(row, def)}${count > 1 ? ` x${count}` : ''}，花費 ${totalPrice.toLocaleString()} 金幣。`, row.isBlessed ? 'blessed' : 'reward');
+        this.updateUI();
+        this.renderInventory();
+        this.renderBuyback();
+        this.renderGemExchange();
+        this.renderKalipFragmentExchange();
+        this.renderTowerCrafts();
+    },
+
     sellBulkItems: function(label, matcher, priceGetter, preserveNote) {
         let totalPrice = 0;
         let totalCount = 0;
@@ -5103,7 +5233,10 @@ const game = {
         let message = '確定要出售 ' + totalCount + ' 件' + label + '，獲得 ' + totalPrice + ' 金幣嗎？';
         if (preserveNote) message += '\n' + preserveNote;
         if (!confirm(message)) return;
-        targets.forEach(t => this.removeInventory(t.key, t.count));
+        targets.forEach(t => {
+            this.recordBuybackSale(this.state.inventory[t.key], t.count, t.price);
+            this.removeInventory(t.key, t.count);
+        });
         this.state.adena += totalPrice;
         this.logSystem('一鍵出售 ' + totalCount + ' 件' + label + '，獲得 ' + totalPrice + ' 金幣。', 'reward');
         this.updateUI();
@@ -5111,6 +5244,7 @@ const game = {
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
         this.renderTowerCrafts();
+        this.renderBuyback();
     },
 
     sellAllNonAccessoryEquipment: function() {
@@ -5187,6 +5321,7 @@ const game = {
         let item = this.state.inventory[itemKey];
         if(!item) return;
         let def = ITEMS[item.itemId];
+        this.recordBuybackSale(item, 1, price);
         this.removeInventory(itemKey, 1);
         this.state.adena += price;
         this.logSystem(`賣出了 ${this.getDisplayName(item, def)}，獲得 ${price} 金幣。`, 'reward');
@@ -5195,6 +5330,7 @@ const game = {
         this.renderGemExchange();
         this.renderKalipFragmentExchange();
         this.renderTowerCrafts();
+        this.renderBuyback();
     },
 
     discardItem: function(itemKey) {
@@ -5681,6 +5817,18 @@ const game = {
             `);
         });
     },
+    addCraftedEquipment: function(itemId, messagePrefix = '製作完成') {
+        const def = ITEMS[itemId];
+        if (!def) return false;
+        const equipmentTypes = ['weapon','helmet','tshirt','armor','shield','cloak','boots','leggings','gloves','amulet','earring','belt','ring','quiver'];
+        const isBlessed = equipmentTypes.includes(def.type) && !def.isBlessed && Math.random() < 0.01;
+        this.addInventory(itemId, 1, 0, isBlessed);
+        const craftedItem = { itemId, enchant: 0, isBlessed };
+        const displayName = this.getDisplayName(craftedItem, def);
+        const suffix = isBlessed ? '！製作時綻放出祝福金光！' : '。';
+        this.logSystem(`${messagePrefix}：${displayName}${suffix}`, isBlessed ? 'blessed' : 'reward');
+        return isBlessed;
+    },
     craftTowerItem: function(recipeId) {
         let recipe = TOWER_OF_INSOLENCE_CRAFTS.find(row => row.id === recipeId);
         if (!recipe || !ITEMS[recipe.result]) return;
@@ -5695,8 +5843,7 @@ const game = {
         }
         Object.entries(recipe.materials || {}).forEach(([itemId, count]) => this.removeItemById(itemId, count));
         if (recipe.adena) this.state.adena -= recipe.adena;
-        this.addInventory(recipe.result, 1, 0, false);
-        this.logSystem(`傲慢之塔戰利品製作完成：${ITEMS[recipe.result].name}。`, 'reward');
+        this.addCraftedEquipment(recipe.result, '傲慢之塔戰利品製作完成');
         this.renderTowerCrafts();
         this.renderInventory();
         this.updateUI();
@@ -5708,8 +5855,7 @@ const game = {
         }
         this.removeItemById('ancient_scroll', 1);
         this.removeItemById(sealedId, 1);
-        this.addInventory(resultId, 1, 0, false);
-        this.logSystem(`製作完成：${ITEMS[resultId].name}。`, 'reward');
+        this.addCraftedEquipment(resultId);
         this.renderInventory();
         this.updateUI();
     },
@@ -5730,8 +5876,7 @@ const game = {
         }
         this.removeItemById(scaleId, requiredScaleCount);
         this.state.adena -= requiredAdena;
-        this.addInventory(armorId, 1, 0, false);
-        this.logSystem(`製作完成：${armorDef.name}。`, 'reward');
+        this.addCraftedEquipment(armorId);
         this.renderInventory();
         this.updateUI();
     },
