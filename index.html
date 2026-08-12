@@ -7959,6 +7959,10 @@ Object.assign(game, {
         const settings = { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS, ...(raw.settings || {}) };
         settings.autoHpThreshold = Math.max(1, Math.min(100, parseInt(settings.autoHpThreshold) || COMPANION_DEFAULT_CONSUMABLE_SETTINGS.autoHpThreshold));
         if (!ITEMS[settings.autoHpType] || ITEMS[settings.autoHpType].type !== 'potion_hp') settings.autoHpType = 'potion_red';
+        const legacyBehavior = ['attack','burst','support'].includes(raw.behavior) ? raw.behavior : 'attack';
+        const integratedMode = raw.companionModeV2 === true || raw.behavior === 'combined';
+        let autoSkill = raw.autoSkill && spells.includes(raw.autoSkill) && SPELLS[raw.autoSkill]?.type === 'attack' ? raw.autoSkill : 'none';
+        if (!integratedMode && legacyBehavior !== 'burst') autoSkill = 'none';
         const companion = {
             id: raw.id || fallbackId || `comp_${Date.now()}`,
             name: raw.name || '無名隊友',
@@ -7972,8 +7976,9 @@ Object.assign(game, {
             learnedSpells: spells.slice(),
             equipment,
             locked: !!raw.locked,
-            behavior: ['attack','burst','support'].includes(raw.behavior) ? raw.behavior : 'attack',
-            autoSkill: raw.autoSkill && spells.includes(raw.autoSkill) ? raw.autoSkill : 'none',
+            behavior: 'combined',
+            companionModeV2: true,
+            autoSkill,
             autoSpells,
             hp: Math.max(1, parseInt(raw.hp) || 1),
             mp: Math.max(0, parseInt(raw.mp) || 0),
@@ -8075,8 +8080,7 @@ Object.assign(game, {
         const attackOptions = this.getCompanionSkillOptions(c);
         const autoOptions = this.getCompanionAutoSpellOptions(c);
         const buffText = this.getCompanionBuffNames(c).join(' / ') || '無';
-        const behaviorText = { attack: '攻擊模式', burst: '強力攻擊模式', support: '輔助模式' }[c.behavior] || '攻擊模式';
-        const skillText = c.behavior === 'burst' ? (c.autoSkill && c.autoSkill !== 'none' ? (SPELLS[c.autoSkill]?.name || c.autoSkill) : '無') : '僅強力攻擊模式使用';
+        const skillText = c.autoSkill && c.autoSkill !== 'none' ? (SPELLS[c.autoSkill]?.name || c.autoSkill) : '無（使用普攻）';
         const statText = COMPANION_STATS.map(stat => `${this.getStatLabel(stat)} ${c.stats[stat]}`).join(' / ');
         const learnedText = learnedSpells.length ? learnedSpells.map(id => SPELLS[id]?.name || id).join('、') : '尚未學習';
         const autoText = c.autoSpells?.length ? c.autoSpells.map(id => SPELLS[id]?.name || id).join('、') : '未勾選';
@@ -8088,7 +8092,7 @@ Object.assign(game, {
                         <div class="${this.getCompanionRarityClass(c.rarity)} font-bold text-lg">${c.name} <span class="text-xs c-sys">${CLASSES[c.classId].name}</span></div>
                         <div class="text-xs c-sys">出戰中 / ${c.rarity} / Lv.${this.getCompanionLevel(c)}</div>
                     </div>
-                    <div class="text-xs c-info text-right">${behaviorText}<br>攻擊技能：${skillText}</div>
+                    <div class="text-xs c-info text-right">輔助與攻擊整合<br>攻擊技能：${skillText}</div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                     <div class="flex items-center">體力:<div class="bar-container flex-1"><div class="bar-fill hp" style="width:${Math.max(0, vitals.hp / maxHp * 100)}%;"></div><span class="bar-text">${Math.floor(vitals.hp)}/${maxHp}</span></div></div>
@@ -8098,8 +8102,8 @@ Object.assign(game, {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-1 text-xs mt-2 c-sys">
                     <div>能力：${statText}</div>
                     <div>狀態：${buffText}</div>
-                    <div>強力攻擊可選：${attackOptions.length ? attackOptions.map(id => SPELLS[id]?.name || id).join('、') : '無'}</div>
-                    <div>自動施法：${autoOptions.length ? autoText : '無可用輔助/補血'}</div>
+                    <div>攻擊技能可選：${attackOptions.length ? attackOptions.map(id => SPELLS[id]?.name || id).join('、') : '無'}</div>
+                    <div>輔助技能：${autoOptions.length ? autoText : '無可用輔助/補血'}</div>
                     <div class="lg:col-span-2">技能：${learnedText}</div>
                     <div class="lg:col-span-2">裝備：${equipText}</div>
                     <div class="lg:col-span-2">消耗品：HP ${settings.autoHpThreshold}% / ${ITEMS[settings.autoHpType]?.name || '治癒藥水'} / 補買 ${settings.autoBuyHp ? '開' : '關'} / 藍水 ${settings.autoBuyMp ? '開' : '關'} / 慎重 ${settings.autoBuyWis ? '開' : '關'} / 加速 ${settings.autoBuyHaste ? '開' : '關'} / 二段 ${settings.autoBuySecondHaste ? '開' : '關'}</div>
@@ -8297,7 +8301,8 @@ Object.assign(game, {
             const def = ITEMS[item.itemId];
             if (!def) return;
             stats.ac += def.ac || 0;
-            stats.hit += def.hit || 0;
+            stats.hit += (def.hit || 0) + (def.type === 'weapon' ? Number(item.enchant || 0) : 0);
+            if (item.isBlessed && def.type === 'weapon') stats.hit += 1;
             stats.dmg += (def.dmg || 0) + (def.type === 'weapon' ? Number(item.enchant || 0) : 0);
             if (item.isBlessed && def.type !== 'weapon') stats.dr += 1;
         });
@@ -8389,11 +8394,9 @@ Object.assign(game, {
         const statText = COMPANION_STATS.map(stat => `${this.getStatLabel(stat)} ${c.stats[stat]}`).join(' / ');
         const learnedSpells = this.getCompanionLearnedSpells(c);
         const skillOptions = this.getCompanionSkillOptions(c).map(id => `<option value="${id}" ${c.autoSkill === id ? 'selected' : ''}>${SPELLS[id].name}</option>`).join('');
-        const skillControl = c.behavior === 'burst'
-            ? `<select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm max-w-[180px]" onchange="game.setCompanionSkill('${c.id}', this.value)">
-                        <option value="none">攻擊技能：無</option>${skillOptions}
-                    </select>`
-            : '<span class="text-xs c-sys border border-gray-700 rounded px-2 py-1">攻擊技能僅強力攻擊模式可設定</span>';
+        const skillControl = `<select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm max-w-[220px]" onchange="game.setCompanionSkill('${c.id}', this.value)">
+                    <option value="none">無（使用普通攻擊）</option>${skillOptions}
+                </select>`;
         const autoSpellOptions = this.getCompanionAutoSpellOptions(c);
         const autoSpellRows = autoSpellOptions.length
             ? autoSpellOptions.map(id => `<label class="cursor-pointer hover:text-white"><input type="checkbox" class="w-3 h-3 align-middle" ${c.autoSpells?.includes(id) ? 'checked' : ''} onchange="game.toggleCompanionAutoSpell('${c.id}','${id}', this.checked)"> ${SPELLS[id].name}</label>`).join('')
@@ -8415,19 +8418,15 @@ Object.assign(game, {
                 </div>
                 <div class="text-xs c-sys mt-2">${statText}</div>
                 <div class="text-xs c-info mt-2">技能：${learnedSpells.length ? learnedSpells.map(id => SPELLS[id]?.name || id).join('、') : '尚未學習'}</div>
-                <div class="mt-2 flex flex-wrap gap-2 items-center">
-                    <select class="bg-black border border-gray-600 text-white py-1 px-2 rounded text-sm" onchange="game.setCompanionBehavior('${c.id}', this.value)">
-                        <option value="attack" ${c.behavior === 'attack' ? 'selected' : ''}>攻擊模式</option>
-                        <option value="burst" ${c.behavior === 'burst' ? 'selected' : ''}>強力攻擊模式</option>
-                        <option value="support" ${c.behavior === 'support' ? 'selected' : ''}>輔助模式</option>
-                    </select>
+                <div class="mt-2">
+                    <div class="c-err text-xs font-bold mb-1">攻擊技能</div>
                     ${skillControl}
                 </div>
                 <div class="mt-2 text-xs c-sys">
-                    <div class="c-info mb-1">自動施法</div>
+                    <div class="c-info font-bold mb-1">輔助技能</div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2">${autoSpellRows}</div>
                     <div class="mt-2 border-t border-gray-800 pt-2 leading-relaxed">
-                        攻擊模式：自動施法後普攻。強力攻擊：自動施法後使用選定攻擊技能，MP 不足改普攻。輔助模式：只會使用上方已勾選的補血與輔助狀態，沒有可用技能才普攻。一般補血看玩家 HP 低於 72%；生命的祝福會看玩家、寵物或隊友任一方低於 72%。
+                        隊友會優先補血與維持勾選的輔助效果，空窗期使用選定的攻擊技能；MP 不足或未選攻擊技能時改為普攻。一般治癒在玩家 HP 低於 72% 時使用；生命的祝福會檢查玩家、寵物與隊友。
                     </div>
                 </div>
                 <div class="mt-2 border-t border-gray-700 pt-2 text-xs c-sys space-y-2">
@@ -8511,13 +8510,14 @@ Object.assign(game, {
     getCompanionEnabledAutoSpellIds: function(c) {
         if (!c) return [];
         this.getCompanionLearnedSpells(c);
-        return Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => c.spells.includes(id) && SPELLS[id]) : [];
+        const allowed = new Set(this.getCompanionAutoSpellOptions(c));
+        return Array.isArray(c.autoSpells) ? c.autoSpells.filter(id => allowed.has(id)) : [];
     },
     toggleCompanionAutoSpell: function(id, spellId, enabled) {
         const c = this.state.companions?.[id];
         if (!c || !SPELLS[spellId]) return;
         this.getCompanionLearnedSpells(c);
-        if (!c.spells.includes(spellId) || SPELLS[spellId].type === 'passive') return;
+        if (!this.getCompanionAutoSpellOptions(c).includes(spellId)) return;
         c.autoSpells = Array.isArray(c.autoSpells) ? c.autoSpells : [];
         if (enabled && !c.autoSpells.includes(spellId)) c.autoSpells.push(spellId);
         if (!enabled) c.autoSpells = c.autoSpells.filter(id => id !== spellId);
@@ -8526,15 +8526,20 @@ Object.assign(game, {
     setCompanionBehavior: function(id, behavior) {
         const c = this.state.companions?.[id];
         if (!c || !['attack','burst','support'].includes(behavior)) return;
-        c.behavior = behavior;
+        c.behavior = 'combined';
+        c.companionModeV2 = true;
         if (behavior === 'burst' && (!c.autoSkill || c.autoSkill === 'none')) c.autoSkill = this.getCompanionSkillOptions(c)[0] || 'none';
+        if (behavior !== 'burst') c.autoSkill = 'none';
         this.renderCompanions();
     },
     setCompanionSkill: function(id, skillId) {
         const c = this.state.companions?.[id];
         if (!c) return;
         this.getCompanionLearnedSpells(c);
-        c.autoSkill = skillId && c.spells.includes(skillId) ? skillId : 'none';
+        c.autoSkill = this.getCompanionSkillOptions(c).includes(skillId) ? skillId : 'none';
+        c.behavior = 'combined';
+        c.companionModeV2 = true;
+        this.renderCompanionStatus();
     },
     getCompanionSettings: function(c) {
         if (!c) return { ...COMPANION_DEFAULT_CONSUMABLE_SETTINGS };
@@ -8763,7 +8768,6 @@ Object.assign(game, {
             return;
         }
         this.removeInventory(itemKey, 1);
-        if (c.behavior === 'burst' && c.autoSkill === 'none' && this.getCompanionSkillOptions(c).includes(spell.id)) c.autoSkill = spell.id;
         this.logSystem(`${c.name} 學會了 ${spell.name}。`, 'reward');
         this.renderCompanions();
         this.renderInventory();
@@ -8777,11 +8781,12 @@ Object.assign(game, {
         const dice = wDef?.dice || '1d3';
         const buffStr = (c.buffs?.str_buff ? 5 : 0) + (c.buffs?.de_dress_mighty ? 2 : 0);
         const buffDex = c.buffs?.dex_buff ? 5 : 0;
-        let hit = Math.floor((c.stats.str + buffStr + c.stats.dex + buffDex) / 3) + gear.hit + (c.rarity === 'SSR' ? 5 : c.rarity === 'SR' ? 3 : 1);
+        const companionLevel = this.getCompanionLevel(c);
+        const levelProficiency = Math.floor(companionLevel / 15);
+        let hit = Math.floor((c.stats.str + buffStr + c.stats.dex + buffDex) / 3) + gear.hit + levelProficiency + (c.rarity === 'SSR' ? 5 : c.rarity === 'SR' ? 3 : 1);
         if (weaponClass === 'bow' && c.buffs?.elf_triple_arrow) hit += 20;
         if (weaponClass === 'bow' && c.buffs?.elf_storm_shot) hit += 4;
         if (weaponClass === 'bow' && c.buffs?.elf_wind_shot) hit += 2;
-        const companionLevel = this.getCompanionLevel(c);
         const roll = rollDice('1d20');
         let isHit = roll === 20 || (roll !== 1 && roll + hit + companionLevel - this.state.targetMonster.level >= 10 - this.state.targetMonster.ac);
         if (!isHit && roll !== 1 && Math.random() < 0.2) isHit = true;
@@ -8896,20 +8901,33 @@ Object.assign(game, {
         const ids = this.getCompanionEnabledAutoSpellIds(c);
         if (ids.length === 0) return false;
         const companionMaxMp = this.getCompanionMaxMp(c);
+        const heals = ids.filter(id => SPELLS[id]?.type === 'heal');
+        for (const id of heals) {
+            if (this.shouldCompanionUseHealSpell(c, SPELLS[id]) && this.companionCastSpell(c, id, 'support')) return true;
+        }
+        const buffs = ids.filter(id => SPELLS[id]?.type === 'buff');
+        for (const id of buffs) {
+            if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
+        }
+        const converters = ids.filter(id => SPELLS[id]?.type === 'mp_convert');
+        for (const id of converters) {
+            if ((c.mp || 0) <= Math.floor(companionMaxMp * 0.45) && this.companionCastSpell(c, id, 'auto')) return true;
+        }
+        return false;
+    },
+    hasCompanionPendingSupport: function(c) {
+        if (!c) return false;
+        const ids = this.getCompanionEnabledAutoSpellIds(c);
         for (const id of ids) {
             const spell = SPELLS[id];
             if (!spell) continue;
+            if (spell.type === 'heal' && this.shouldCompanionUseHealSpell(c, spell)) return true;
+            if (spell.type === 'buff' && !this.state.buffs[id]) return true;
             if (spell.type === 'mp_convert') {
-                if ((c.mp || 0) <= Math.floor(companionMaxMp * 0.45) && this.companionCastSpell(c, id, 'auto')) return true;
-                continue;
-            }
-            if (spell.type === 'heal') {
-                if (this.shouldCompanionUseHealSpell(c, spell) && this.companionCastSpell(c, id, 'auto')) return true;
-                continue;
-            }
-            if (spell.type === 'buff') {
-                const buffTarget = c.behavior === 'support' ? this.state.buffs : (c.buffs || {});
-                if (!buffTarget[id] && this.companionCastSpell(c, id, 'auto')) return true;
+                const maxHp = this.getCompanionMaxHp(c);
+                const maxMp = this.getCompanionMaxMp(c);
+                const hpCost = Math.max(1, parseInt(spell.hpCost) || 1);
+                if ((c.mp || 0) <= Math.floor(maxMp * 0.45) && (c.hp || 0) > hpCost + Math.floor(maxHp * 0.30)) return true;
             }
         }
         return false;
@@ -8951,13 +8969,12 @@ Object.assign(game, {
         const autoCasted = this.companionAutoCast(c);
         if (autoCasted) {
             // 自動施法消耗本次隊友行動，避免勾選太多技能造成爆發過高。
-        } else if (c.behavior === 'support') {
-            this.companionSupport(c);
-        } else if (c.behavior === 'burst') {
-            if ((!c.autoSkill || c.autoSkill === 'none') && this.getCompanionSkillOptions(c).length) c.autoSkill = this.getCompanionSkillOptions(c)[0];
-            if (!this.companionCastSpell(c, c.autoSkill, 'burst')) this.companionPhysicalAttack(c);
         } else {
-            this.companionPhysicalAttack(c);
+            const attackSkill = this.getCompanionSkillOptions(c).includes(c.autoSkill) ? c.autoSkill : 'none';
+            const supportPending = this.hasCompanionPendingSupport(c);
+            if (attackSkill !== 'none' && !supportPending && this.companionCastSpell(c, attackSkill, 'burst')) {
+                // 輔助空窗期以玩家指定的攻擊技能支援。
+            } else this.companionPhysicalAttack(c);
         }
         const regenStats = this.getCompanionRegenStats(c);
         let hpRegen = Math.max(0, Math.floor((c.stats.con || 8) / 12)) + regenStats.hp;
