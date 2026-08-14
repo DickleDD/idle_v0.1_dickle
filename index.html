@@ -1993,11 +1993,11 @@ const DICKLE_TOWER_OF_INSOLENCE_090 = (() => {
         toi_boss_soul: { name: '傲慢支配者精粹', type: 'quest', dropRate: 0.1, sellPrice: 25000, desc: '傲慢之塔 Boss 殘留的精粹，是製作塔內畢業裝的核心素材。' },
         toi_reaper_core: { name: '死神核心', type: 'quest', dropRate: 0.02, sellPrice: 120000, desc: '死神掉落的最上級素材，可用於製作死神鐮刀。' },
         memory_candle: { name: '回憶蠟燭', type: 'stat_reset', dropRate: 0.015, sellPrice: 50000, desc: '使用後重置可分配能力點，回到職業初始能力，並返還創角點數與 50 級後升級點數。萬能藥效果會保留。' },
-        elixir_str: { name: '萬能藥(力量)', type: 'elixir', stat: 'str', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點力量，最高不超過能力上限。' },
-        elixir_dex: { name: '萬能藥(敏捷)', type: 'elixir', stat: 'dex', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點敏捷，最高不超過能力上限。' },
-        elixir_con: { name: '萬能藥(體質)', type: 'elixir', stat: 'con', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點體質，最高不超過能力上限。' },
-        elixir_int: { name: '萬能藥(智力)', type: 'elixir', stat: 'int', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點智力，最高不超過能力上限。' },
-        elixir_wis: { name: '萬能藥(精神)', type: 'elixir', stat: 'wis', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點精神，最高不超過能力上限。' },
+        elixir_str: { name: '萬能藥(力量)', type: 'elixir', stat: 'str', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點力量，不受 35 點上限限制。' },
+        elixir_dex: { name: '萬能藥(敏捷)', type: 'elixir', stat: 'dex', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點敏捷，不受 35 點上限限制。' },
+        elixir_con: { name: '萬能藥(體質)', type: 'elixir', stat: 'con', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點體質，不受 35 點上限限制。' },
+        elixir_int: { name: '萬能藥(智力)', type: 'elixir', stat: 'int', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點智力，不受 35 點上限限制。' },
+        elixir_wis: { name: '萬能藥(精神)', type: 'elixir', stat: 'wis', dropRate: 0.006, sellPrice: 180000, desc: '使用後永久增加 1 點精神，不受 35 點上限限制。' },
         ring_zenith: { name: '潔尼斯戒指', type: 'ring', safe: 0, ac: -1, mr: 10, hp: 40, dr: 1, dropRate: 0.04, legendary: true, desc: '抗魔、體力與減傷兼具的塔之戒指。' },
         amulet_seer: { name: '幻象眼魔項鍊', type: 'amulet', safe: 0, ac: -1, int: 1, wis: 1, mp: 50, mr: 8, dropRate: 0.04, legendary: true, desc: '讓高智流派更容易突破高 MR 怪物。' },
         cloak_vampire: { name: '吸血鬼斗篷', type: 'cloak', safe: 4, ac: -4, hp: 80, hpRegen: 6, mr: 5, dropRate: 0.035, legendary: true, desc: '提供穩定回血與生命上限，適合長時間掛機。' },
@@ -3882,7 +3882,7 @@ const game = {
         ['str','dex','con','int','wis'].forEach(stat => {
             let value = parseInt(this.state.elixirStats[stat]);
             if (!Number.isFinite(value)) value = 0;
-            this.state.elixirStats[stat] = Math.max(0, Math.min(LEVEL_BONUS_STAT_CAP, value));
+            this.state.elixirStats[stat] = Math.max(0, value);
         });
         return this.state.elixirStats;
     },
@@ -4773,6 +4773,9 @@ const game = {
             } else if(def.type === 'elixir') {
                 actions += `<button class="btn-ui border-blue-700 text-blue-300" onclick="game.showItemDetail('${key}')">詳細</button> `;
                 actions += `<button class="btn-ui c-success border-green-800" onclick="game.useElixir('${key}')">使用</button> `;
+                if (this.state.activeCompanion && this.state.companions?.[this.state.activeCompanion]) {
+                    actions += `<button class="btn-ui c-info border-blue-800" onclick="game.useElixirOnActiveCompanion('${key}')">隊友使用</button> `;
+                }
             } else if(def.type === 'pet_scroll') {
                 actions += `<button class="btn-ui c-info border-blue-800" onclick="game.revivePetWithScroll('${key}')">復活</button> `;
             } else if(def.type === 'pet_fruit') {
@@ -4947,12 +4950,6 @@ const game = {
         this.normalizeBaseStats();
         this.normalizeElixirStats();
         const stat = def.stat;
-        const cap = this.getBonusStatCap();
-        const permanentValue = (parseInt(this.state.baseStats[stat]) || 0) + (parseInt(this.state.elixirStats[stat]) || 0);
-        if (permanentValue >= cap) {
-            this.logSystem(`${this.getStatLabel(stat)} 已達 ${cap} 點上限，無法使用 ${def.name}。`, 'danger');
-            return;
-        }
         const hpRatio = this.state.maxHp > 0 ? this.state.hp / this.state.maxHp : 1;
         const mpRatio = this.state.maxMp > 0 ? this.state.mp / this.state.maxMp : 1;
         this.removeInventory(itemKey, 1);
@@ -4964,6 +4961,37 @@ const game = {
         this.updateUI();
         this.updateSettingsUI();
         this.renderInventory();
+    },
+    useElixirOnActiveCompanion: function(itemKey) {
+        const item = this.state.inventory[itemKey];
+        const def = item && ITEMS[item.itemId];
+        const active = this.getActiveCompanion();
+        if (!item || !def || def.type !== 'elixir' || !['str','dex','con','int','wis'].includes(def.stat)) return;
+        if (!active) {
+            this.logSystem('目前沒有出戰中的隊友。', 'danger');
+            return;
+        }
+        if (!confirm(`確定讓 ${active.name} 使用 ${def.name}？`)) return;
+        const companionId = active.id;
+        const beforeMaxHp = this.getCompanionMaxHp(active);
+        const beforeMaxMp = this.getCompanionMaxMp(active);
+        const hpRatio = beforeMaxHp > 0 ? (active.hp || 0) / beforeMaxHp : 1;
+        const mpRatio = beforeMaxMp > 0 ? (active.mp || 0) / beforeMaxMp : 1;
+        this.removeInventory(itemKey, 1);
+        const companion = this.state.companions?.[companionId];
+        if (!companion) return;
+        const stat = def.stat;
+        companion.stats = companion.stats && typeof companion.stats === 'object' ? companion.stats : { ...CLASSES[companion.classId].baseStats };
+        companion.stats[stat] = Math.max(6, parseInt(companion.stats[stat]) || CLASSES[companion.classId].baseStats[stat] || 8) + 1;
+        const maxHp = this.getCompanionMaxHp(companion);
+        const maxMp = this.getCompanionMaxMp(companion);
+        companion.hp = Math.max(1, Math.min(maxHp, Math.floor(maxHp * hpRatio)));
+        companion.mp = Math.max(0, Math.min(maxMp, Math.floor(maxMp * mpRatio)));
+        this.logSystem(`${companion.name} 使用了 ${def.name}，${this.getStatLabel(stat)} 永久增加 1 點。`, 'reward');
+        this.updateUI();
+        this.renderInventory();
+        this.renderCompanions();
+        this.renderCompanionStatus();
     },
     usePotionOnPet: function(itemKey) {
         const active = this.getActivePetData();
@@ -6021,8 +6049,13 @@ const game = {
         if (this.state.targetMonster.hp <= 0) this.monsterDied();
     },
 
-    calcMagicDmgToMonster: function(base, mrIgnoreRate = 0) {
-        let targetMR = this.getEffectiveMonsterMR(this.state.targetMonster);
+    calcMagicDmgToMonster: function(base, mrIgnoreRate = 0, penetrationRate = null) {
+        let targetMR;
+        if (Number.isFinite(Number(penetrationRate))) {
+            const rawMR = Math.max(0, Number(this.state.targetMonster?.mr || 0));
+            const rate = Math.min(0.95, Math.max(0, Number(penetrationRate)));
+            targetMR = Math.max(0, Math.min(100, Math.floor(rawMR * (1 - rate))));
+        } else targetMR = this.getEffectiveMonsterMR(this.state.targetMonster);
         if (mrIgnoreRate > 0) targetMR = Math.floor(targetMR * (1 - Math.min(0.95, Math.max(0, mrIgnoreRate))));
         let d = Math.max(1, Math.floor(base * (100 - targetMR) / 100));
         let tid = this.state.targetMonster.id;
@@ -7943,7 +7976,7 @@ Object.assign(game, {
         if (!raw || typeof raw !== 'object') return null;
         const classId = CLASSES[raw.classId] ? raw.classId : 'knight';
         const stats = { ...CLASSES[classId].baseStats, ...(raw.stats || {}) };
-        COMPANION_STATS.forEach(stat => stats[stat] = Math.max(6, Math.min(35, parseInt(stats[stat]) || CLASSES[classId].baseStats[stat] || 8)));
+        COMPANION_STATS.forEach(stat => stats[stat] = Math.max(6, parseInt(stats[stat]) || CLASSES[classId].baseStats[stat] || 8));
         let equipment = {};
         COMPANION_EQUIP_SLOTS.forEach(slot => {
             let key = raw.equipment?.[slot] || null;
@@ -8275,6 +8308,7 @@ Object.assign(game, {
         const conBonus = con <= 15 ? 0 : con - 15;
         let hp = cls.hpBase + this.getCompanionLevel(companion) * (cls.hpPerLevel + conBonus);
         Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) hp += ITEMS[this.state.inventory[key].itemId]?.hp || 0; });
+        if (companion.buffs?.soul_ascension) hp *= 1.2;
         return Math.max(1, Math.floor(hp * (companion.rarity === 'SSR' ? 1.12 : companion.rarity === 'SR' ? 1.06 : 1)));
     },
     getCompanionMaxMp: function(companion) {
@@ -8284,14 +8318,24 @@ Object.assign(game, {
         let wisBonus = wis <= 11 ? 0 : Math.floor((wis - 10) / 2);
         let mp = cls.mpBase + this.getCompanionLevel(companion) * Math.max(1, cls.mpPerLevel + wisBonus);
         Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) mp += ITEMS[this.state.inventory[key].itemId]?.mp || 0; });
+        if (companion.buffs?.soul_ascension) mp *= 1.2;
         return Math.max(0, Math.floor(mp * (companion.rarity === 'SSR' ? 1.12 : companion.rarity === 'SR' ? 1.06 : 1)));
     },
     getCompanionMagicDmg: function(companion) {
         const int = companion?.stats?.int || 8;
         let dmg = int >= 20 ? 6 : int >= 18 ? 4 : int >= 16 ? 3 : int >= 14 ? 2 : int >= 12 ? 1 : 0;
+        dmg += Math.max(0, int - 20);
         Object.values(companion.equipment || {}).forEach(key => { if (key && this.state.inventory[key]) dmg += ITEMS[this.state.inventory[key].itemId]?.mDmg || 0; });
         if (companion.buffs?.potion_wisdom) dmg += 2;
         return dmg + Math.floor(this.getCompanionLevel(companion) / 5);
+    },
+    getCompanionMagicPenetrationRate: function(companion) {
+        const int = Math.max(0, parseInt(companion?.stats?.int) || 0);
+        if (int >= 20) return 0.25;
+        if (int >= 18) return 0.18;
+        if (int >= 16) return 0.12;
+        if (int >= 14) return 0.06;
+        return 0;
     },
     getCompanionGearStats: function(companion) {
         let stats = { ac: 0, hit: 0, dmg: 0, dr: 0 };
@@ -8426,7 +8470,7 @@ Object.assign(game, {
                     <div class="c-info font-bold mb-1">輔助技能</div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2">${autoSpellRows}</div>
                     <div class="mt-2 border-t border-gray-800 pt-2 leading-relaxed">
-                        隊友會優先補血與維持勾選的輔助效果，空窗期使用選定的攻擊技能；MP 不足或未選攻擊技能時改為普攻。一般治癒在玩家 HP 低於 72% 時使用；生命的祝福會檢查玩家、寵物與隊友。
+                        隊友會優先治療血量低於 72% 的玩家、寵物或自己，並分別為玩家與自己維持勾選的輔助效果。輔助空窗期使用選定的攻擊技能；MP 不足或未選攻擊技能時改為普攻。
                     </div>
                 </div>
                 <div class="mt-2 border-t border-gray-700 pt-2 text-xs c-sys space-y-2">
@@ -8819,11 +8863,89 @@ Object.assign(game, {
         if (this.state.targetMonster.hp <= 0) this.monsterDied();
         return true;
     },
+    getCompanionSpellCost: function(companion, spell) {
+        const baseCost = Math.max(0, Number(spell?.mp || 0));
+        if (baseCost <= 0) return 0;
+        const int = Math.max(0, parseInt(companion?.stats?.int) || 0);
+        const tier = int >= 20 ? 20 : int >= 18 ? 18 : int >= 16 ? 16 : int >= 14 ? 14 : 0;
+        let reduction = tier >= 20 ? 4 : tier >= 18 ? 3 : tier >= 16 ? 2 : tier >= 14 ? 1 : 0;
+        if (spell.level >= 5 && tier >= 18) reduction += 1;
+        if (spell.level >= 6 && tier >= 20) reduction += 1;
+        if (companion?.classId === 'wizard' && spell.level >= 10) reduction += 6 + Math.floor(Math.max(0, int - 18) / 2);
+        return Math.max(1, baseCost - reduction);
+    },
+    getCompanionAttackSpellDamageHits: function(c, spell) {
+        const magicDmg = this.getCompanionMagicDmg(c);
+        const penetration = this.getCompanionMagicPenetrationRate(c);
+        const spellLevelBonus = Math.max(0, (parseInt(spell.level) || 1) - 1) * 2;
+        let hits = 1;
+        let diceExp = spell.dice || null;
+        let baseDmg = spell.baseDmg || 0;
+        let lastHitBonus = magicDmg;
+        if (spell.id === 'fireball') { hits = 3; diceExp = '1d16'; baseDmg = 0; }
+        else if (spell.id === 'lightning_storm') { hits = 9; diceExp = '1d18'; baseDmg = 0; }
+        else if (spell.id === 'blizzard') { hits = 11; diceExp = '1d10'; baseDmg = 0; }
+        else if (spell.id === 'fire_storm') { hits = 4; diceExp = '3d10'; baseDmg = 0; }
+        else if (spell.id === 'tornado') { hits = 5; diceExp = '1d20'; baseDmg = 0; lastHitBonus = 5 + magicDmg; }
+        else if (spell.id === 'earth_prison') { hits = 2; diceExp = '2d8'; baseDmg = 0; lastHitBonus = 0; }
+        else if (spell.id === 'quake') { hits = 4; diceExp = '3d6'; baseDmg = 0; }
+        const damageHits = [];
+        for (let i = 0; i < hits; i++) {
+            let dmg;
+            if (spell.id === 'earth_prison') {
+                dmg = i === 0 ? rollDice('2d8') : rollDice('2d10') + magicDmg;
+            } else if (['blizzard', 'fire_storm', 'quake'].includes(spell.id)) {
+                dmg = (diceExp ? rollDice(diceExp) : 0) + baseDmg + magicDmg;
+            } else {
+                dmg = (diceExp ? rollDice(diceExp) : 0) + baseDmg;
+                if (i === hits - 1) dmg += lastHitBonus;
+            }
+            if (spell.intScale) dmg += Math.max(0, (c.stats.int || 8) - 12) * spell.intScale;
+            if (i === hits - 1) dmg += spellLevelBonus;
+            let finalDmg = this.calcMagicDmgToMonster(dmg, spell.mrIgnoreRate || 0, penetration);
+            if (spell.id === 'ultimate_light_spear' && c.classId === 'wizard') finalDmg = Math.max(1, Math.floor(finalDmg * (this.state.targetMonster.isBoss ? 1.18 : 1.08)));
+            damageHits.push(finalDmg);
+        }
+        return damageHits;
+    },
+    castCompanionHealSpell: function(c, spell) {
+        const magicDmg = this.getCompanionMagicDmg(c);
+        if (spell.partyHeal) {
+            this.castHealSpell(spell, magicDmg, `${c.name} `);
+            return true;
+        }
+        const targets = this.getCompanionPartyHpPcts(c).sort((a, b) => a.pct - b.pct);
+        const target = targets[0];
+        if (!target) return false;
+        let heal = Math.max(1, Math.floor((spell.healBase || 0) + magicDmg));
+        let targetName = '你';
+        if (target.target === 'player') {
+            if (this.state.buffs.heal_erosion) heal = Math.max(1, Math.floor(heal / 2));
+            this.state.hp = Math.min(this.state.maxHp, this.state.hp + heal);
+        } else if (target.target === 'pet') {
+            const activePet = this.getActivePetData();
+            if (!activePet) return false;
+            activePet.data.hp = Math.min(this.getPetMaxHp(this.state.activePet), activePet.data.hp + heal);
+            targetName = this.getPetDisplayName(this.state.activePet);
+        } else {
+            const maxHp = this.getCompanionMaxHp(c);
+            c.hp = Math.min(maxHp, (c.hp || 0) + heal);
+            targetName = c.name;
+        }
+        this.logCombat(`${c.name} 施放了 ${spell.name}，為 ${targetName} 回復 ${heal} 點生命。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
+        return true;
+    },
+    doesCompanionNeedBuff: function(c, spellId, includePlayer = true) {
+        if (!c) return false;
+        const playerNeedsBuff = includePlayer && !(Number(this.state.buffs?.[spellId]) > 0);
+        const companionNeedsBuff = !(Number(c.buffs?.[spellId]) > 0);
+        return playerNeedsBuff || companionNeedsBuff;
+    },
     companionCastSpell: function(c, spellId, mode = 'burst') {
         const spell = SPELLS[spellId];
         if (!c || !spell || !c.spells.includes(spellId)) return false;
         const vitals = this.normalizeCompanionVitals(c, { minHp: 0 });
-        const cost = Math.max(0, this.getSpellCost(spell));
+        const cost = this.getCompanionSpellCost(c, spell);
         if ((c.mp || 0) < cost) return false;
         if (spellId === 'knight_shock_stun' && this.state.targetMonster) {
             const wKey = c.equipment.weapon;
@@ -8864,29 +8986,30 @@ Object.assign(game, {
         }
         if (spell.type === 'attack' && this.state.targetMonster) {
             c.mp -= cost;
-            let dmg = (spell.dice ? rollDice(spell.dice) : 0) + (spell.baseDmg || 0) + this.getCompanionMagicDmg(c);
-            if (spell.intScale) dmg += Math.max(0, (c.stats.int || 8) - 12) * spell.intScale;
-            let finalDmg = this.calcMagicDmgToMonster(dmg, spell.mrIgnoreRate || 0);
-            if (spell.id === 'ultimate_light_spear' && c.classId === 'wizard') finalDmg = Math.max(1, Math.floor(finalDmg * (this.state.targetMonster.isBoss ? 1.18 : 1.08)));
-            this.state.targetMonster.hp -= finalDmg;
-            this.logCombat(`${c.name} 施放 ${spell.name}，造成 ${finalDmg} 點魔法傷害。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
+            const damageHits = this.getCompanionAttackSpellDamageHits(c, spell);
+            const totalDmg = damageHits.reduce((sum, dmg) => sum + dmg, 0);
+            this.state.targetMonster.hp -= totalDmg;
+            if (spell.healDice) c.hp = Math.min(this.getCompanionMaxHp(c), (c.hp || 0) + rollDice(spell.healDice));
+            const hitText = damageHits.length > 1 ? `${damageHits.length} 段共` : '';
+            this.logCombat(`${c.name} 施放 ${spell.name}，${hitText}造成 ${totalDmg} 點魔法傷害。`, spell.classes?.includes('elf') ? 'skill-elf' : 'magic');
             this.updateMonsterHpBar();
             if (this.state.targetMonster.hp <= 0) this.monsterDied();
             return true;
         }
         if (spell.type === 'heal') {
             c.mp -= cost;
-            this.castHealSpell(spell, this.getCompanionMagicDmg(c), `${c.name} `);
-            return true;
+            return this.castCompanionHealSpell(c, spell);
         }
         if (spell.type === 'buff') {
             c.buffs = c.buffs && typeof c.buffs === 'object' ? c.buffs : {};
             const supportPlayer = mode === 'support' || (mode === 'auto' && c.behavior === 'support');
-            const buffTarget = supportPlayer ? this.state.buffs : c.buffs;
-            if (buffTarget[spellId] && buffTarget[spellId] > 0) return false;
+            const playerNeedsBuff = supportPlayer && !(Number(this.state.buffs?.[spellId]) > 0);
+            const companionNeedsBuff = !(Number(c.buffs?.[spellId]) > 0);
+            if (!playerNeedsBuff && !companionNeedsBuff) return false;
+            const buffTarget = playerNeedsBuff ? this.state.buffs : c.buffs;
             c.mp -= cost;
             buffTarget[spellId] = spell.duration || 300;
-            if (supportPlayer) {
+            if (playerNeedsBuff) {
                 if (spellId === 'soul_ascension') this.calculateMaxHpMp();
                 this.logCombat(`${c.name} 施放 ${spell.name} 支援你。`, spell.classes?.includes('elf') ? 'skill-elf' : (spell.classes?.includes('wizard') ? 'skill-wizard' : 'magic'));
             } else {
@@ -8907,7 +9030,7 @@ Object.assign(game, {
         }
         const buffs = ids.filter(id => SPELLS[id]?.type === 'buff');
         for (const id of buffs) {
-            if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
+            if (this.doesCompanionNeedBuff(c, id) && this.companionCastSpell(c, id, 'support')) return true;
         }
         const converters = ids.filter(id => SPELLS[id]?.type === 'mp_convert');
         for (const id of converters) {
@@ -8922,7 +9045,7 @@ Object.assign(game, {
             const spell = SPELLS[id];
             if (!spell) continue;
             if (spell.type === 'heal' && this.shouldCompanionUseHealSpell(c, spell)) return true;
-            if (spell.type === 'buff' && !this.state.buffs[id]) return true;
+            if (spell.type === 'buff' && this.doesCompanionNeedBuff(c, id)) return true;
             if (spell.type === 'mp_convert') {
                 const maxHp = this.getCompanionMaxHp(c);
                 const maxMp = this.getCompanionMaxMp(c);
@@ -8948,16 +9071,14 @@ Object.assign(game, {
     },
     shouldCompanionUseHealSpell: function(c, spell, threshold = 0.72) {
         if (!spell || spell.type !== 'heal') return false;
-        const playerHpPct = this.state.maxHp > 0 ? (this.state.hp || 0) / this.state.maxHp : 1;
-        if (spell.partyHeal) return this.getCompanionPartyHpPcts(c).some(row => row.pct < threshold);
-        return playerHpPct < threshold;
+        return this.getCompanionPartyHpPcts(c).some(row => row.pct < threshold);
     },
     companionSupport: function(c) {
         const enabled = this.getCompanionEnabledAutoSpellIds(c);
         const heals = ['elf_bless_of_life','full_heal','high_heal','mid_heal','heal'].filter(id => enabled.includes(id));
         for (const id of heals) if (this.shouldCompanionUseHealSpell(c, SPELLS[id]) && this.companionCastSpell(c, id, 'support')) return true;
         const buffs = ['soul_ascension','immune_to_harm','str_buff','dex_buff','elf_life_fountain','elf_aqua_protect','elf_fire_weapon','elf_elemental_fire','elf_dance_of_fire','elf_triple_arrow','elf_wind_shot','elf_storm_shot','elf_earth_skin','elf_iron_skin','elf_clear_mind','elf_resist_magic','shield','haste','greater_haste'].filter(id => enabled.includes(id));
-        for (const id of buffs) if (!this.state.buffs[id] && this.companionCastSpell(c, id, 'support')) return true;
+        for (const id of buffs) if (this.doesCompanionNeedBuff(c, id) && this.companionCastSpell(c, id, 'support')) return true;
         return this.companionPhysicalAttack(c);
     },
     companionAct: function() {
